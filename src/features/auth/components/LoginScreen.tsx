@@ -9,6 +9,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import RegisterScreen from "@/features/auth/components/RegisterScreen";
+import { routes } from "@/shared/constants/routes";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function LoginScreen() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     console.log("Login:", { email, password, rememberMe });
     setIsLoading(false);
-    router.push("/student/dashboard");
+    router.push(routes.student.dashboard);
   };
 
   const handleGoogleLogin = async () => {
@@ -33,7 +34,7 @@ export default function LoginScreen() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     console.log("Google login");
     setIsGoogleLoading(false);
-    router.push("/student/dashboard");
+    router.push(routes.student.dashboard);
   };
 
   const handleAdminLogin = async () => {
@@ -48,7 +49,7 @@ export default function LoginScreen() {
     return (
       <RegisterScreen
         onNavigateToLogin={() => setShowRegister(false)}
-        onRegisterSuccess={() => router.push("/student/dashboard")}
+        onRegisterSuccess={() => router.push(routes.student.dashboard)}
       />
     );
   }
@@ -271,10 +272,10 @@ export default function LoginScreen() {
 
                 <div className="text-center pt-2 space-y-3">
                   <p className="text-sm text-gray-600">
-                    Don't have an account?{" "}
+                    Don&apos;t have an account?{" "}
                     <button
                       type="button"
-                      onClick={() => setShowRegister(true)}
+                      onClick={() => router.push(routes.auth.register)}
                       className="text-primary hover:text-primary/80 transition-colors font-medium"
                       disabled={isLoading || isGoogleLoading}
                     >

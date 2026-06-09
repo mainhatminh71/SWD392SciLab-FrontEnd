@@ -1,255 +1,314 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Atom, Check, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
+import {
+  AlertCircle,
+  Atom,
+  BarChart3,
+  Check,
+  FlaskConical,
+  Loader2,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { registerAccount } from "@/features/auth/api/register.api";
+import {
+  getAuthErrorMessage,
+  getAuthFieldErrors,
+} from "@/features/auth/api/auth-errors";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/shared/components/ui/alert";
+import { routes } from "@/shared/constants/routes";
+import {
+  type RegisterFormValues,
+  validateRegisterForm,
+} from "@/shared/schemas/register.schema";
 
 interface RegisterScreenProps {
   onNavigateToLogin?: () => void;
   onRegisterSuccess?: () => void;
 }
 
-export default function RegisterScreen({ onNavigateToLogin, onRegisterSuccess }: RegisterScreenProps) {
-  const [isLoading, setIsLoading] = useState(false);
+const defaultValues: RegisterFormValues = {
+  email: "",
+  displayName: "",
+  password: "",
+  confirmPassword: "",
+};
+
+const strengthText = ["Very weak", "Weak", "Fair", "Good", "Strong"];
+const strengthColor = [
+  "bg-red-500",
+  "bg-orange-500",
+  "bg-yellow-500",
+  "bg-sky-500",
+  "bg-emerald-500",
+];
+
+function calculatePasswordStrength(password: string) {
+  return [
+    password.length >= 8,
+    password.length >= 12,
+    /[a-z]/.test(password) && /[A-Z]/.test(password),
+    /\d/.test(password),
+    /[^a-zA-Z\d]/.test(password),
+  ].filter(Boolean).length;
+}
+
+export default function RegisterScreen({
+  onNavigateToLogin,
+  onRegisterSuccess,
+}: RegisterScreenProps) {
+  const router = useRouter();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [globalError, setGlobalError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
-  const [errors, setErrors] = useState({
-    email: "",
-    displayName: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const {
+    formState: { errors, isSubmitting },
+    clearErrors,
+    handleSubmit,
+    register,
+    setError,
+    control,
+  } = useForm<RegisterFormValues>({ defaultValues, mode: "onBlur" });
 
-  // Password strength calculation
-  const calculatePasswordStrength = (pwd: string) => {
-    let strength = 0;
-    if (pwd.length >= 8) strength++;
-    if (pwd.length >= 12) strength++;
-    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++;
-    if (/\d/.test(pwd)) strength++;
-    if (/[^a-zA-Z\d]/.test(pwd)) strength++;
-    return strength;
-  };
-
+  const password = useWatch({ control, name: "password" }) ?? "";
+  const confirmPassword = useWatch({ control, name: "confirmPassword" }) ?? "";
   const passwordStrength = calculatePasswordStrength(password);
-  const strengthText = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
-  const strengthColor = [
-    "bg-red-500",
-    "bg-orange-500",
-    "bg-yellow-500",
-    "bg-blue-500",
-    "bg-green-500",
-  ];
+  const isBusy = isSubmitting || isGoogleLoading;
+  const passwordStatus =
+    password && !errors.password
+      ? `Password strength: ${strengthText[passwordStrength - 1] ?? "Very weak"}`
+      : "";
 
-  const validateForm = () => {
-    const newErrors = {
-      email: "",
-      displayName: "",
-      password: "",
-      confirmPassword: "",
-    };
-
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-      newErrors.email = "Invalid email address";
-    }
-
-    if (!displayName) {
-      newErrors.displayName = "Display name is required";
-    } else if (displayName.length < 2) {
-      newErrors.displayName = "Display name must be at least 2 characters";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return !Object.values(newErrors).some((error) => error !== "");
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
+  const navigateToLogin = () => {
+    if (onNavigateToLogin) {
+      onNavigateToLogin();
       return;
     }
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Register:", { email, displayName, password });
-    setIsLoading(false);
-    if (onRegisterSuccess) {
-      onRegisterSuccess();
-    }
+    router.push(routes.auth.login);
   };
+
+  const onSubmit = handleSubmit(async (values) => {
+    clearErrors();
+    setGlobalError("");
+    setStatusMessage("Creating your SciLab account.");
+
+    const validationErrors = validateRegisterForm(values);
+    if (Object.keys(validationErrors).length > 0) {
+      Object.entries(validationErrors).forEach(([field, message]) => {
+        setError(field as keyof RegisterFormValues, { message });
+      });
+      setStatusMessage("Please fix the highlighted fields.");
+      toast.error("Please fix the highlighted fields.");
+      return;
+    }
+
+    try {
+      await registerAccount(values);
+      setStatusMessage("Account created. Opening your dashboard.");
+      toast.success("SciLab account created.");
+
+      if (onRegisterSuccess) {
+        onRegisterSuccess();
+      } else {
+        router.push(routes.student.dashboard);
+      }
+    } catch (error) {
+      const fieldErrors = getAuthFieldErrors(error);
+      Object.entries(fieldErrors).forEach(([field, message]) => {
+        setError(field as keyof RegisterFormValues, { message });
+      });
+
+      const message = getAuthErrorMessage(error);
+      setGlobalError(message);
+      setStatusMessage(message);
+      toast.error(message);
+    }
+  });
 
   const handleGoogleRegister = async () => {
     setIsGoogleLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Google register");
+    setGlobalError("");
+    setStatusMessage("Google registration is waiting for backend support.");
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const message =
+      "Google registration is pending backend integration. Please create an account with email for now.";
+    setGlobalError(message);
+    setStatusMessage(message);
+    toast.info("Google registration is pending backend integration.");
     setIsGoogleLoading(false);
-    if (onRegisterSuccess) {
-      onRegisterSuccess();
-    }
   };
 
   return (
-    <div className="min-h-screen w-full flex">
-      {/* Left Side - Hero Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-50 via-indigo-50/30 to-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwyfHxzY2llbnRpZmljJTIwcmVzZWFyY2glMjBkYXRhJTIwdmlzdWFsaXphdGlvbiUyMGFuYWx5dGljc3xlbnwxfHx8fDE3ODA5MzUwMzh8MA&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center opacity-[0.07]"></div>
+    <div className="min-h-screen w-full bg-[#f8f5ef] text-slate-950 lg:flex">
+      <aside className="hidden lg:flex lg:w-1/2">
+        <div className="relative flex w-full flex-col justify-between overflow-hidden bg-[#263238] px-16 py-12 text-white xl:px-24">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center opacity-10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#263238] via-[#37474f]/95 to-[#6d4c41]/90" />
 
-        <div className="relative z-10 flex flex-col justify-between py-12 px-16 xl:px-24 w-full">
-          {/* Logo at top */}
-          <div className="flex items-center gap-3">
-            <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
-              <Atom className="w-8 h-8 text-white" strokeWidth={2.5} />
+          <div className="relative flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-300 text-slate-950 shadow-lg shadow-black/20">
+              <Atom className="h-7 w-7" strokeWidth={2.3} />
             </div>
-            <span className="text-3xl font-bold text-gray-900 tracking-tight">SciLab</span>
+            <span className="text-3xl font-bold tracking-tight">SciLab</span>
           </div>
 
-          {/* Main content */}
-          <div className="space-y-6">
-            <div className="inline-block">
-              <div className="bg-primary/10 text-primary px-4 py-2 rounded-lg backdrop-blur-sm border border-primary/20">
-                <span className="text-sm font-medium">Research Intelligence Platform</span>
-              </div>
+          <div className="relative max-w-xl space-y-7">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-amber-100">
+              <FlaskConical className="h-4 w-4" />
+              Metadata and trend tracking
             </div>
 
-            <h1 className="text-5xl xl:text-6xl font-semibold text-gray-900 leading-tight">
-              Unlock Scientific
-              <br />
-              Publication Insights
+            <h1 className="text-5xl font-semibold leading-tight xl:text-6xl">
+              Create your research workspace
             </h1>
 
-            <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
-              Track emerging research trends, discover breakthrough papers, and stay ahead in your field with AI-powered analytics.
+            <p className="max-w-lg text-xl leading-relaxed text-slate-100">
+              Follow journals, bookmark publication metadata, and compare topic
+              trends from one SciLab account.
             </p>
 
-            <div className="pt-8 space-y-4">
+            <div className="grid gap-4 pt-4">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-300/15 text-emerald-100">
+                  <BarChart3 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Real-time Trend Analysis</h3>
-                  <p className="text-gray-600 mt-1">Monitor publication patterns across 50M+ research papers</p>
+                  <h2 className="font-semibold">Trend analysis</h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-200">
+                    Compare publication patterns by keyword, topic, and year.
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-sky-300/15 text-sky-100">
+                  <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">AI-Powered Discovery</h3>
-                  <p className="text-gray-600 mt-1">Uncover hidden connections and emerging research areas</p>
+                  <h2 className="font-semibold">Saved discovery</h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-200">
+                    Keep useful journals and articles close for dashboard review.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Footer stats */}
-          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-gray-200/50">
-            <div>
-              <div className="text-3xl font-bold text-gray-900">50M+</div>
-              <div className="text-sm text-gray-600 mt-1">Research Papers</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-gray-900">10K+</div>
-              <div className="text-sm text-gray-600 mt-1">Active Researchers</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-gray-900">500+</div>
-              <div className="text-sm text-gray-600 mt-1">Universities</div>
-            </div>
+          <div className="relative grid grid-cols-3 gap-5 border-t border-white/15 pt-7 text-sm text-slate-200">
+            <div>Journal search</div>
+            <div>Article bookmarks</div>
+            <div>Role-aware access</div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Right Side - Registration Card */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-slate-50/50 lg:px-12">
-        <div className="w-full max-w-[580px]">
-          <div className="mb-10 flex flex-col items-center text-center">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-                <Atom className="w-7 h-7 text-white" strokeWidth={2} />
+      <main className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8 lg:px-12">
+        <div className="w-full max-w-[560px]">
+          <div className="mb-8 text-center">
+            <div className="mb-6 inline-flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-900 text-amber-200 shadow-lg shadow-slate-900/15">
+                <Atom className="h-6 w-6" strokeWidth={2.2} />
               </div>
-              <span className="text-3xl font-bold text-gray-900 tracking-tight">SciLab</span>
+              <span className="text-3xl font-bold tracking-tight">SciLab</span>
             </div>
 
-            <div className="space-y-3">
-              <h2 className="text-4xl font-bold text-gray-900 tracking-tight">Create Your SciLab Account</h2>
-              <p className="text-gray-500 text-lg max-w-sm mx-auto">Join researchers and academics discovering publication trends.</p>
-            </div>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Create your account
+            </h2>
+            <p className="mx-auto mt-3 max-w-sm text-base leading-7 text-slate-600">
+              Start tracking publication metadata and research trends.
+            </p>
           </div>
 
-          <Card className="shadow-[0_8px_40px_rgb(0,0,0,0.08)] border-gray-200/50 rounded-3xl bg-white/95 backdrop-blur-xl">
-            <CardHeader className="border-b border-gray-100 pb-8 pt-10 px-8 sm:px-12">
-              <form onSubmit={handleRegister} className="space-y-6">
+          <Card className="rounded-lg border-slate-200 bg-white shadow-[0_16px_50px_rgb(15,23,42,0.10)]">
+            <CardHeader className="border-b border-slate-100 px-6 py-7 sm:px-10">
+              {globalError ? (
+                <Alert
+                  variant="destructive"
+                  className="mb-5"
+                  aria-live="polite"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Registration issue</AlertTitle>
+                  <AlertDescription>{globalError}</AlertDescription>
+                </Alert>
+              ) : null}
+
+              <form onSubmit={onSubmit} className="space-y-5" noValidate>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
+                    autoComplete="email"
                     placeholder="name@university.edu"
-                    className={`h-12 px-4 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (errors.email) setErrors({ ...errors, email: "" });
-                    }}
-                    disabled={isLoading || isGoogleLoading}
+                    className="h-12 px-4"
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "email-error" : undefined}
+                    disabled={isBusy}
+                    {...register("email", {
+                      onChange: () => {
+                        clearErrors("email");
+                        setGlobalError("");
+                      },
+                    })}
                   />
-                  {errors.email && (
-                    <p className="text-sm text-red-500 flex items-center gap-1">
-                      <X className="w-4 h-4" />
-                      {errors.email}
+                  {errors.email ? (
+                    <p
+                      id="email-error"
+                      className="flex items-center gap-1 text-sm text-red-600"
+                    >
+                      <X className="h-4 w-4" />
+                      {errors.email.message}
                     </p>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name</Label>
+                  <Label htmlFor="displayName">Display name</Label>
                   <Input
                     id="displayName"
                     type="text"
-                    placeholder="Dr. Jane Smith"
-                    className={`h-12 px-4 ${errors.displayName ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                    value={displayName}
-                    onChange={(e) => {
-                      setDisplayName(e.target.value);
-                      if (errors.displayName) setErrors({ ...errors, displayName: "" });
-                    }}
-                    disabled={isLoading || isGoogleLoading}
+                    autoComplete="name"
+                    placeholder="Jane Smith"
+                    className="h-12 px-4"
+                    aria-invalid={!!errors.displayName}
+                    aria-describedby={
+                      errors.displayName ? "displayName-error" : undefined
+                    }
+                    disabled={isBusy}
+                    {...register("displayName", {
+                      onChange: () => {
+                        clearErrors("displayName");
+                        setGlobalError("");
+                      },
+                    })}
                   />
-                  {errors.displayName && (
-                    <p className="text-sm text-red-500 flex items-center gap-1">
-                      <X className="w-4 h-4" />
-                      {errors.displayName}
+                  {errors.displayName ? (
+                    <p
+                      id="displayName-error"
+                      className="flex items-center gap-1 text-sm text-red-600"
+                    >
+                      <X className="h-4 w-4" />
+                      {errors.displayName.message}
                     </p>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -257,170 +316,179 @@ export default function RegisterScreen({ onNavigateToLogin, onRegisterSuccess }:
                   <Input
                     id="password"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="Create a strong password"
-                    className={`h-12 px-4 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (errors.password) setErrors({ ...errors, password: "" });
-                    }}
-                    disabled={isLoading || isGoogleLoading}
+                    className="h-12 px-4"
+                    aria-invalid={!!errors.password}
+                    aria-describedby={
+                      errors.password ? "password-error" : "password-status"
+                    }
+                    disabled={isBusy}
+                    {...register("password", {
+                      onChange: () => {
+                        clearErrors("password");
+                        setGlobalError("");
+                      },
+                    })}
                   />
-                  {errors.password && (
-                    <p className="text-sm text-red-500 flex items-center gap-1">
-                      <X className="w-4 h-4" />
-                      {errors.password}
+                  {errors.password ? (
+                    <p
+                      id="password-error"
+                      className="flex items-center gap-1 text-sm text-red-600"
+                    >
+                      <X className="h-4 w-4" />
+                      {errors.password.message}
                     </p>
-                  )}
+                  ) : null}
 
-                  {password && !errors.password && (
+                  {password && !errors.password ? (
                     <div className="space-y-2">
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
+                      <div className="flex gap-1" aria-hidden="true">
+                        {Array.from({ length: 5 }).map((_, index) => (
                           <div
-                            key={i}
+                            key={index}
                             className={`h-1.5 flex-1 rounded-full transition-colors ${
-                              i < passwordStrength ? strengthColor[passwordStrength - 1] : "bg-gray-200"
+                              index < passwordStrength
+                                ? strengthColor[passwordStrength - 1]
+                                : "bg-slate-200"
                             }`}
                           />
                         ))}
                       </div>
-                      <p className={`text-sm flex items-center gap-1 ${
-                        passwordStrength >= 4 ? "text-green-600" : passwordStrength >= 3 ? "text-blue-600" : passwordStrength >= 2 ? "text-yellow-600" : "text-red-600"
-                      }`}>
-                        {passwordStrength >= 4 ? <Check className="w-4 h-4" /> : null}
-                        Password strength: {strengthText[passwordStrength] || "Very Weak"}
+                      <p
+                        id="password-status"
+                        className="flex items-center gap-1 text-sm text-slate-600"
+                      >
+                        {passwordStrength >= 4 ? (
+                          <Check className="h-4 w-4 text-emerald-600" />
+                        ) : null}
+                        {passwordStatus}
                       </p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">Confirm password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="Re-enter your password"
-                    className={`h-12 px-4 ${errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: "" });
-                    }}
-                    disabled={isLoading || isGoogleLoading}
+                    className="h-12 px-4"
+                    aria-invalid={!!errors.confirmPassword}
+                    aria-describedby={
+                      errors.confirmPassword
+                        ? "confirmPassword-error"
+                        : "confirmPassword-status"
+                    }
+                    disabled={isBusy}
+                    {...register("confirmPassword", {
+                      onChange: () => {
+                        clearErrors("confirmPassword");
+                        setGlobalError("");
+                      },
+                    })}
                   />
-                  {errors.confirmPassword && (
-                    <p className="text-sm text-red-500 flex items-center gap-1">
-                      <X className="w-4 h-4" />
-                      {errors.confirmPassword}
+                  {errors.confirmPassword ? (
+                    <p
+                      id="confirmPassword-error"
+                      className="flex items-center gap-1 text-sm text-red-600"
+                    >
+                      <X className="h-4 w-4" />
+                      {errors.confirmPassword.message}
                     </p>
-                  )}
-                  {confirmPassword && !errors.confirmPassword && password === confirmPassword && (
-                    <p className="text-sm text-green-600 flex items-center gap-1">
-                      <Check className="w-4 h-4" />
-                      Passwords match
+                  ) : null}
+                  {confirmPassword &&
+                  !errors.confirmPassword &&
+                  password === confirmPassword ? (
+                    <p
+                      id="confirmPassword-status"
+                      className="flex items-center gap-1 text-sm text-emerald-700"
+                    >
+                      <Check className="h-4 w-4" />
+                      Passwords match.
                     </p>
-                  )}
+                  ) : null}
                 </div>
 
-                <div className="space-y-3 pt-4">
-                  <Button
-                    type="submit"
-                    className="w-full h-12 text-base font-medium shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-200"
-                    disabled={isLoading || isGoogleLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="animate-spin mr-2" />
-                        Creating Account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
+                <div aria-live="polite" className="sr-only">
+                  {statusMessage}
                 </div>
+
+                <Button
+                  type="submit"
+                  className="h-12 w-full text-base font-medium shadow-md shadow-slate-900/10"
+                  disabled={isBusy}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account
+                    </>
+                  ) : (
+                    "Create account"
+                  )}
+                </Button>
               </form>
             </CardHeader>
 
-            <CardContent className="px-8 sm:px-12 pt-6 pb-10">
+            <CardContent className="px-6 py-7 sm:px-10">
               <div className="space-y-5">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
+                    <div className="w-full border-t border-slate-200" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
+                    <span className="bg-white px-4 font-medium text-slate-500">
+                      Or continue with
+                    </span>
                   </div>
                 </div>
 
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-14 text-base font-medium border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="h-12 w-full text-base font-medium"
                   onClick={handleGoogleRegister}
-                  disabled={isLoading || isGoogleLoading}
+                  disabled={isBusy}
                 >
                   {isGoogleLoading ? (
                     <>
-                      <Loader2 className="animate-spin mr-2" />
-                      Connecting...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Connecting
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full border text-xs font-semibold text-slate-700">
+                        G
+                      </span>
                       Continue with Google
                     </>
                   )}
                 </Button>
 
-                <div className="text-center pt-2">
-                  <p className="text-sm text-gray-600">
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      onClick={onNavigateToLogin}
-                      className="text-primary hover:text-primary/80 transition-colors font-medium"
-                      disabled={isLoading || isGoogleLoading}
-                    >
-                      Sign In
-                    </button>
-                  </p>
-                </div>
+                <p className="text-center text-sm text-slate-600">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={navigateToLogin}
+                    className="font-medium text-slate-950 underline-offset-4 transition-colors hover:text-amber-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+                    disabled={isBusy}
+                  >
+                    Sign in
+                  </button>
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500">
-              By creating an account, you agree to our{" "}
-              <a href="#" className="text-primary hover:underline">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-primary hover:underline">
-                Privacy Policy
-              </a>
-            </p>
-          </div>
+          <p className="mt-6 text-center text-sm leading-6 text-slate-500">
+            By creating an account, you agree to SciLab access policies for
+            research metadata and dashboard features.
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
