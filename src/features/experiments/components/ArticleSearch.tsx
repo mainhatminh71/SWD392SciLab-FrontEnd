@@ -20,6 +20,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
+import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
 
 interface Article {
@@ -349,24 +350,26 @@ export default function ArticleSearch() {
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View
                       </Button>
-                      <Button
-                        variant={article.isBookmarked ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => toggleBookmark(article.id)}
-                        className="h-9 px-4"
-                      >
-                        {article.isBookmarked ? (
-                          <>
-                            <BookmarkCheck className="w-4 h-4 mr-2" />
-                            Saved
-                          </>
-                        ) : (
-                          <>
-                            <BookmarkPlus className="w-4 h-4 mr-2" />
-                            Save
-                          </>
-                        )}
-                      </Button>
+                      <Can permission="bookmark">
+                        <Button
+                          variant={article.isBookmarked ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleBookmark(article.id)}
+                          className="h-9 px-4"
+                        >
+                          {article.isBookmarked ? (
+                            <>
+                              <BookmarkCheck className="w-4 h-4 mr-2" />
+                              Saved
+                            </>
+                          ) : (
+                            <>
+                              <BookmarkPlus className="w-4 h-4 mr-2" />
+                              Save
+                            </>
+                          )}
+                        </Button>
+                      </Can>
                     </div>
                   </div>
                 </Card>

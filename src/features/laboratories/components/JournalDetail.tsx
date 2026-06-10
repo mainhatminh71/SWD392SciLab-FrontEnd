@@ -20,6 +20,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
+import Can from "@/shared/components/auth/Can";
 import { Card } from "@/shared/components/ui/card";
 import {
   LineChart,
@@ -147,26 +148,28 @@ export default function JournalDetail({ journalId }: JournalDetailProps) {
                       </div>
                     </div>
 
-                    <Button
-                      onClick={() => setIsFollowing(!isFollowing)}
-                      className={`h-10 px-6 ${
-                        isFollowing
-                          ? "bg-surface-raised text-foreground hover:bg-accent"
-                          : "bg-primary text-primary-foreground hover:bg-primary/90"
-                      }`}
-                    >
-                      {isFollowing ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          Following
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Follow
-                        </>
-                      )}
-                    </Button>
+                    <Can permission="follow">
+                      <Button
+                        onClick={() => setIsFollowing(!isFollowing)}
+                        className={`h-10 px-6 ${
+                          isFollowing
+                            ? "bg-surface-raised text-foreground hover:bg-accent"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90"
+                        }`}
+                      >
+                        {isFollowing ? (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Following
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Follow
+                          </>
+                        )}
+                      </Button>
+                    </Can>
                   </div>
 
                   <div className="flex items-center gap-3">

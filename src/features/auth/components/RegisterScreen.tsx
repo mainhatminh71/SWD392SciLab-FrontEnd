@@ -29,6 +29,7 @@ import {
   AlertTitle,
 } from "@/shared/components/ui/alert";
 import { routes } from "@/shared/constants/routes";
+import { useAuth } from "@/providers/auth-provider";
 import {
   type RegisterFormValues,
   validateRegisterForm,
@@ -70,6 +71,7 @@ export default function RegisterScreen({
   onRegisterSuccess,
 }: RegisterScreenProps) {
   const router = useRouter();
+  const { registerSession } = useAuth();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [globalError, setGlobalError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -118,6 +120,10 @@ export default function RegisterScreen({
 
     try {
       await registerAccount(values);
+      registerSession({
+        email: values.email,
+        displayName: values.displayName,
+      });
       setStatusMessage("Account created. Opening your dashboard.");
       toast.success("ScholarTrend account created.");
 

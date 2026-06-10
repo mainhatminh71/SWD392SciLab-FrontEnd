@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Atom, Shield } from "lucide-react";
+import { Loader2, Atom } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -10,9 +11,12 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import RegisterScreen from "@/features/auth/components/RegisterScreen";
 import { routes } from "@/shared/constants/routes";
+import { DEMO_CREDENTIAL_HINTS } from "@/shared/constants/demo-credentials";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -23,26 +27,35 @@ export default function LoginScreen() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Login:", { email, password, rememberMe });
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const result = login(email, password);
     setIsLoading(false);
-    router.push(routes.student.dashboard);
+
+    if (!result.ok) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success(`Signed in as ${result.user.name}`);
+    router.push(result.redirectTo);
   };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Google login");
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    const result = login("student@demo.com", "123456");
     setIsGoogleLoading(false);
-    router.push(routes.student.dashboard);
+
+    if (result.ok) {
+      toast.success("Signed in with Google (demo student account)");
+      router.push(result.redirectTo);
+    }
   };
 
-  const handleAdminLogin = async () => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Admin login");
-    setIsLoading(false);
-    router.push("/admin/users");
+  const fillDemoAccount = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword("123456");
   };
 
   if (showRegister) {
@@ -56,7 +69,6 @@ export default function LoginScreen() {
 
   return (
     <div className="min-h-screen w-full flex bg-background">
-      {/* Left — editorial hero */}
       <div className="hidden lg:flex lg:w-1/2 bg-surface-raised border-r border-border">
         <div className="flex flex-col justify-between py-12 px-16 xl:px-24 w-full">
           <div className="flex items-center gap-3">
@@ -82,27 +94,24 @@ export default function LoginScreen() {
               ahead in your field with calm, focused analytics.
             </p>
 
-            <div className="space-y-6 pt-4">
-              {[
-                {
-                  title: "Real-time Trend Analysis",
-                  desc: "Monitor publication patterns across 50M+ research papers",
-                },
-                {
-                  title: "AI-Powered Discovery",
-                  desc: "Uncover hidden connections and emerging research areas",
-                },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-[var(--radius-card)] bg-accent flex items-center justify-center flex-shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-heading text-lg text-foreground">{item.title}</h3>
-                    <p className="text-muted-foreground mt-1 text-sm">{item.desc}</p>
-                  </div>
-                </div>
+            <div className="rounded-[var(--radius-card)] border border-border bg-card p-5 space-y-3">
+              <p className="text-sm font-medium text-foreground">Demo accounts</p>
+              {DEMO_CREDENTIAL_HINTS.map((item) => (
+                <button
+                  key={item.email}
+                  type="button"
+                  onClick={() => fillDemoAccount(item.email)}
+                  className="w-full text-left rounded-[var(--radius-button)] px-3 py-2 hover:bg-accent transition-colors"
+                >
+                  <p className="text-sm font-medium text-foreground">{item.role}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.email} / {item.password}
+                  </p>
+                </button>
               ))}
+              <p className="text-xs text-muted-foreground pt-1">
+                Guest can browse journals & articles without signing in.
+              </p>
             </div>
           </div>
 
@@ -121,7 +130,6 @@ export default function LoginScreen() {
         </div>
       </div>
 
-      {/* Right — auth form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12">
         <div className="w-full max-w-[480px]">
           <div className="mb-10 flex flex-col items-center text-center lg:hidden">
@@ -148,7 +156,7 @@ export default function LoginScreen() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="name@university.edu"
+                    placeholder="student@demo.com"
                     className="h-11"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -161,7 +169,7 @@ export default function LoginScreen() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="123456"
                     className="h-11"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -230,7 +238,7 @@ export default function LoginScreen() {
                     Connecting...
                   </>
                 ) : (
-                  "Continue with Google"
+                  "Continue with Google (demo student)"
                 )}
               </Button>
 
@@ -250,11 +258,10 @@ export default function LoginScreen() {
                 type="button"
                 variant="secondary"
                 className="w-full h-11"
-                onClick={handleAdminLogin}
+                onClick={() => router.push(routes.student.journals)}
                 disabled={isLoading || isGoogleLoading}
               >
-                <Shield className="w-4 h-4" strokeWidth={1.75} />
-                Admin Login
+                Continue as Guest
               </Button>
             </CardContent>
           </Card>
