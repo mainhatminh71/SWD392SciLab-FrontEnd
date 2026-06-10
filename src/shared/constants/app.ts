@@ -1,4 +1,4 @@
-export const APP_NAME = "SciLab";
+export const APP_NAME = "ScholarTrend";
 export const APP_TAGLINE = "Research Intelligence Platform";
 
 export const STUDENT_NAV_ITEMS = [

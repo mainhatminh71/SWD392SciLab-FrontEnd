@@ -4,7 +4,7 @@ import { Toaster } from "@/shared/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SciLab",
+  title: "ScholarTrend",
   description: "Research Intelligence Platform",
 };
 
@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
           <Toaster />
