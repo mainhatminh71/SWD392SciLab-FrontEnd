@@ -1,16 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Atom,
-  LayoutDashboard,
-  BookOpen,
-  FileText,
-  TrendingUp,
-  Bookmark,
-  Bell,
-  User,
-  Search,
   Filter,
   X,
   ChevronDown,
@@ -21,11 +13,13 @@ import {
   BookmarkCheck,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
 import PageContainer from "@/shared/components/layout/PageContainer";
+import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
 import { Label } from "@/shared/components/ui/label";
 
 interface Article {
@@ -118,13 +112,8 @@ const mockArticles: Article[] = [
 
 const yearOptions = ["2024", "2023", "2022", "2021", "2020", "2019"];
 
-interface ArticleSearchProps {
-  onNavigate?: (view: string) => void;
-  onViewArticle?: (articleId: string) => void;
-}
-
-export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSearchProps) {
-  const [activeNav, setActiveNav] = useState("articles");
+export default function ArticleSearch() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [doiSearch, setDoiSearch] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
@@ -139,23 +128,6 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentArticles = articles.slice(startIndex, endIndex);
-
-  const sidebarItems = [
-    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { id: "journals", icon: BookOpen, label: "Journals" },
-    { id: "articles", icon: FileText, label: "Articles" },
-    { id: "trends", icon: TrendingUp, label: "Trend Analysis" },
-    { id: "bookmarks", icon: Bookmark, label: "Bookmarks" },
-    { id: "notifications", icon: Bell, label: "Notifications" },
-    { id: "profile", icon: User, label: "Profile" },
-  ];
-
-  const handleNavClick = (navId: string) => {
-    setActiveNav(navId);
-    if (onNavigate) {
-      onNavigate(navId);
-    }
-  };
 
   const toggleBookmark = (articleId: string) => {
     setArticles(
@@ -179,90 +151,14 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
     (selectedYear ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Sidebar */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
-        {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
-          </div>
-          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
-        </div>
+    <>
+      <StudentTopHeader
+        searchPlaceholder="Search articles by keyword, title, or topic..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeNav === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
-                  isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-5 h-5" strokeWidth={1.75} />
-                <span className="text-sm">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-border">
-          <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-            onClick={() => onNavigate && onNavigate("profile")}
-          >
-            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-tag">JS</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
-          <div className="flex-1 max-w-2xl">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search articles by keyword, title, or topic..."
-                className="pl-10 h-10 bg-surface-raised border-border focus:bg-card"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <div
-              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-              onClick={() => onNavigate && onNavigate("profile")}
-            >
-              <span className="text-sm font-medium text-tag">JS</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto py-8">
+      <main className="flex-1 overflow-auto py-8">
           <PageContainer size="wide" className="space-y-6">
             {/* Page Header */}
             <div className="flex items-center justify-between">
@@ -448,7 +344,7 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                         variant="outline"
                         size="sm"
                         className="h-9 px-4"
-                        onClick={() => onViewArticle && onViewArticle(article.id)}
+                        onClick={() => router.push(`/student/articles/${article.id}`)}
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View
@@ -518,8 +414,7 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
               </Button>
             </div>
           </PageContainer>
-        </main>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
