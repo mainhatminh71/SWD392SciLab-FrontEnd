@@ -1,17 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Atom,
-  LayoutDashboard,
-  BookOpen,
-  FileText,
-  TrendingUp,
-  Bookmark,
-  Bell,
-  User,
-  Search,
   ArrowLeft,
+  BookOpen,
   BookmarkPlus,
   BookmarkCheck,
   ExternalLink,
@@ -21,35 +14,18 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
 import PageContainer from "@/shared/components/layout/PageContainer";
+import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
 import { Card } from "@/shared/components/ui/card";
 
 interface ArticleDetailProps {
-  onNavigate?: (view: string) => void;
+  articleId: string;
 }
 
-export default function ArticleDetail({ onNavigate }: ArticleDetailProps) {
-  const [activeNav, setActiveNav] = useState("articles");
+export default function ArticleDetail({ articleId }: ArticleDetailProps) {
+  const router = useRouter();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [copiedCitation, setCopiedCitation] = useState(false);
-
-  const sidebarItems = [
-    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { id: "journals", icon: BookOpen, label: "Journals" },
-    { id: "articles", icon: FileText, label: "Articles" },
-    { id: "trends", icon: TrendingUp, label: "Trend Analysis" },
-    { id: "bookmarks", icon: Bookmark, label: "Bookmarks" },
-    { id: "notifications", icon: Bell, label: "Notifications" },
-    { id: "profile", icon: User, label: "Profile" },
-  ];
-
-  const handleNavClick = (navId: string) => {
-    setActiveNav(navId);
-    if (onNavigate) {
-      onNavigate(navId);
-    }
-  };
 
   const copyCitation = () => {
     const citation = "Zhang, L., Kumar, R., Smith, J., & Anderson, M. (2024). Deep Learning Approaches for Protein Structure Prediction: AlphaFold and Beyond. Nature Machine Intelligence, 6(4), 234-256. https://doi.org/10.1038/s42256-024-00789-1";
@@ -58,95 +34,18 @@ export default function ArticleDetail({ onNavigate }: ArticleDetailProps) {
     setTimeout(() => setCopiedCitation(false), 2000);
   };
 
+  void articleId;
+
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Sidebar */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
-        {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
-          </div>
-          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
-        </div>
+    <>
+      <StudentTopHeader />
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeNav === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
-                  isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-5 h-5" strokeWidth={1.75} />
-                <span className="text-sm">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-border">
-          <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-            onClick={() => onNavigate && onNavigate("profile")}
-          >
-            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-tag">JS</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
-          <div className="flex-1 max-w-2xl">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search articles, journals, topics..."
-                className="pl-10 h-10 bg-surface-raised border-border focus:bg-card"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <div
-              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-              onClick={() => onNavigate && onNavigate("profile")}
-            >
-              <span className="text-sm font-medium text-tag">JS</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-card">
+      <main className="flex-1 overflow-auto bg-card">
           <PageContainer size="narrow" className="py-12">
-            {/* Back Button */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onNavigate && onNavigate("articles")}
+              onClick={() => router.push("/student/articles")}
               className="mb-8 -ml-2"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -377,8 +276,7 @@ export default function ArticleDetail({ onNavigate }: ArticleDetailProps) {
               </section>
             </article>
           </PageContainer>
-        </main>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
