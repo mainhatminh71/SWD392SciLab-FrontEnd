@@ -28,6 +28,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
 import PageContainer from "@/shared/components/layout/PageContainer";
+import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
 import {
   LineChart,
@@ -153,31 +154,38 @@ export default function TrendAnalysis() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="h-9">
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Export PNG
-            </Button>
-            <Button variant="outline" size="sm" className="h-9">
-              <FileTextIcon className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
+            <Can permission="export_report">
+              <>
+                <Button variant="outline" size="sm" className="h-9">
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Export PNG
+                </Button>
+                <Button variant="outline" size="sm" className="h-9">
+                  <FileTextIcon className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+                <div className="w-px h-6 bg-gray-200 mx-1"></div>
+              </>
+            </Can>
 
-            <div className="w-px h-6 bg-gray-200 mx-1"></div>
+            <Can permission="notifications">
+              <Link
+                href="/student/notifications"
+                className="relative p-2 hover:bg-accent rounded-lg transition-colors"
+              >
+                <Bell className="w-5 h-5 text-muted-foreground" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+              </Link>
+            </Can>
 
-            <Link
-              href="/student/notifications"
-              className="relative p-2 hover:bg-accent rounded-lg transition-colors"
-            >
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </Link>
-
-            <Link
-              href="/student/profile"
-              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-            >
-              <span className="text-sm font-medium text-tag">JS</span>
-            </Link>
+            <Can permission="profile">
+              <Link
+                href="/student/profile"
+                className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <span className="text-sm font-medium text-tag">JS</span>
+              </Link>
+            </Can>
           </div>
         </header>
 
@@ -587,24 +595,26 @@ export default function TrendAnalysis() {
                           </span>
                         </div>
                       </div>
-                      <Button
-                        variant={followedTopics.includes(topic.topic) ? "default" : "outline"}
-                        size="sm"
-                        className="h-8 px-3 ml-4"
-                        onClick={() => toggleFollowTopic(topic.topic)}
-                      >
-                        {followedTopics.includes(topic.topic) ? (
-                          <>
-                            <Star className="w-3.5 h-3.5 mr-1.5 fill-current" />
-                            Following
-                          </>
-                        ) : (
-                          <>
-                            <StarOff className="w-3.5 h-3.5 mr-1.5" />
-                            Follow
-                          </>
-                        )}
-                      </Button>
+                      <Can permission="follow">
+                        <Button
+                          variant={followedTopics.includes(topic.topic) ? "default" : "outline"}
+                          size="sm"
+                          className="h-8 px-3 ml-4"
+                          onClick={() => toggleFollowTopic(topic.topic)}
+                        >
+                          {followedTopics.includes(topic.topic) ? (
+                            <>
+                              <Star className="w-3.5 h-3.5 mr-1.5 fill-current" />
+                              Following
+                            </>
+                          ) : (
+                            <>
+                              <StarOff className="w-3.5 h-3.5 mr-1.5" />
+                              Follow
+                            </>
+                          )}
+                        </Button>
+                      </Can>
                     </div>
                   ))}
                 </div>

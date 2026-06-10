@@ -16,6 +16,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
+import Can from "@/shared/components/auth/Can";
 import { Card } from "@/shared/components/ui/card";
 
 interface ArticleDetailProps {
@@ -90,23 +91,25 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
 
               {/* Actions Bar */}
               <div className="flex items-center gap-3 pb-8 border-b border-border">
-                <Button
-                  variant={isBookmarked ? "default" : "outline"}
-                  onClick={() => setIsBookmarked(!isBookmarked)}
-                  className="h-10"
-                >
-                  {isBookmarked ? (
-                    <>
-                      <BookmarkCheck className="w-4 h-4 mr-2" />
-                      Bookmarked
-                    </>
-                  ) : (
-                    <>
-                      <BookmarkPlus className="w-4 h-4 mr-2" />
-                      Bookmark
-                    </>
-                  )}
-                </Button>
+                <Can permission="bookmark">
+                  <Button
+                    variant={isBookmarked ? "default" : "outline"}
+                    onClick={() => setIsBookmarked(!isBookmarked)}
+                    className="h-10"
+                  >
+                    {isBookmarked ? (
+                      <>
+                        <BookmarkCheck className="w-4 h-4 mr-2" />
+                        Bookmarked
+                      </>
+                    ) : (
+                      <>
+                        <BookmarkPlus className="w-4 h-4 mr-2" />
+                        Bookmark
+                      </>
+                    )}
+                  </Button>
+                </Can>
                 <Button
                   variant="outline"
                   className="h-10"
