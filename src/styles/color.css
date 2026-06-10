@@ -1,59 +1,69 @@
 /**
- * Theme colors — file chính để custom màu SciLab
- * Ưu tiên sửa: --primary-color, --secondary-color, --font-color-*
+ * Academic Serenity — Color System
+ * Calm · minimal · reading-focused
  */
 
 :root {
-  /* ── Brand colors ── */
-  --primary-color: #2563eb;
-  --secondary-color: #64748b;
+  /* ── Brand ── */
+  --primary-color: #d3ab9e;
+  --primary-color-hover: #c49a8d;
+  --secondary-color: #3ac9c1;
+  --tag-text-color: #5c3f35;
 
   /* ── Font colors ── */
-  --font-color-primary: #0f172a;
-  --font-color-secondary: #475569;
-  --font-color-muted: #717182;
+  --font-color-primary: #2c2420;
+  --font-color-secondary: #5c534e;
+  --font-color-muted: #8a827c;
   --font-color-inverse: #ffffff;
-  --font-color-link: var(--primary-color);
-  --font-color-destructive: #d4183d;
+  --font-color-link: #5c3f35;
+  --font-color-destructive: #b54a4a;
 
-  /* ── Surface & border ── */
-  --background-color: #ffffff;
+  /* ── Layered surfaces ── */
+  --background-color: #f9f9fa;
   --surface-color: #ffffff;
-  --surface-muted-color: #f8fafc;
-  --border-color: rgba(0, 0, 0, 0.1);
-  --ring-color: var(--primary-color);
+  --surface-raised-color: #f3f3f4;
+  --surface-muted-color: #edeeef;
+  --border-color: rgba(211, 171, 158, 0.15);
+  --ring-color: rgba(211, 171, 158, 0.3);
+
+  /* ── Shadows ── */
+  --shadow-ambient: 0 4px 20px rgba(211, 171, 158, 0.05);
+  --shadow-ambient-hover: 0 6px 24px rgba(211, 171, 158, 0.1);
+
+  /* ── Tags / chips ── */
+  --tag-background: rgba(211, 171, 158, 0.12);
 
   /* ── Button: primary ── */
   --button-primary-bg: var(--primary-color);
   --button-primary-text: #ffffff;
-  --button-primary-hover: #1d4ed8;
+  --button-primary-hover: var(--primary-color-hover);
   --button-primary-border: transparent;
 
-  /* ── Button: secondary ── */
-  --button-secondary-bg: #f1f5f9;
-  --button-secondary-text: #0f172a;
-  --button-secondary-hover: #e2e8f0;
-  --button-secondary-border: transparent;
+  /* ── Button: secondary (outline clay) ── */
+  --button-secondary-bg: transparent;
+  --button-secondary-text: var(--font-color-primary);
+  --button-secondary-hover: rgba(211, 171, 158, 0.08);
+  --button-secondary-border: var(--primary-color);
 
   /* ── Button: outline ── */
   --button-outline-bg: transparent;
   --button-outline-text: var(--font-color-primary);
-  --button-outline-hover: #f8fafc;
+  --button-outline-hover: var(--surface-raised-color);
   --button-outline-border: var(--border-color);
 
   /* ── Button: ghost ── */
   --button-ghost-bg: transparent;
-  --button-ghost-text: var(--font-color-primary);
-  --button-ghost-hover: #f1f5f9;
+  --button-ghost-text: var(--font-color-secondary);
+  --button-ghost-hover: var(--surface-raised-color);
   --button-ghost-border: transparent;
 
   /* ── Button: destructive ── */
-  --button-destructive-bg: #d4183d;
+  --button-destructive-bg: #b54a4a;
   --button-destructive-text: #ffffff;
-  --button-destructive-hover: #b91c1c;
+  --button-destructive-hover: #9e3f3f;
   --button-destructive-border: transparent;
 
-  /* ── Button: padding ── */
+  /* ── Button padding ── */
   --button-padding-x: 1rem;
   --button-padding-y: 0.5rem;
   --button-padding-x-sm: 0.75rem;
@@ -61,7 +71,7 @@
   --button-padding-x-lg: 1.5rem;
   --button-padding-y-lg: 0.625rem;
 
-  /* ── shadcn/ui token bridge (component dùng các biến này) ── */
+  /* ── shadcn/ui bridge ── */
   --background: var(--background-color);
   --foreground: var(--font-color-primary);
   --card: var(--surface-color);
@@ -70,71 +80,51 @@
   --popover-foreground: var(--font-color-primary);
   --primary: var(--primary-color);
   --primary-foreground: var(--button-primary-text);
-  --secondary: #ececf0;
+  --secondary: var(--surface-raised-color);
   --secondary-foreground: var(--font-color-primary);
-  --muted: #ececf0;
+  --muted: var(--surface-muted-color);
   --muted-foreground: var(--font-color-muted);
-  --accent: #e9ebef;
-  --accent-foreground: var(--font-color-primary);
+  --accent: rgba(211, 171, 158, 0.12);
+  --accent-foreground: var(--tag-text-color);
   --destructive: var(--button-destructive-bg);
   --destructive-foreground: var(--button-destructive-text);
   --border: var(--border-color);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
+  --input: var(--border-color);
+  --input-background: var(--surface-raised-color);
+  --switch-background: var(--surface-muted-color);
   --ring: var(--ring-color);
 
-  /* ── Chart & sidebar ── */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  /* ── Charts: teal only for metrics/progress ── */
+  --chart-1: #3ac9c1;
+  --chart-2: #d3ab9e;
+  --chart-3: #8aafa8;
+  --chart-4: #c4b5a8;
+  --chart-5: #5c534e;
+
+  /* ── Sidebar ── */
+  --sidebar: var(--surface-color);
   --sidebar-foreground: var(--font-color-primary);
   --sidebar-primary: var(--primary-color);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: #1e293b;
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: rgba(211, 171, 158, 0.12);
+  --sidebar-accent-foreground: var(--tag-text-color);
+  --sidebar-border: var(--border-color);
+  --sidebar-ring: var(--ring-color);
 }
 
 .dark {
-  --primary-color: #3b82f6;
-  --secondary-color: #94a3b8;
-
-  --font-color-primary: #f8fafc;
-  --font-color-secondary: #cbd5e1;
-  --font-color-muted: #94a3b8;
-  --font-color-inverse: #0f172a;
-  --font-color-link: #60a5fa;
-  --font-color-destructive: #f87171;
-
-  --background-color: oklch(0.145 0 0);
-  --surface-color: oklch(0.145 0 0);
-  --surface-muted-color: oklch(0.205 0 0);
-  --border-color: oklch(0.269 0 0);
-  --ring-color: oklch(0.439 0 0);
-
-  --button-primary-bg: #f8fafc;
-  --button-primary-text: #0f172a;
-  --button-primary-hover: #e2e8f0;
-
-  --button-secondary-bg: oklch(0.269 0 0);
-  --button-secondary-text: #f8fafc;
-  --button-secondary-hover: oklch(0.32 0 0);
-
-  --button-outline-text: var(--font-color-primary);
-  --button-outline-hover: oklch(0.269 0 0);
-  --button-outline-border: var(--border-color);
-
-  --button-ghost-text: var(--font-color-primary);
-  --button-ghost-hover: oklch(0.269 0 0);
-
-  --button-destructive-bg: oklch(0.396 0.141 25.723);
-  --button-destructive-text: oklch(0.637 0.237 25.331);
-  --button-destructive-hover: oklch(0.45 0.16 25.723);
+  --primary-color: #d3ab9e;
+  --primary-color-hover: #e0bdb2;
+  --font-color-primary: #f3f0ee;
+  --font-color-secondary: #c4bbb5;
+  --font-color-muted: #9a928c;
+  --background-color: #1e1c1b;
+  --surface-color: #2a2726;
+  --surface-raised-color: #332f2e;
+  --surface-muted-color: #3d3938;
+  --border-color: rgba(211, 171, 158, 0.12);
+  --shadow-ambient: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --shadow-ambient-hover: 0 6px 24px rgba(0, 0, 0, 0.28);
 
   --background: var(--background-color);
   --foreground: var(--font-color-primary);
@@ -142,31 +132,22 @@
   --card-foreground: var(--font-color-primary);
   --popover: var(--surface-color);
   --popover-foreground: var(--font-color-primary);
-  --primary: var(--button-primary-bg);
-  --primary-foreground: var(--button-primary-text);
-  --secondary: oklch(0.269 0 0);
+  --primary: var(--primary-color);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-raised-color);
   --secondary-foreground: var(--font-color-primary);
-  --muted: oklch(0.269 0 0);
+  --muted: var(--surface-muted-color);
   --muted-foreground: var(--font-color-muted);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: var(--font-color-primary);
-  --destructive: var(--button-destructive-bg);
-  --destructive-foreground: var(--button-destructive-text);
+  --accent: rgba(211, 171, 158, 0.15);
+  --accent-foreground: #e8d5cf;
   --border: var(--border-color);
-  --input: oklch(0.269 0 0);
+  --input: var(--border-color);
+  --input-background: var(--surface-raised-color);
   --ring: var(--ring-color);
 
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: var(--surface-color);
   --sidebar-foreground: var(--font-color-primary);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: #f8fafc;
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar-accent: rgba(211, 171, 158, 0.15);
+  --sidebar-accent-foreground: #e8d5cf;
+  --sidebar-border: var(--border-color);
 }

@@ -43,6 +43,7 @@ import TrendAnalysis from "@/features/reports/components/TrendAnalysis";
 import ProfileManagement from "@/features/auth/components/ProfileManagement";
 import BookmarkCenter from "@/features/submissions/components/BookmarkCenter";
 import NotificationCenter from "@/features/notifications/components/NotificationCenter";
+import PageContainer from "@/shared/components/layout/PageContainer";
 import {
   activityData,
   publicationGrowthData,
@@ -50,6 +51,9 @@ import {
   recentPublications,
   trendingTopics,
 } from "@/features/dashboard/api/mockDashboardData";
+
+const CHART_PRIMARY = "#D3AB9E";
+const CHART_TEAL = "#3AC9C1";
 
 export default function Dashboard() {
   const [isLoading] = useState(false);
@@ -130,30 +134,35 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25 mx-auto">
-            <Atom className="w-9 h-9 text-white animate-spin" strokeWidth={2.5} />
+          <div className="w-16 h-16 bg-primary rounded-[var(--radius-card)] flex items-center justify-center mx-auto">
+            <Atom className="w-9 h-9 text-primary-foreground animate-spin" strokeWidth={1.75} />
           </div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const chartTooltipStyle = {
+    backgroundColor: "var(--card)",
+    border: "1px solid var(--border)",
+    borderRadius: "8px",
+    padding: "8px 12px",
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-gray-200">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={2.5} />
+      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
+          <div className="w-9 h-9 bg-primary rounded-[var(--radius-button)] flex items-center justify-center">
+            <Atom className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
           </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground">SciLab</span>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
@@ -162,210 +171,188 @@ export default function Dashboard() {
               <button
                 key={item.id}
                 onClick={() => setActiveNav(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
-                <Icon className="w-5 h-5" strokeWidth={2} />
+                <Icon className="w-5 h-5" strokeWidth={1.75} />
                 <span className="text-sm">{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-[var(--radius-card)] hover:bg-accent cursor-pointer transition-colors"
             onClick={() => setActiveNav("profile")}
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JS</span>
+            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-gray-500 truncate">jane.smith@uni.edu</p>
+              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
+              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
           <div className="flex-1 max-w-xl">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
               <Input
                 type="search"
                 placeholder="Search journals, articles, topics..."
-                className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white"
+                className="pl-10 h-10 bg-background"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+            <button className="relative p-2 hover:bg-accent rounded-[var(--radius-button)] transition-colors">
+              <Bell className="w-5 h-5 text-muted-foreground" strokeWidth={1.75} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
             </button>
 
             <div
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow"
+              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer"
               onClick={() => setActiveNav("profile")}
             >
-              <span className="text-white text-sm font-medium">JS</span>
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-auto p-8">
-          <div className="max-w-[1600px] mx-auto space-y-8">
-            {/* Page Header */}
+        <main className="flex-1 overflow-auto py-8">
+          <PageContainer size="wide" className="space-y-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-500 mt-1">Welcome back, Dr. Smith. Here's your research overview.</p>
+              <h1 className="font-heading text-3xl text-foreground">Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Welcome back, Dr. Smith. Here&apos;s your research overview.</p>
             </div>
 
-            {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="p-6 border-gray-200 hover:shadow-md transition-shadow">
+              <Card className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-500 font-medium">Total Journals</p>
-                    <p className="text-3xl font-bold text-gray-900">1,247</p>
+                    <p className="text-sm text-muted-foreground">Total Journals</p>
+                    <p className="font-heading text-3xl text-foreground">1,247</p>
                   </div>
-                  <div className="w-11 h-11 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-6 h-6 text-primary" />
+                  <div className="w-11 h-11 bg-accent rounded-[var(--radius-card)] flex items-center justify-center">
+                    <BookOpen className="w-6 h-6 text-primary" strokeWidth={1.75} />
                   </div>
                 </div>
                 <div className="flex items-center gap-1 mt-4">
-                  <ArrowUp className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-600">12.5%</span>
-                  <span className="text-sm text-gray-500">vs last month</span>
+                  <ArrowUp className="w-4 h-4 text-teal" strokeWidth={1.75} />
+                  <span className="text-sm text-teal">12.5%</span>
+                  <span className="text-sm text-muted-foreground">vs last month</span>
                 </div>
               </Card>
 
-              <Card className="p-6 border-gray-200 hover:shadow-md transition-shadow">
+              <Card className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-500 font-medium">Total Articles</p>
-                    <p className="text-3xl font-bold text-gray-900">52,384</p>
+                    <p className="text-sm text-muted-foreground">Total Articles</p>
+                    <p className="font-heading text-3xl text-foreground">52,384</p>
                   </div>
-                  <div className="w-11 h-11 bg-indigo-50 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-indigo-600" />
+                  <div className="w-11 h-11 bg-accent rounded-[var(--radius-card)] flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-primary" strokeWidth={1.75} />
                   </div>
                 </div>
                 <div className="flex items-center gap-1 mt-4">
-                  <ArrowUp className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-600">8.3%</span>
-                  <span className="text-sm text-gray-500">vs last month</span>
+                  <ArrowUp className="w-4 h-4 text-teal" strokeWidth={1.75} />
+                  <span className="text-sm text-teal">8.3%</span>
+                  <span className="text-sm text-muted-foreground">vs last month</span>
                 </div>
               </Card>
 
-              <Card className="p-6 border-gray-200 hover:shadow-md transition-shadow">
+              <Card className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-500 font-medium">Top Keywords</p>
-                    <p className="text-3xl font-bold text-gray-900">3,892</p>
+                    <p className="text-sm text-muted-foreground">Top Keywords</p>
+                    <p className="font-heading text-3xl text-foreground">3,892</p>
                   </div>
-                  <div className="w-11 h-11 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <Hash className="w-6 h-6 text-purple-600" />
+                  <div className="w-11 h-11 bg-accent rounded-[var(--radius-card)] flex items-center justify-center">
+                    <Hash className="w-6 h-6 text-primary" strokeWidth={1.75} />
                   </div>
                 </div>
                 <div className="flex items-center gap-1 mt-4">
-                  <ArrowUp className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-600">15.2%</span>
-                  <span className="text-sm text-gray-500">vs last month</span>
+                  <ArrowUp className="w-4 h-4 text-teal" strokeWidth={1.75} />
+                  <span className="text-sm text-teal">15.2%</span>
+                  <span className="text-sm text-muted-foreground">vs last month</span>
                 </div>
               </Card>
 
-              <Card className="p-6 border-gray-200 hover:shadow-md transition-shadow">
+              <Card className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-500 font-medium">Subject Areas</p>
-                    <p className="text-3xl font-bold text-gray-900">284</p>
+                    <p className="text-sm text-muted-foreground">Subject Areas</p>
+                    <p className="font-heading text-3xl text-foreground">284</p>
                   </div>
-                  <div className="w-11 h-11 bg-teal-50 rounded-lg flex items-center justify-center">
-                    <Layers className="w-6 h-6 text-teal-600" />
+                  <div className="w-11 h-11 bg-accent rounded-[var(--radius-card)] flex items-center justify-center">
+                    <Layers className="w-6 h-6 text-teal" strokeWidth={1.75} />
                   </div>
                 </div>
                 <div className="flex items-center gap-1 mt-4">
-                  <ArrowDown className="w-4 h-4 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">2.1%</span>
-                  <span className="text-sm text-gray-500">vs last month</span>
+                  <ArrowDown className="w-4 h-4 text-destructive" strokeWidth={1.75} />
+                  <span className="text-sm text-destructive">2.1%</span>
+                  <span className="text-sm text-muted-foreground">vs last month</span>
                 </div>
               </Card>
             </div>
 
-            {/* Analytics Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Publication Growth Chart */}
-              <Card className="p-6 border-gray-200">
+              <Card className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Publication Growth</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">Monthly publication trends</p>
+                    <h3 className="font-heading text-lg text-foreground">Publication Growth</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">Monthly publication trends</p>
                   </div>
                   <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
-                    <Clock className="w-3.5 h-3.5 mr-1.5" />
+                    <Clock className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.75} />
                     12 Months
                   </Button>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
                   <AreaChart data={publicationGrowthData}>
-                    <defs>
-                      <linearGradient id="publicationGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop key="gradient-start" offset="5%" stopColor="rgb(59, 130, 246)" stopOpacity={0.3} />
-                        <stop key="gradient-end" offset="95%" stopColor="rgb(59, 130, 246)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid key="grid-pub" strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <CartesianGrid key="grid-pub" strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis
                       key="xaxis-pub"
                       dataKey="month"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 12 }}
+                      tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                     />
                     <YAxis
                       key="yaxis-pub"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 12 }}
+                      tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                       tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                     />
-                    <Tooltip
-                      key="tooltip-pub"
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        padding: "8px 12px",
-                      }}
-                    />
+                    <Tooltip key="tooltip-pub" contentStyle={chartTooltipStyle} />
                     <Area
                       key="area-pub"
                       type="monotone"
                       dataKey="publications"
-                      stroke="rgb(59, 130, 246)"
+                      stroke={CHART_PRIMARY}
                       strokeWidth={2}
-                      fill="url(#publicationGradient)"
+                      fill={CHART_PRIMARY}
+                      fillOpacity={0.15}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               </Card>
 
-              {/* Research Activity Timeline */}
-              <Card className="p-6 border-gray-200">
+              <Card className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Research Activity Timeline</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">Articles published by time of day</p>
+                    <h3 className="font-heading text-lg text-foreground">Research Activity Timeline</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">Articles published by time of day</p>
                   </div>
                   <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                     Today
@@ -373,45 +360,36 @@ export default function Dashboard() {
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={activityData}>
-                    <CartesianGrid key="grid-activity" strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <CartesianGrid key="grid-activity" strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis
                       key="xaxis-activity"
                       dataKey="time"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 12 }}
+                      tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                     />
                     <YAxis
                       key="yaxis-activity"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 12 }}
+                      tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                     />
-                    <Tooltip
-                      key="tooltip-activity"
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        padding: "8px 12px",
-                      }}
-                    />
-                    <Bar key="bar-activity" dataKey="articles" fill="rgb(99, 102, 241)" radius={[4, 4, 0, 0]} />
+                    <Tooltip key="tooltip-activity" contentStyle={chartTooltipStyle} />
+                    <Bar key="bar-activity" dataKey="articles" fill={CHART_TEAL} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
             </div>
 
-            {/* Trending Topics */}
-            <Card className="p-6 border-gray-200">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Trending Research Topics</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">Most active research areas this week</p>
+                  <h3 className="font-heading text-lg text-foreground">Trending Research Topics</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">Most active research areas this week</p>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-primary">
+                <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-tag">
                   View All
-                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                  <ChevronRight className="w-3.5 h-3.5 ml-1" strokeWidth={1.75} />
                 </Button>
               </div>
 
@@ -420,30 +398,30 @@ export default function Dashboard() {
                   <div key={index} className="flex items-center gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-sm font-medium text-gray-900">{item.topic}</span>
+                        <span className="text-sm text-foreground">{item.topic}</span>
                         <div
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-button)] text-xs ${
                             item.trend === "up"
-                              ? "bg-green-50 text-green-700"
-                              : "bg-red-50 text-red-700"
+                              ? "bg-teal/10 text-teal"
+                              : "bg-destructive/10 text-destructive"
                           }`}
                         >
                           {item.trend === "up" ? (
-                            <ArrowUp className="w-3 h-3" />
+                            <ArrowUp className="w-3 h-3" strokeWidth={1.75} />
                           ) : (
-                            <ArrowDown className="w-3 h-3" />
+                            <ArrowDown className="w-3 h-3" strokeWidth={1.75} />
                           )}
                           {Math.abs(item.change)}%
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-gray-100 rounded-full h-2">
+                        <div className="flex-1 bg-surface-raised rounded-full h-2">
                           <div
-                            className="bg-primary rounded-full h-2 transition-all"
+                            className="bg-teal rounded-full h-2 transition-all"
                             style={{ width: `${(item.count / trendingTopics[0].count) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm text-gray-600 font-medium min-w-[60px] text-right">
+                        <span className="text-sm text-muted-foreground min-w-[60px] text-right">
                           {item.count.toLocaleString()}
                         </span>
                       </div>
@@ -453,14 +431,12 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            {/* Secondary Widgets */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recently Updated Journals */}
-              <Card className="p-6 border-gray-200">
+              <Card className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Recently Updated Journals</h3>
+                  <h3 className="font-heading text-lg text-foreground">Recently Updated Journals</h3>
                   <Button variant="ghost" size="sm" className="h-8 px-2">
-                    <MoreHorizontal className="w-4 h-4" />
+                    <MoreHorizontal className="w-4 h-4" strokeWidth={1.75} />
                   </Button>
                 </div>
 
@@ -468,34 +444,33 @@ export default function Dashboard() {
                   {recentJournals.map((journal, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="flex items-center gap-4 p-3 rounded-[var(--radius-card)] hover:bg-accent transition-colors cursor-pointer"
                     >
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="w-5 h-5 text-white" />
+                      <div className="w-10 h-10 bg-primary rounded-[var(--radius-card)] flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{journal.name}</p>
+                        <p className="text-sm text-foreground truncate">{journal.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-gray-500">{journal.articles} articles</span>
-                          <span className="text-xs text-gray-300">•</span>
-                          <span className="text-xs text-gray-500">{journal.lastUpdate}</span>
+                          <span className="text-xs text-muted-foreground">{journal.articles} articles</span>
+                          <span className="text-xs text-border">•</span>
+                          <span className="text-xs text-muted-foreground">{journal.lastUpdate}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 text-green-600">
-                        <ArrowUp className="w-3.5 h-3.5" />
-                        <span className="text-sm font-medium">{journal.trend}</span>
+                      <div className="flex items-center gap-1 text-teal">
+                        <ArrowUp className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        <span className="text-sm">{journal.trend}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </Card>
 
-              {/* Recent Publications */}
-              <Card className="p-6 border-gray-200">
+              <Card className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Recent Publications</h3>
+                  <h3 className="font-heading text-lg text-foreground">Recent Publications</h3>
                   <Button variant="ghost" size="sm" className="h-8 px-2">
-                    <MoreHorizontal className="w-4 h-4" />
+                    <MoreHorizontal className="w-4 h-4" strokeWidth={1.75} />
                   </Button>
                 </div>
 
@@ -503,16 +478,16 @@ export default function Dashboard() {
                   {recentPublications.map((publication, index) => (
                     <div
                       key={index}
-                      className="p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="p-3 rounded-[var(--radius-card)] hover:bg-accent transition-colors cursor-pointer"
                     >
-                      <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                      <p className="text-sm text-foreground mb-1 line-clamp-2">
                         {publication.title}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>{publication.journal}</span>
-                        <span className="text-gray-300">•</span>
+                        <span className="text-border">•</span>
                         <span>{publication.time}</span>
-                        <span className="text-gray-300">•</span>
+                        <span className="text-border">•</span>
                         <span>{publication.citations} citations</span>
                       </div>
                     </div>
@@ -520,7 +495,7 @@ export default function Dashboard() {
                 </div>
               </Card>
             </div>
-          </div>
+          </PageContainer>
         </main>
       </div>
     </div>

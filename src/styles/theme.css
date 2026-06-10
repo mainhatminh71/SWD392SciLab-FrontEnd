@@ -2,6 +2,7 @@
 
 @theme inline {
   --font-sans: var(--font-family-sans);
+  --font-serif: var(--font-family-heading);
   --font-mono: var(--font-family-mono);
 
   --color-background: var(--background);
@@ -30,10 +31,15 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-teal: var(--secondary-color);
+  --color-tag: var(--tag-text-color);
+  --color-surface-raised: var(--surface-raised-color);
+  --color-surface-muted: var(--surface-muted-color);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
+  --shadow-ambient: var(--shadow-ambient);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -59,58 +65,71 @@
     font-family: var(--font-family-sans);
   }
 
-  h1 {
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-normal);
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-family-heading);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-tight);
     color: var(--font-color-primary);
+  }
+
+  h1 {
+    font-size: var(--font-size-4xl);
   }
 
   h2 {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-normal);
-    color: var(--font-color-primary);
+    font-size: var(--font-size-3xl);
   }
 
   h3 {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-normal);
-    color: var(--font-color-primary);
+    font-size: var(--font-size-2xl);
   }
 
   h4 {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-normal);
-    color: var(--font-color-primary);
+    font-size: var(--font-size-xl);
   }
 
   p {
     color: var(--font-color-secondary);
-    line-height: var(--line-height-normal);
+    line-height: var(--line-height-relaxed);
   }
 
   label {
-    font-size: var(--font-size-base);
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-normal);
     color: var(--font-color-primary);
   }
 
   button {
     font-family: var(--font-family-sans);
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-normal);
   }
 
-  input {
+  input,
+  textarea,
+  select {
     font-family: var(--font-family-sans);
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-normal);
-    line-height: var(--line-height-normal);
     color: var(--font-color-primary);
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-family-heading);
+    font-weight: var(--font-weight-normal);
+  }
+
+  .shadow-ambient {
+    box-shadow: var(--shadow-ambient);
+  }
+
+  .shadow-ambient-hover {
+    box-shadow: var(--shadow-ambient-hover);
   }
 }

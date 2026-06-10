@@ -75,13 +75,13 @@ function getStatusStyles(status: ApiSourceStatus) {
   switch (status) {
     case "active":
       return {
-        badge: "bg-green-50 text-green-700 border-green-200",
+        badge: "bg-teal/10 text-teal border-border",
         dot: "bg-green-500",
         label: "Active",
       };
     case "disabled":
       return {
-        badge: "bg-gray-100 text-gray-600 border-gray-200",
+        badge: "bg-surface-raised text-muted-foreground border-border",
         dot: "bg-gray-400",
         label: "Disabled",
       };
@@ -99,7 +99,7 @@ function getHealthStyles(health: ConnectionHealth) {
     case "healthy":
       return {
         icon: CheckCircle2,
-        className: "text-green-600",
+        className: "text-teal",
         bg: "bg-green-50",
         label: "Healthy",
       };
@@ -120,8 +120,8 @@ function getHealthStyles(health: ConnectionHealth) {
     case "unknown":
       return {
         icon: Activity,
-        className: "text-gray-500",
-        bg: "bg-gray-100",
+        className: "text-muted-foreground",
+        bg: "bg-surface-raised",
         label: "Unknown",
       };
   }
@@ -158,20 +158,19 @@ function ProviderCard({
   const isTesting = testingId === source.id;
 
   return (
-    <Card className="group relative overflow-hidden border border-gray-200 bg-white hover:border-gray-300 hover:shadow-md transition-all">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+    <Card className="group relative overflow-hidden border border-border bg-card hover:border-primary/30 transition-all">
 
       <div className="p-6 space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4 min-w-0">
-            <div className="w-12 h-12 rounded-xl bg-slate-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-bold text-slate-700">
+            <div className="w-12 h-12 rounded-[var(--radius-card)] bg-accent border border-border flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-foreground">
                 {providerIcons[source.providerId]}
               </span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-semibold text-gray-900">{source.name}</h3>
+                <h3 className="font-heading text-base text-foreground">{source.name}</h3>
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${status.badge}`}
                 >
@@ -179,13 +178,13 @@ function ProviderCard({
                   {status.label}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 mt-1 line-clamp-2">{source.description}</p>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{source.description}</p>
             </div>
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -215,41 +214,41 @@ function ProviderCard({
         </div>
 
         <div className="grid grid-cols-1 gap-3">
-          <div className="rounded-lg border border-gray-100 bg-slate-50/80 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1">
+          <div className="rounded-lg border border-border bg-background/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
               Endpoint
             </p>
             <div className="flex items-center gap-2 min-w-0">
-              <Globe2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <p className="text-sm font-mono text-gray-800 truncate">{source.endpoint}</p>
+              <Globe2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <p className="text-sm font-mono text-foreground truncate">{source.endpoint}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-gray-100 bg-slate-50/80 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1">
+            <div className="rounded-lg border border-border bg-background/80 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 Last Sync
               </p>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-foreground">
                 {formatRelativeTime(source.lastSync)}
               </p>
             </div>
 
-            <div className="rounded-lg border border-gray-100 bg-slate-50/80 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1">
+            <div className="rounded-lg border border-border bg-background/80 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                 Connection Health
               </p>
               <div className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-md flex items-center justify-center ${health.bg}`}>
                   <HealthIcon className={`w-4 h-4 ${health.className}`} />
                 </div>
-                <span className="text-sm font-medium text-gray-900">{health.label}</span>
+                <span className="text-sm font-medium text-foreground">{health.label}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+        <div className="flex items-center gap-2 pt-1 border-t border-border">
           <Button
             variant="outline"
             size="sm"
@@ -364,7 +363,7 @@ function SourceFormDialog({
             <Label htmlFor="provider">Provider</Label>
             <select
               id="provider"
-              className="w-full h-11 px-4 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full h-11 px-4 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               value={values.providerId}
               onChange={(event) => handleProviderChange(event.target.value as ApiProviderId)}
             >
@@ -557,33 +556,33 @@ export default function ApiSourceConfiguration() {
     <AdminShell
       title="API Source Configuration"
       subtitle={`${stats.active} active · ${stats.healthy} healthy connections`}
-      icon={<Database className="w-5 h-5 text-white" strokeWidth={2.5} />}
+      icon={<Database className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />}
       headerAction={
-        <Button onClick={openAddDialog} className="shadow-sm shadow-primary/20">
+        <Button onClick={openAddDialog}>
           <Plus className="w-4 h-4" />
           Add Source
         </Button>
       }
     >
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        <Card className="p-6 border-gray-200 bg-white">
+      <div className="space-y-6">
+        <Card className="p-6 border-border bg-card">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">External Data Providers</h2>
-              <p className="text-sm text-gray-500 mt-1 max-w-2xl">
+              <h2 className="font-heading text-lg text-foreground">External Data Providers</h2>
+              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
                 Manage academic API integrations used for publication metadata, journal rankings,
                 and citation enrichment. Inspired by integration marketplaces like Vercel and
                 Supabase.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+              <span className="inline-flex items-center rounded-full border border-border bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
                 {stats.active} Active
               </span>
-              <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+              <span className="inline-flex items-center rounded-full border border-border bg-accent px-3 py-1 text-xs font-medium text-tag">
                 {stats.healthy} Healthy
               </span>
-              <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
+              <span className="inline-flex items-center rounded-full border border-border bg-surface-raised px-3 py-1 text-xs font-medium text-muted-foreground">
                 {stats.disabled} Disabled
               </span>
             </div>
@@ -604,14 +603,14 @@ export default function ApiSourceConfiguration() {
           ))}
         </div>
 
-        <Card className="p-5 border-dashed border-gray-300 bg-white/70">
+        <Card className="p-5 border-dashed border-border bg-card/70">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-              <Database className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
+              <Database className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">Need another provider?</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm font-medium text-foreground">Need another provider?</p>
+              <p className="text-sm text-muted-foreground mt-1">
                 Add custom REST endpoints for institutional repositories, PubMed, or internal
                 research databases.
               </p>

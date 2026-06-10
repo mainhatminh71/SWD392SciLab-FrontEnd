@@ -30,6 +30,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
+import PageContainer from "@/shared/components/layout/PageContainer";
 import { Label } from "@/shared/components/ui/label";
 import {
   LineChart,
@@ -61,11 +62,11 @@ const multiTrendData = [
 ];
 
 const growthComparisonData = [
-  { keyword: "Artificial Intelligence", current: 8800, previous: 5200, growth: 69.2, color: "#3b82f6" },
-  { keyword: "Machine Learning", current: 6800, previous: 4500, growth: 51.1, color: "#8b5cf6" },
-  { keyword: "Climate Science", current: 4900, previous: 3400, growth: 44.1, color: "#10b981" },
-  { keyword: "Quantum Computing", current: 2900, previous: 1800, growth: 61.1, color: "#f59e0b" },
-  { keyword: "CRISPR Technology", current: 2280, previous: 2100, growth: 8.6, color: "#ef4444" },
+  { keyword: "Artificial Intelligence", current: 8800, previous: 5200, growth: 69.2, color: "#D3AB9E" },
+  { keyword: "Machine Learning", current: 6800, previous: 4500, growth: 51.1, color: "#3AC9C1" },
+  { keyword: "Climate Science", current: 4900, previous: 3400, growth: 44.1, color: "#8AAFA8" },
+  { keyword: "Quantum Computing", current: 2900, previous: 1800, growth: 61.1, color: "#C4B5A8" },
+  { keyword: "CRISPR Technology", current: 2280, previous: 2100, growth: 8.6, color: "#5C534E" },
 ];
 
 const velocityData = [
@@ -99,11 +100,11 @@ const topJournals = [
 ];
 
 const trendKeywords = [
-  { id: "1", label: "Artificial Intelligence", color: "#3b82f6", dataKey: "ai" },
-  { id: "2", label: "Machine Learning", color: "#8b5cf6", dataKey: "ml" },
-  { id: "3", label: "Quantum Computing", color: "#f59e0b", dataKey: "quantum" },
-  { id: "4", label: "CRISPR Technology", color: "#ef4444", dataKey: "crispr" },
-  { id: "5", label: "Climate Science", color: "#10b981", dataKey: "climate" },
+  { id: "1", label: "Artificial Intelligence", color: "#D3AB9E", dataKey: "ai" },
+  { id: "2", label: "Machine Learning", color: "#3AC9C1", dataKey: "ml" },
+  { id: "3", label: "Quantum Computing", color: "#8AAFA8", dataKey: "quantum" },
+  { id: "4", label: "CRISPR Technology", color: "#C4B5A8", dataKey: "crispr" },
+  { id: "5", label: "Climate Science", color: "#5C534E", dataKey: "climate" },
 ];
 
 export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
@@ -152,7 +153,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
     const configs = {
       explosive: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
       strong: { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200" },
-      growing: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
+      growing: { bg: "bg-accent", text: "text-tag", border: "border-border" },
     };
     const config = configs[momentum as keyof typeof configs];
     return (
@@ -163,15 +164,15 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
         {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-gray-200">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground tracking-tight">SciLab</span>
         </div>
 
         {/* Navigation */}
@@ -183,13 +184,13 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <Icon className="w-5 h-5" strokeWidth={2} />
+                <Icon className="w-5 h-5" strokeWidth={1.75} />
                 <span className="text-sm">{item.label}</span>
               </button>
             );
@@ -197,17 +198,17 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
             onClick={() => onNavigate && onNavigate("profile")}
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JS</span>
+            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-gray-500 truncate">jane.smith@uni.edu</p>
+              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
+              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
             </div>
           </div>
         </div>
@@ -216,15 +217,15 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
           <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-indigo-600 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                <TrendingUp className="w-5 h-5 text-white" strokeWidth={2.5} />
+              <div className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                <TrendingUp className="w-5 h-5 text-white" strokeWidth={1.75} />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg font-bold text-gray-900 truncate">Trend Analysis</h1>
-                <p className="text-xs text-gray-500 truncate">Real-time research intelligence</p>
+                <h1 className="font-heading text-lg text-foreground truncate">Trend Analysis</h1>
+                <p className="text-xs text-muted-foreground truncate">Real-time research intelligence</p>
               </div>
             </div>
           </div>
@@ -241,28 +242,28 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
 
             <div className="w-px h-6 bg-gray-200 mx-1"></div>
 
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
+            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
+              <Bell className="w-5 h-5 text-muted-foreground" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
             <div
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow"
+              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
               onClick={() => onNavigate && onNavigate("profile")}
             >
-              <span className="text-white text-sm font-medium">JS</span>
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8">
-          <div className="max-w-[1600px] mx-auto space-y-6">
+        <main className="flex-1 overflow-auto py-8">
+          <PageContainer size="wide" className="space-y-6">
             {/* Filters Panel */}
-            <Card className="p-6 border-gray-200 bg-white">
+            <Card className="p-6 border-border bg-card">
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-base font-semibold text-gray-900 truncate">Analysis Filters</h2>
+                  <h2 className="text-base font-semibold text-foreground truncate">Analysis Filters</h2>
                   <Button variant="ghost" size="sm" className="text-xs flex-shrink-0">
                     Reset All
                   </Button>
@@ -275,7 +276,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                       Keywords
                     </Label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="keyword-input"
                         type="text"
@@ -294,7 +295,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                     </Label>
                     <select
                       id="date-range"
-                      className="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                       value={dateRange}
                       onChange={(e) => setDateRange(e.target.value)}
                     >
@@ -314,7 +315,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                     </Label>
                     <select
                       id="journal-filter"
-                      className="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                       value={selectedJournal}
                       onChange={(e) => setSelectedJournal(e.target.value)}
                     >
@@ -333,7 +334,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                     </Label>
                     <select
                       id="subject-filter"
-                      className="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                       value={selectedSubject}
                       onChange={(e) => setSelectedSubject(e.target.value)}
                     >
@@ -352,7 +353,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                       Topics
                     </Label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="topic-input"
                         type="text"
@@ -374,7 +375,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 max-w-xs ${
                           selectedKeywords.includes(keyword.dataKey)
                             ? "text-white shadow-sm"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            : "bg-surface-raised text-muted-foreground hover:bg-gray-200"
                         }`}
                         style={
                           selectedKeywords.includes(keyword.dataKey)
@@ -399,69 +400,69 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
 
             {/* Key Metrics */}
             <div className="grid grid-cols-4 gap-6">
-              <Card className="p-6 border-gray-200 bg-gradient-to-br from-blue-50 to-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-blue-600" strokeWidth={2.5} />
+                  <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-primary" strokeWidth={1.75} />
                   </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
+                  <span className="px-2 py-1 bg-teal/10 text-teal text-xs font-semibold rounded">
                     +18.4%
                   </span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">23,450</p>
-                <p className="text-sm text-gray-600 truncate">Total Publications</p>
-                <p className="text-xs text-gray-500 mt-1 truncate">Last 6 months</p>
+                <p className="font-heading text-3xl text-foreground mb-1">23,450</p>
+                <p className="text-sm text-muted-foreground truncate">Total Publications</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">Last 6 months</p>
               </Card>
 
-              <Card className="p-6 border-gray-200 bg-gradient-to-br from-purple-50 to-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-purple-600" strokeWidth={2.5} />
+                  <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-primary" strokeWidth={1.75} />
                   </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
+                  <span className="px-2 py-1 bg-teal/10 text-teal text-xs font-semibold rounded">
                     +12.7%
                   </span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">580</p>
-                <p className="text-sm text-gray-600 truncate">Weekly Velocity</p>
-                <p className="text-xs text-gray-500 mt-1 truncate">Publications/week</p>
+                <p className="font-heading text-3xl text-foreground mb-1">580</p>
+                <p className="text-sm text-muted-foreground truncate">Weekly Velocity</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">Publications/week</p>
               </Card>
 
-              <Card className="p-6 border-gray-200 bg-gradient-to-br from-orange-50 to-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-orange-600" strokeWidth={2.5} />
+                    <Activity className="w-5 h-5 text-orange-600" strokeWidth={1.75} />
                   </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
+                  <span className="px-2 py-1 bg-teal/10 text-teal text-xs font-semibold rounded">
                     +156.3%
                   </span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">8</p>
-                <p className="text-sm text-gray-600 truncate">Emerging Topics</p>
-                <p className="text-xs text-gray-500 mt-1 truncate">High momentum</p>
+                <p className="font-heading text-3xl text-foreground mb-1">8</p>
+                <p className="text-sm text-muted-foreground truncate">Emerging Topics</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">High momentum</p>
               </Card>
 
-              <Card className="p-6 border-gray-200 bg-gradient-to-br from-green-50 to-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5 text-green-600" strokeWidth={2.5} />
+                    <BarChart3 className="w-5 h-5 text-teal" strokeWidth={1.75} />
                   </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
+                  <span className="px-2 py-1 bg-teal/10 text-teal text-xs font-semibold rounded">
                     +69.2%
                   </span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">AI</p>
-                <p className="text-sm text-gray-600 truncate">Top Trending Keyword</p>
-                <p className="text-xs text-gray-500 mt-1 truncate">8,800 publications</p>
+                <p className="font-heading text-3xl text-foreground mb-1">AI</p>
+                <p className="text-sm text-muted-foreground truncate">Top Trending Keyword</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">8,800 publications</p>
               </Card>
             </div>
 
             {/* Main Trend Chart */}
-            <Card className="p-6 border-gray-200 bg-white">
+            <Card className="p-6 border-border bg-card">
               <div className="flex items-center justify-between mb-6 gap-4">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900 truncate">Publication Trends</h2>
-                  <p className="text-sm text-gray-500 mt-0.5 truncate">Multi-keyword comparison over time</p>
+                  <h2 className="font-heading text-lg text-foreground truncate">Publication Trends</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 truncate">Multi-keyword comparison over time</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" className="h-8 px-3">
@@ -507,54 +508,19 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                     iconType="line"
                   />
                   {selectedKeywords.includes("ai") && (
-                    <Line
-                      type="monotone"
-                      dataKey="ai"
-                      stroke="#3b82f6"
-                      strokeWidth={3}
-                      dot={false}
-                      name="Artificial Intelligence"
-                    />
+                    <Line type="monotone" dataKey="ai" stroke="#D3AB9E" strokeWidth={2} dot={false} name="Artificial Intelligence" />
                   )}
                   {selectedKeywords.includes("ml") && (
-                    <Line
-                      type="monotone"
-                      dataKey="ml"
-                      stroke="#8b5cf6"
-                      strokeWidth={3}
-                      dot={false}
-                      name="Machine Learning"
-                    />
+                    <Line type="monotone" dataKey="ml" stroke="#3AC9C1" strokeWidth={2} dot={false} name="Machine Learning" />
                   )}
                   {selectedKeywords.includes("quantum") && (
-                    <Line
-                      type="monotone"
-                      dataKey="quantum"
-                      stroke="#f59e0b"
-                      strokeWidth={3}
-                      dot={false}
-                      name="Quantum Computing"
-                    />
+                    <Line type="monotone" dataKey="quantum" stroke="#8AAFA8" strokeWidth={2} dot={false} name="Quantum Computing" />
                   )}
                   {selectedKeywords.includes("crispr") && (
-                    <Line
-                      type="monotone"
-                      dataKey="crispr"
-                      stroke="#ef4444"
-                      strokeWidth={3}
-                      dot={false}
-                      name="CRISPR Technology"
-                    />
+                    <Line type="monotone" dataKey="crispr" stroke="#C4B5A8" strokeWidth={2} dot={false} name="CRISPR Technology" />
                   )}
                   {selectedKeywords.includes("climate") && (
-                    <Line
-                      type="monotone"
-                      dataKey="climate"
-                      stroke="#10b981"
-                      strokeWidth={3}
-                      dot={false}
-                      name="Climate Science"
-                    />
+                    <Line type="monotone" dataKey="climate" stroke="#5C534E" strokeWidth={2} dot={false} name="Climate Science" />
                   )}
                 </LineChart>
               </ResponsiveContainer>
@@ -563,10 +529,10 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
             {/* Growth Comparison & Velocity */}
             <div className="grid grid-cols-2 gap-6">
               {/* Growth Comparison */}
-              <Card className="p-6 border-gray-200 bg-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="mb-6 min-w-0">
-                  <h2 className="text-lg font-semibold text-gray-900 truncate">Growth Comparison</h2>
-                  <p className="text-sm text-gray-500 mt-0.5 truncate">6-month period-over-period analysis</p>
+                  <h2 className="font-heading text-lg text-foreground truncate">Growth Comparison</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 truncate">6-month period-over-period analysis</p>
                 </div>
 
                 <div className="space-y-4">
@@ -578,19 +544,19 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                             className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: item.color }}
                           ></div>
-                          <span className="text-sm font-medium text-gray-900 truncate">{item.keyword}</span>
+                          <span className="text-sm font-medium text-foreground truncate">{item.keyword}</span>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
-                          <span className="text-sm text-gray-600 whitespace-nowrap">
+                          <span className="text-sm text-muted-foreground whitespace-nowrap">
                             {item.previous.toLocaleString()} → {item.current.toLocaleString()}
                           </span>
                           <span
                             className={`px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1 whitespace-nowrap ${
                               item.growth > 50
-                                ? "bg-green-100 text-green-700"
+                                ? "bg-teal/10 text-teal"
                                 : item.growth > 25
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-gray-100 text-gray-700"
+                                ? "bg-accent text-tag"
+                                : "bg-surface-raised text-muted-foreground"
                             }`}
                           >
                             <ArrowUp className="w-3 h-3" />
@@ -598,7 +564,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                           </span>
                         </div>
                       </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-surface-raised rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
@@ -613,10 +579,10 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
               </Card>
 
               {/* Publication Velocity */}
-              <Card className="p-6 border-gray-200 bg-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="mb-6 min-w-0">
-                  <h2 className="text-lg font-semibold text-gray-900 truncate">Publication Velocity</h2>
-                  <p className="text-sm text-gray-500 mt-0.5 truncate">Weekly publication rate vs. average</p>
+                  <h2 className="font-heading text-lg text-foreground truncate">Publication Velocity</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 truncate">Weekly publication rate vs. average</p>
                 </div>
 
                 <ResponsiveContainer width="100%" height={280}>
@@ -646,21 +612,8 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                     <Legend
                       wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
                     />
-                    <Bar
-                      dataKey="velocity"
-                      fill="#3b82f6"
-                      radius={[4, 4, 0, 0]}
-                      name="Weekly Publications"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avg"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={false}
-                      name="Average"
-                    />
+                    <Bar dataKey="velocity" fill="#3AC9C1" radius={[4, 4, 0, 0]} name="Weekly Publications" />
+                    <Line type="monotone" dataKey="avg" stroke="#D3AB9E" strokeWidth={1.75} strokeDasharray="5 5" dot={false} name="Average" />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
@@ -669,11 +622,11 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
             {/* Emerging Topics & Top Journals */}
             <div className="grid grid-cols-3 gap-6">
               {/* Emerging Topics */}
-              <Card className="col-span-2 p-6 border-gray-200 bg-white">
+              <Card className="col-span-2 p-6 border-border bg-card">
                 <div className="flex items-center justify-between mb-6 gap-4">
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-semibold text-gray-900 truncate">Emerging Topics</h2>
-                    <p className="text-sm text-gray-500 mt-0.5 truncate">High-momentum research areas</p>
+                    <h2 className="font-heading text-lg text-foreground truncate">Emerging Topics</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5 truncate">High-momentum research areas</p>
                   </div>
                   <Button variant="outline" size="sm" className="h-8 px-3">
                     View All
@@ -684,14 +637,14 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                   {emergingTopics.map((topic, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg border border-gray-200 transition-colors"
+                      className="flex items-center justify-between p-4 bg-background hover:bg-accent rounded-lg border border-border transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-sm font-semibold text-gray-900 truncate">{topic.topic}</h3>
+                          <h3 className="text-sm font-semibold text-foreground truncate">{topic.topic}</h3>
                           {getMomentumBadge(topic.momentum)}
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-gray-600 flex-wrap">
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1 whitespace-nowrap">
                             <FileText className="w-3.5 h-3.5" />
                             {topic.publications.toLocaleString()} publications
@@ -702,7 +655,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                           </span>
                           <span
                             className={`flex items-center gap-1 font-semibold whitespace-nowrap ${
-                              topic.growth > 100 ? "text-red-600" : "text-green-600"
+                              topic.growth > 100 ? "text-red-600" : "text-teal"
                             }`}
                           >
                             <ArrowUp className="w-3.5 h-3.5" />
@@ -734,10 +687,10 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
               </Card>
 
               {/* Top Journals */}
-              <Card className="p-6 border-gray-200 bg-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="mb-6 min-w-0">
-                  <h2 className="text-lg font-semibold text-gray-900 truncate">Top Journals</h2>
-                  <p className="text-sm text-gray-500 mt-0.5 truncate">Publication share</p>
+                  <h2 className="font-heading text-lg text-foreground truncate">Top Journals</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 truncate">Publication share</p>
                 </div>
 
                 <div className="space-y-4">
@@ -745,32 +698,32 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <span className="text-sm font-semibold text-gray-900 flex-shrink-0">
+                          <span className="text-sm font-semibold text-foreground flex-shrink-0">
                             {index + 1}.
                           </span>
-                          <span className="text-sm font-medium text-gray-900 truncate">{journal.name}</span>
+                          <span className="text-sm font-medium text-foreground truncate">{journal.name}</span>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {journal.trend === "up" ? (
-                            <ArrowUp className="w-3.5 h-3.5 text-green-600" />
+                            <ArrowUp className="w-3.5 h-3.5 text-teal" />
                           ) : journal.trend === "down" ? (
                             <ArrowDown className="w-3.5 h-3.5 text-red-600" />
                           ) : (
-                            <Minus className="w-3.5 h-3.5 text-gray-400" />
+                            <Minus className="w-3.5 h-3.5 text-muted-foreground" />
                           )}
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-sm font-semibold text-foreground">
                             {journal.share}%
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-surface-raised rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
+                            className="h-full bg-teal rounded-full"
                             style={{ width: `${journal.share * 5}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs text-gray-500 w-12 text-right">
+                        <span className="text-xs text-muted-foreground w-12 text-right">
                           {journal.publications}
                         </span>
                       </div>
@@ -779,7 +732,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
                 </div>
               </Card>
             </div>
-          </div>
+          </PageContainer>
         </main>
       </div>
     </div>

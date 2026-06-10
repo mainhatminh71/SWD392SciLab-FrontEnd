@@ -24,6 +24,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
+import PageContainer from "@/shared/components/layout/PageContainer";
 import { Label } from "@/shared/components/ui/label";
 
 interface BookmarkCenterProps {
@@ -177,15 +178,15 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
         {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-gray-200">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground tracking-tight">SciLab</span>
         </div>
 
         {/* Navigation */}
@@ -197,13 +198,13 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <Icon className="w-5 h-5" strokeWidth={2} />
+                <Icon className="w-5 h-5" strokeWidth={1.75} />
                 <span className="text-sm">{item.label}</span>
               </button>
             );
@@ -211,17 +212,17 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
             onClick={() => onNavigate && onNavigate("profile")}
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JS</span>
+            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-gray-500 truncate">jane.smith@uni.edu</p>
+              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
+              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
             </div>
           </div>
         </div>
@@ -230,58 +231,58 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-sm">
-                <Bookmark className="w-5 h-5 text-white" strokeWidth={2.5} />
+              <div className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center shadow-sm">
+                <Bookmark className="w-5 h-5 text-white" strokeWidth={1.75} />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg font-bold text-gray-900 truncate">Bookmark Center</h1>
-                <p className="text-xs text-gray-500 truncate">Your research library</p>
+                <h1 className="font-heading text-lg text-foreground truncate">Bookmark Center</h1>
+                <p className="text-xs text-muted-foreground truncate">Your research library</p>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
+            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
+              <Bell className="w-5 h-5 text-muted-foreground" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
             <div
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow"
+              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
               onClick={() => onNavigate && onNavigate("profile")}
             >
-              <span className="text-white text-sm font-medium">JS</span>
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8">
-          <div className="max-w-[1400px] mx-auto space-y-6">
+        <main className="flex-1 overflow-auto py-8">
+          <PageContainer size="wide" className="space-y-6">
             {/* Stats & Search Bar */}
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <FolderOpen className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                    <FolderOpen className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{filteredBookmarks.length}</p>
-                    <p className="text-sm text-gray-600">Saved Articles</p>
+                    <p className="font-heading text-2xl text-foreground">{filteredBookmarks.length}</p>
+                    <p className="text-sm text-muted-foreground">Saved Articles</p>
                   </div>
                 </div>
               </div>
 
               <div className="flex-1 max-w-xl">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder="Search bookmarks by title or keywords..."
-                    className="pl-10 h-11 bg-white border-gray-200 shadow-sm"
+                    className="pl-10 h-11 bg-card border-border shadow-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -305,9 +306,9 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
 
             {/* Filters Panel */}
             {showFilters && (
-              <Card className="p-6 border-gray-200 bg-white">
+              <Card className="p-6 border-border bg-card">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-semibold text-gray-900 truncate">Filter Options</h2>
+                  <h2 className="text-base font-semibold text-foreground truncate">Filter Options</h2>
                   {activeFilterCount > 0 && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs flex-shrink-0">
                       Clear All
@@ -324,7 +325,7 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                     <div className="relative">
                       <select
                         id="journal-filter"
-                        className="w-full h-10 px-3 pr-8 bg-white border border-gray-200 rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full h-10 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                         value={selectedJournal}
                         onChange={(e) => setSelectedJournal(e.target.value)}
                       >
@@ -334,7 +335,7 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
 
@@ -346,7 +347,7 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                     <div className="relative">
                       <select
                         id="year-filter"
-                        className="w-full h-10 px-3 pr-8 bg-white border border-gray-200 rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full h-10 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
                       >
@@ -356,7 +357,7 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
 
@@ -368,7 +369,7 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                     <div className="relative">
                       <select
                         id="topic-filter"
-                        className="w-full h-10 px-3 pr-8 bg-white border border-gray-200 rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full h-10 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                         value={selectedTopic}
                         onChange={(e) => setSelectedTopic(e.target.value)}
                       >
@@ -378,7 +379,7 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
 
@@ -402,13 +403,13 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
 
             {/* Empty State */}
             {filteredBookmarks.length === 0 && (
-              <Card className="p-12 border-gray-200 bg-white">
+              <Card className="p-12 border-border bg-card">
                 <div className="text-center max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BookmarkX className="w-8 h-8 text-gray-400" />
+                  <div className="w-16 h-16 bg-surface-raised rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BookmarkX className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookmarks found</h3>
-                  <p className="text-sm text-gray-600 mb-6">
+                  <h3 className="font-heading text-lg text-foreground mb-2">No bookmarks found</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
                     {searchQuery || activeFilterCount > 0
                       ? "Try adjusting your search or filters to find what you're looking for."
                       : "Start building your research library by bookmarking articles that interest you."}
@@ -435,11 +436,11 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                 {filteredBookmarks.map((bookmark) => (
                   <Card
                     key={bookmark.id}
-                    className="p-6 border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all bg-white"
+                    className="p-6 border-border  hover:border-border transition-all bg-card"
                   >
                     <div className="flex gap-6">
                       {/* Bookmark Icon */}
-                      <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center flex-shrink-0">
                         <Bookmark className="w-6 h-6 text-amber-600 fill-amber-600" />
                       </div>
 
@@ -447,14 +448,14 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                       <div className="flex-1 min-w-0">
                         {/* Title */}
                         <h3
-                          className="text-xl font-semibold text-gray-900 mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2"
+                          className="font-heading text-xl text-foreground mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2"
                           onClick={() => handleOpenArticle(bookmark.id)}
                         >
                           {bookmark.title}
                         </h3>
 
                         {/* Authors */}
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                           <span className="truncate">
                             {bookmark.authors.slice(0, 3).join(", ")}
                             {bookmark.authors.length > 3 && " et al."}
@@ -462,12 +463,12 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                         </div>
 
                         {/* Journal & Year */}
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                           <div className="flex items-center gap-1.5">
                             <BookOpen className="w-4 h-4 flex-shrink-0" />
                             <span className="font-medium truncate">{bookmark.journal}</span>
                           </div>
-                          <span className="text-gray-300">•</span>
+                          <span className="text-border">•</span>
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-4 h-4 flex-shrink-0" />
                             <span>{bookmark.year}</span>
@@ -479,20 +480,20 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                           {bookmark.keywords.slice(0, 4).map((keyword) => (
                             <span
                               key={keyword}
-                              className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-md"
+                              className="px-3 py-1 bg-accent text-tag text-xs font-medium rounded-md"
                             >
                               {keyword}
                             </span>
                           ))}
                           {bookmark.keywords.length > 4 && (
-                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
+                            <span className="px-3 py-1 bg-surface-raised text-muted-foreground text-xs font-medium rounded-md">
                               +{bookmark.keywords.length - 4} more
                             </span>
                           )}
                         </div>
 
                         {/* Date Bookmarked */}
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           Bookmarked on {new Date(bookmark.dateBookmarked).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
@@ -527,7 +528,7 @@ export default function BookmarkCenter({ onNavigate, onViewArticle }: BookmarkCe
                 ))}
               </div>
             )}
-          </div>
+          </PageContainer>
         </main>
       </div>
     </div>

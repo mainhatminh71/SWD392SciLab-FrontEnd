@@ -194,15 +194,15 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "journal":
-        return { bg: "bg-blue-50", text: "text-blue-700", icon: "text-blue-600" };
+        return { bg: "bg-accent", text: "text-tag", icon: "text-primary" };
       case "topic":
-        return { bg: "bg-purple-50", text: "text-purple-700", icon: "text-purple-600" };
+        return { bg: "bg-accent", text: "text-tag", icon: "text-primary" };
       case "publication":
-        return { bg: "bg-green-50", text: "text-green-700", icon: "text-green-600" };
+        return { bg: "bg-green-50", text: "text-green-700", icon: "text-teal" };
       case "system":
-        return { bg: "bg-gray-50", text: "text-gray-700", icon: "text-gray-600" };
+        return { bg: "bg-surface-raised", text: "text-muted-foreground", icon: "text-muted-foreground" };
       default:
-        return { bg: "bg-blue-50", text: "text-blue-700", icon: "text-blue-600" };
+        return { bg: "bg-accent", text: "text-tag", icon: "text-primary" };
     }
   };
 
@@ -214,15 +214,15 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
         {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-gray-200">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground tracking-tight">SciLab</span>
         </div>
 
         {/* Navigation */}
@@ -234,13 +234,13 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <Icon className="w-5 h-5" strokeWidth={2} />
+                <Icon className="w-5 h-5" strokeWidth={1.75} />
                 <span className="text-sm">{item.label}</span>
               </button>
             );
@@ -248,17 +248,17 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
             onClick={() => onNavigate && onNavigate("profile")}
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JS</span>
+            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-gray-500 truncate">jane.smith@uni.edu</p>
+              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
+              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
             </div>
           </div>
         </div>
@@ -267,15 +267,15 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
           <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                <Bell className="w-5 h-5 text-white" strokeWidth={2.5} />
+              <div className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                <Bell className="w-5 h-5 text-white" strokeWidth={1.75} />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg font-bold text-gray-900 truncate">Notifications</h1>
-                <p className="text-xs text-gray-500 truncate">
+                <h1 className="font-heading text-lg text-foreground truncate">Notifications</h1>
+                <p className="text-xs text-muted-foreground truncate">
                   {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
                 </p>
               </div>
@@ -283,18 +283,18 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
+            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
+              <Bell className="w-5 h-5 text-muted-foreground" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </button>
 
             <div
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow"
+              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
               onClick={() => onNavigate && onNavigate("profile")}
             >
-              <span className="text-white text-sm font-medium">JS</span>
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
           </div>
         </header>
@@ -318,7 +318,7 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                             isActive
                               ? "bg-primary text-white shadow-sm"
-                              : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                              : "bg-card text-muted-foreground hover:bg-accent border border-border"
                           }`}
                         >
                           <Icon className="w-4 h-4" />
@@ -344,13 +344,13 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                 {/* Notifications List */}
                 <div className="space-y-2">
                   {filteredNotifications.length === 0 ? (
-                    <Card className="p-12 border-gray-200 bg-white">
+                    <Card className="p-12 border-border bg-card">
                       <div className="text-center max-w-md mx-auto">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Bell className="w-8 h-8 text-gray-400" />
+                        <div className="w-16 h-16 bg-surface-raised rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Bell className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No notifications</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="font-heading text-lg text-foreground mb-2">No notifications</h3>
+                        <p className="text-sm text-muted-foreground">
                           You're all caught up! Check back later for new updates.
                         </p>
                       </div>
@@ -363,31 +363,31 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                       return (
                         <Card
                           key={notification.id}
-                          className={`p-5 border-gray-200 hover:border-gray-300 transition-all ${
-                            notification.isRead ? "bg-white" : "bg-blue-50/50 border-l-4 border-l-primary"
+                          className={`p-5 border-border hover:border-border transition-all ${
+                            notification.isRead ? "bg-card" : "bg-accent/50 border-l-4 border-l-primary"
                           }`}
                         >
                           <div className="flex gap-4">
                             {/* Icon */}
                             <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                              <Icon className={`w-5 h-5 ${colors.icon}`} strokeWidth={2} />
+                              <Icon className={`w-5 h-5 ${colors.icon}`} strokeWidth={1.75} />
                             </div>
 
                             {/* Content */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3 mb-1">
-                                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                                   {notification.title}
                                   {!notification.isRead && (
                                     <Circle className="w-2 h-2 fill-primary text-primary flex-shrink-0" />
                                   )}
                                 </h3>
-                                <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
+                                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                                   {getTimeAgo(notification.timestamp)}
                                 </span>
                               </div>
 
-                              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                                 {notification.description}
                               </p>
 
@@ -402,13 +402,13 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                                     Mark as read
                                   </button>
                                 )}
-                                <button className="text-xs text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1">
+                                <button className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1">
                                   <ExternalLink className="w-3.5 h-3.5" />
                                   View details
                                 </button>
                                 <button
                                   onClick={() => handleDeleteNotification(notification.id)}
-                                  className="text-xs text-gray-500 hover:text-red-600 font-medium flex items-center gap-1 ml-auto"
+                                  className="text-xs text-muted-foreground hover:text-red-600 font-medium flex items-center gap-1 ml-auto"
                                 >
                                   <XIcon className="w-3.5 h-3.5" />
                                   Dismiss
@@ -425,13 +425,13 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
             </div>
 
             {/* Preferences Sidebar */}
-            <aside className="w-80 bg-white border-l border-gray-200 p-6 overflow-auto">
+            <aside className="w-80 bg-card border-l border-border p-6 overflow-auto">
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900 mb-1">
+                  <h2 className="text-base font-semibold text-foreground mb-1">
                     Notification Preferences
                   </h2>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Choose how you want to receive updates
                   </p>
                 </div>
@@ -441,7 +441,7 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       notificationPreference === "in-app"
                         ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     <input
@@ -454,10 +454,10 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Bell className="w-4 h-4 text-gray-700 flex-shrink-0" />
-                        <p className="text-sm font-semibold text-gray-900">In-App Only</p>
+                        <Bell className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <p className="text-sm font-semibold text-foreground">In-App Only</p>
                       </div>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         Receive notifications only within SciLab
                       </p>
                     </div>
@@ -467,7 +467,7 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       notificationPreference === "daily"
                         ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     <input
@@ -480,13 +480,13 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Mail className="w-4 h-4 text-gray-700 flex-shrink-0" />
-                        <p className="text-sm font-semibold text-gray-900">Daily Email</p>
-                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded flex-shrink-0">
+                        <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <p className="text-sm font-semibold text-foreground">Daily Email</p>
+                        <span className="px-1.5 py-0.5 bg-accent text-tag text-xs font-semibold rounded flex-shrink-0">
                           Recommended
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         Get a daily digest of important updates
                       </p>
                     </div>
@@ -496,7 +496,7 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       notificationPreference === "weekly"
                         ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     <input
@@ -509,10 +509,10 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Calendar className="w-4 h-4 text-gray-700 flex-shrink-0" />
-                        <p className="text-sm font-semibold text-gray-900">Weekly Email</p>
+                        <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <p className="text-sm font-semibold text-foreground">Weekly Email</p>
                       </div>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         Receive a weekly summary every Monday
                       </p>
                     </div>
@@ -522,7 +522,7 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       notificationPreference === "disabled"
                         ? "border-primary bg-primary/5"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     <input
@@ -535,10 +535,10 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <XIcon className="w-4 h-4 text-gray-700 flex-shrink-0" />
-                        <p className="text-sm font-semibold text-gray-900">Disable All</p>
+                        <XIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <p className="text-sm font-semibold text-foreground">Disable All</p>
                       </div>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         Turn off all notification emails
                       </p>
                     </div>
@@ -551,20 +551,20 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
                 </Button>
 
                 {/* Stats */}
-                <Card className="p-4 border-gray-200 bg-slate-50">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Activity Summary</h3>
+                <Card className="p-4 border-border bg-background">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Activity Summary</h3>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Unread</span>
-                      <span className="font-semibold text-gray-900">{unreadCount}</span>
+                      <span className="text-muted-foreground">Unread</span>
+                      <span className="font-semibold text-foreground">{unreadCount}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Total</span>
-                      <span className="font-semibold text-gray-900">{notifications.length}</span>
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-semibold text-foreground">{notifications.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">This Week</span>
-                      <span className="font-semibold text-gray-900">
+                      <span className="text-muted-foreground">This Week</span>
+                      <span className="font-semibold text-foreground">
                         {notifications.filter((n) => {
                           const weekAgo = new Date();
                           weekAgo.setDate(weekAgo.getDate() - 7);
