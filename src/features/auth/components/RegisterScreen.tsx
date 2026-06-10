@@ -104,7 +104,7 @@ export default function RegisterScreen({
   const onSubmit = handleSubmit(async (values) => {
     clearErrors();
     setGlobalError("");
-    setStatusMessage("Creating your SciLab account.");
+    setStatusMessage("Creating your ScholarTrend account.");
 
     const validationErrors = validateRegisterForm(values);
     if (Object.keys(validationErrors).length > 0) {
@@ -119,7 +119,7 @@ export default function RegisterScreen({
     try {
       await registerAccount(values);
       setStatusMessage("Account created. Opening your dashboard.");
-      toast.success("SciLab account created.");
+      toast.success("ScholarTrend account created.");
 
       if (onRegisterSuccess) {
         onRegisterSuccess();
@@ -163,7 +163,7 @@ export default function RegisterScreen({
             <div className="w-12 h-12 bg-primary rounded-[var(--radius-card)] flex items-center justify-center">
               <Atom className="w-6 h-6 text-primary-foreground" strokeWidth={1.75} />
             </div>
-            <span className="font-heading text-2xl text-foreground">SciLab</span>
+            <span className="font-heading text-2xl text-foreground">ScholarTrend</span>
           </div>
 
           <div className="space-y-8 max-w-lg">
@@ -178,7 +178,7 @@ export default function RegisterScreen({
 
             <p className="text-lg text-muted-foreground leading-relaxed">
               Follow journals, bookmark publication metadata, and compare topic
-              trends from one SciLab account.
+              trends from one ScholarTrend account.
             </p>
 
             <div className="space-y-6 pt-4">
@@ -227,7 +227,7 @@ export default function RegisterScreen({
               <div className="w-10 h-10 bg-primary rounded-[var(--radius-card)] flex items-center justify-center">
                 <Atom className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
               </div>
-              <span className="font-heading text-2xl text-foreground">SciLab</span>
+              <span className="font-heading text-2xl text-foreground">ScholarTrend</span>
             </div>
 
             <h2 className="font-heading text-4xl text-foreground">Create your account</h2>
@@ -441,7 +441,7 @@ export default function RegisterScreen({
           </Card>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            By creating an account, you agree to SciLab access policies for
+            By creating an account, you agree to ScholarTrend access policies for
             research metadata and dashboard features.
           </p>
         </div>

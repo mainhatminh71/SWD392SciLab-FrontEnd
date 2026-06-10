@@ -23,7 +23,7 @@ export async function registerAccount(
   const email = request.email.trim().toLowerCase();
 
   if (
-    email === "existing@scilab.edu" ||
+    email === "existing@ScholarTrend.edu" ||
     email.includes("duplicate") ||
     email.includes("taken")
   ) {

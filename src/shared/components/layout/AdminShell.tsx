@@ -32,7 +32,7 @@ export default function AdminShell({
             <Shield className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
           </div>
           <div>
-            <span className="font-heading text-lg text-foreground">SciLab</span>
+            <span className="font-heading text-lg text-foreground">ScholarTrend</span>
             <p className="text-xs text-muted-foreground">Admin Panel</p>
           </div>
         </div>
@@ -67,7 +67,7 @@ export default function AdminShell({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">Admin User</p>
-              <p className="text-xs text-muted-foreground truncate">admin@scilab.com</p>
+              <p className="text-xs text-muted-foreground truncate">admin@ScholarTrend.com</p>
             </div>
           </div>
           <button

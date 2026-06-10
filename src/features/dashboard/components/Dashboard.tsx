@@ -160,7 +160,7 @@ export default function Dashboard() {
           <div className="w-9 h-9 bg-primary rounded-[var(--radius-button)] flex items-center justify-center">
             <Atom className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
           </div>
-          <span className="font-heading text-xl text-foreground">SciLab</span>
+          <span className="font-heading text-xl text-foreground">ScholarTrend</span>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">

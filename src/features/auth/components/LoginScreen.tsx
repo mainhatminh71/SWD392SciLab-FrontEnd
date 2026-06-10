@@ -63,7 +63,7 @@ export default function LoginScreen() {
             <div className="w-12 h-12 bg-primary rounded-[var(--radius-card)] flex items-center justify-center">
               <Atom className="w-6 h-6 text-primary-foreground" strokeWidth={1.75} />
             </div>
-            <span className="font-heading text-2xl text-foreground">SciLab</span>
+            <span className="font-heading text-2xl text-foreground">ScholarTrend</span>
           </div>
 
           <div className="space-y-8 max-w-lg">
@@ -129,7 +129,7 @@ export default function LoginScreen() {
               <div className="w-10 h-10 bg-primary rounded-[var(--radius-card)] flex items-center justify-center">
                 <Atom className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
               </div>
-              <span className="font-heading text-2xl text-foreground">SciLab</span>
+              <span className="font-heading text-2xl text-foreground">ScholarTrend</span>
             </div>
           </div>
 

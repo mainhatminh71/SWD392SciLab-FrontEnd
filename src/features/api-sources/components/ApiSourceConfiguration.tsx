@@ -348,7 +348,7 @@ function SourceFormDialog({
         <DialogHeader>
           <DialogTitle>{mode === "add" ? "Add Source" : "Edit Source"}</DialogTitle>
           <DialogDescription>
-            Configure an external academic data provider for SciLab ingestion pipelines.
+            Configure an external academic data provider for ScholarTrend ingestion pipelines.
           </DialogDescription>
         </DialogHeader>
 
@@ -404,7 +404,7 @@ function SourceFormDialog({
               id="description"
               value={values.description}
               onChange={(event) => setValues({ ...values, description: event.target.value })}
-              placeholder="What this provider supplies to SciLab..."
+              placeholder="What this provider supplies to ScholarTrend..."
               rows={3}
             />
           </div>

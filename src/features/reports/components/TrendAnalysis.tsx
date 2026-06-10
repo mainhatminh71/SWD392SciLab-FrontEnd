@@ -172,7 +172,7 @@ export default function TrendAnalysis({ onNavigate }: TrendAnalysisProps) {
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
             <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
-          <span className="font-heading text-xl text-foreground tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
         </div>
 
         {/* Navigation */}

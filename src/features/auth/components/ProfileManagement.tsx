@@ -121,7 +121,7 @@ export default function ProfileManagement({ onNavigate }: ProfileManagementProps
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
             <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
-          <span className="font-heading text-xl text-foreground tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
         </div>
 
         {/* Navigation */}
@@ -587,7 +587,7 @@ export default function ProfileManagement({ onNavigate }: ProfileManagementProps
                           <p className="text-sm font-semibold text-foreground">In-App Only</p>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Receive notifications only within the SciLab application. No emails will be sent.
+                          Receive notifications only within the ScholarTrend application. No emails will be sent.
                         </p>
                       </div>
                     </label>

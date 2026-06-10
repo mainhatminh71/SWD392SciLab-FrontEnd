@@ -4,7 +4,7 @@ import { Toaster } from "@/shared/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SciLab",
+  title: "ScholarTrend",
   description: "Research Intelligence Platform",
 };
 
