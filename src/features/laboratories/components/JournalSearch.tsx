@@ -25,6 +25,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
+import PageContainer from "@/shared/components/layout/PageContainer";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 
@@ -256,15 +257,15 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
     (filters.oaDiamond ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
         {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-gray-200">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
         </div>
 
         {/* Navigation */}
@@ -276,13 +277,13 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <Icon className="w-5 h-5" strokeWidth={2} />
+                <Icon className="w-5 h-5" strokeWidth={1.75} />
                 <span className="text-sm">{item.label}</span>
               </button>
             );
@@ -290,17 +291,17 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
             onClick={() => onNavigate && onNavigate("profile")}
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JS</span>
+            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-gray-500 truncate">jane.smith@uni.edu</p>
+              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
+              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
             </div>
           </div>
         </div>
@@ -309,21 +310,21 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
           <div className="flex-1 max-w-2xl">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search by journal name, ISSN, subject area, or publisher..."
-                className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white"
+                className="pl-10 h-10 bg-surface-raised border-border focus:bg-card"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -332,38 +333,38 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
+            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
+              <Bell className="w-5 h-5 text-muted-foreground" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
             <div
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow"
+              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
               onClick={() => onNavigate && onNavigate("profile")}
             >
-              <span className="text-white text-sm font-medium">JS</span>
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8">
-          <div className="max-w-[1600px] mx-auto space-y-6">
+        <main className="flex-1 overflow-auto py-8">
+          <PageContainer size="wide" className="space-y-6">
             {/* Page Header */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Journal Search</h1>
-              <p className="text-gray-500 mt-1">Discover academic journals across all disciplines</p>
+              <h1 className="font-heading text-3xl text-foreground">Journal Search</h1>
+              <p className="text-muted-foreground mt-1">Discover academic journals across all disciplines</p>
             </div>
 
             <div className="flex gap-8">
             {/* Filters Sidebar */}
             {showFilters && (
               <aside className="w-72 flex-shrink-0">
-                <Card className="p-6 border-gray-200 sticky top-0">
+                <Card className="p-6 border-border sticky top-0">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-gray-600" />
-                    <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                    <Filter className="w-5 h-5 text-muted-foreground" />
+                    <h2 className="font-heading text-lg text-foreground">Filters</h2>
                     {activeFilterCount > 0 && (
                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
                         {activeFilterCount}
@@ -374,7 +375,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                     variant="ghost"
                     size="sm"
                     onClick={clearAllFilters}
-                    className="h-8 px-3 text-xs text-gray-600"
+                    className="h-8 px-3 text-xs text-muted-foreground"
                   >
                     Clear all
                   </Button>
@@ -383,7 +384,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                 <div className="space-y-6 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
                   {/* Subject Area */}
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Subject Area</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Subject Area</h3>
                     <div className="space-y-2">
                       {subjectAreas.slice(0, 5).map((subject) => (
                         <div key={subject} className="flex items-center gap-2">
@@ -394,7 +395,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                           />
                           <Label
                             htmlFor={`subject-${subject}`}
-                            className="text-sm text-gray-700 cursor-pointer"
+                            className="text-sm text-muted-foreground cursor-pointer"
                           >
                             {subject}
                           </Label>
@@ -404,8 +405,8 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                   </div>
 
                   {/* Country */}
-                  <div className="pt-6 border-t border-gray-100">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Country</h3>
+                  <div className="pt-6 border-t border-border">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Country</h3>
                     <div className="space-y-2">
                       {countries.slice(0, 5).map((country) => (
                         <div key={country} className="flex items-center gap-2">
@@ -416,7 +417,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                           />
                           <Label
                             htmlFor={`country-${country}`}
-                            className="text-sm text-gray-700 cursor-pointer"
+                            className="text-sm text-muted-foreground cursor-pointer"
                           >
                             {country}
                           </Label>
@@ -426,8 +427,8 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                   </div>
 
                   {/* Publisher */}
-                  <div className="pt-6 border-t border-gray-100">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Publisher</h3>
+                  <div className="pt-6 border-t border-border">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Publisher</h3>
                     <div className="space-y-2">
                       {publishers.slice(0, 5).map((publisher) => (
                         <div key={publisher} className="flex items-center gap-2">
@@ -438,7 +439,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                           />
                           <Label
                             htmlFor={`publisher-${publisher}`}
-                            className="text-sm text-gray-700 cursor-pointer"
+                            className="text-sm text-muted-foreground cursor-pointer"
                           >
                             {publisher}
                           </Label>
@@ -448,8 +449,8 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                   </div>
 
                   {/* Ranking Metric */}
-                  <div className="pt-6 border-t border-gray-100">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Ranking Metric</h3>
+                  <div className="pt-6 border-t border-border">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Ranking Metric</h3>
                     <div className="space-y-2">
                       {rankingMetrics.map((metric) => (
                         <div key={metric} className="flex items-center gap-2">
@@ -460,7 +461,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                           />
                           <Label
                             htmlFor={`metric-${metric}`}
-                            className="text-sm text-gray-700 cursor-pointer"
+                            className="text-sm text-muted-foreground cursor-pointer"
                           >
                             {metric}
                           </Label>
@@ -470,8 +471,8 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                   </div>
 
                   {/* Open Access */}
-                  <div className="pt-6 border-t border-gray-100">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Access Type</h3>
+                  <div className="pt-6 border-t border-border">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Access Type</h3>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Checkbox
@@ -481,7 +482,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                             setFilters({ ...filters, openAccess: checked as boolean })
                           }
                         />
-                        <Label htmlFor="open-access" className="text-sm text-gray-700 cursor-pointer">
+                        <Label htmlFor="open-access" className="text-sm text-muted-foreground cursor-pointer">
                           Open Access
                         </Label>
                       </div>
@@ -493,7 +494,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                             setFilters({ ...filters, oaDiamond: checked as boolean })
                           }
                         />
-                        <Label htmlFor="oa-diamond" className="text-sm text-gray-700 cursor-pointer">
+                        <Label htmlFor="oa-diamond" className="text-sm text-muted-foreground cursor-pointer">
                           OA Diamond
                         </Label>
                       </div>
@@ -518,14 +519,14 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                     <Filter className="w-4 h-4 mr-2" />
                     {showFilters ? "Hide Filters" : "Show Filters"}
                   </Button>
-                  <p className="text-sm text-gray-600">
-                    Showing <span className="font-medium text-gray-900">{startIndex + 1}-{Math.min(endIndex, mockJournals.length)}</span> of{" "}
-                    <span className="font-medium text-gray-900">{mockJournals.length}</span> journals
+                  <p className="text-sm text-muted-foreground">
+                    Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(endIndex, mockJournals.length)}</span> of{" "}
+                    <span className="font-medium text-foreground">{mockJournals.length}</span> journals
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Sort by:</span>
+                  <span className="text-sm text-muted-foreground">Sort by:</span>
                   <Button variant="outline" size="sm" className="h-9">
                     <ArrowUpDown className="w-3.5 h-3.5 mr-2" />
                     {sortBy === "relevance" ? "Relevance" : sortBy}
@@ -540,10 +541,10 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                   <Card
                     key={journal.id}
                     onClick={() => onViewJournal && onViewJournal(journal.id)}
-                    className="p-6 border-gray-200 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                    className="p-6 border-border  hover:border-border transition-all cursor-pointer"
                   >
                     <div className="flex gap-6">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-16 h-16 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
                         <BookOpen className="w-8 h-8 text-white" />
                       </div>
 
@@ -551,14 +552,14 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                         {/* Journal Name and Badges */}
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1 hover:text-primary transition-colors line-clamp-1">
+                            <h3 className="font-heading text-lg text-foreground mb-1 hover:text-primary transition-colors line-clamp-1">
                               {journal.name}
                             </h3>
-                            <div className="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                               <span className="flex-shrink-0">ISSN: {journal.issn}</span>
-                              <span className="text-gray-300 flex-shrink-0">•</span>
+                              <span className="text-border flex-shrink-0">•</span>
                               <span className="truncate max-w-[200px]">{journal.publisher}</span>
-                              <span className="text-gray-300 flex-shrink-0">•</span>
+                              <span className="text-border flex-shrink-0">•</span>
                               <div className="flex items-center gap-1 flex-shrink-0">
                                 <Globe className="w-3.5 h-3.5" />
                                 <span>{journal.country}</span>
@@ -568,19 +569,19 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
 
                           <div className="flex items-center gap-2 flex-shrink-0">
                             {journal.openAccess && (
-                              <div className="px-2.5 py-1 bg-green-50 text-green-700 rounded-md flex items-center gap-1">
+                              <div className="px-2.5 py-1 bg-teal/10 text-teal rounded-md flex items-center gap-1">
                                 <LockOpen className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium">Open Access</span>
                               </div>
                             )}
                             {journal.oaDiamond && (
-                              <div className="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-md flex items-center gap-1">
+                              <div className="px-2.5 py-1 bg-accent text-tag rounded-md flex items-center gap-1">
                                 <Award className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium">OA Diamond</span>
                               </div>
                             )}
                             {!journal.openAccess && (
-                              <div className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md flex items-center gap-1">
+                              <div className="px-2.5 py-1 bg-surface-raised text-muted-foreground rounded-md flex items-center gap-1">
                                 <Lock className="w-3.5 h-3.5" />
                                 <span className="text-xs font-medium">Subscription</span>
                               </div>
@@ -593,13 +594,13 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                           {journal.subjects.slice(0, 3).map((subject) => (
                             <span
                               key={subject}
-                              className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full"
+                              className="px-3 py-1 bg-accent text-tag text-xs font-medium rounded-full"
                             >
                               {subject}
                             </span>
                           ))}
                           {journal.subjects.length > 3 && (
-                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                            <span className="px-3 py-1 bg-surface-raised text-muted-foreground text-xs font-medium rounded-full">
                               +{journal.subjects.length - 3} more
                             </span>
                           )}
@@ -611,38 +612,38 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                             <div
                               className={`px-3 py-1.5 rounded-lg font-bold text-sm ${
                                 journal.ranking.quartile === "Q1"
-                                  ? "bg-green-100 text-green-800"
+                                  ? "bg-teal/10 text-teal"
                                   : journal.ranking.quartile === "Q2"
-                                  ? "bg-blue-100 text-blue-800"
+                                  ? "bg-accent text-blue-800"
                                   : journal.ranking.quartile === "Q3"
                                   ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  : "bg-surface-raised text-foreground"
                               }`}
                             >
                               {journal.ranking.quartile}
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">{journal.ranking.metric}</p>
-                              <p className="text-sm font-semibold text-gray-900">{journal.ranking.value}</p>
+                              <p className="text-xs text-muted-foreground">{journal.ranking.metric}</p>
+                              <p className="text-sm font-semibold text-foreground">{journal.ranking.value}</p>
                             </div>
                           </div>
 
                           <div className="h-8 w-px bg-gray-200" />
 
-                          <div className="flex items-center gap-1 text-gray-600">
+                          <div className="flex items-center gap-1 text-muted-foreground">
                             <TrendingUp className="w-4 h-4" />
                             <span className="text-sm">
-                              <span className="font-semibold text-gray-900">{journal.citations.toLocaleString()}</span>{" "}
+                              <span className="font-semibold text-foreground">{journal.citations.toLocaleString()}</span>{" "}
                               citations
                             </span>
                           </div>
 
                           <div className="h-8 w-px bg-gray-200" />
 
-                          <div className="flex items-center gap-1 text-gray-600">
+                          <div className="flex items-center gap-1 text-muted-foreground">
                             <BookOpen className="w-4 h-4" />
                             <span className="text-sm">
-                              <span className="font-semibold text-gray-900">{journal.articles.toLocaleString()}</span>{" "}
+                              <span className="font-semibold text-foreground">{journal.articles.toLocaleString()}</span>{" "}
                               articles
                             </span>
                           </div>
@@ -674,7 +675,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                       className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
                         currentPage === page
                           ? "bg-primary text-white"
-                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                          : "bg-card border border-border text-muted-foreground hover:bg-accent"
                       }`}
                     >
                       {page}
@@ -695,7 +696,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
               </div>
             </div>
           </div>
-          </div>
+          </PageContainer>
         </main>
       </div>
     </div>

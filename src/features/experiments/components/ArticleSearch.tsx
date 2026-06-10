@@ -25,6 +25,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
+import PageContainer from "@/shared/components/layout/PageContainer";
 import { Label } from "@/shared/components/ui/label";
 
 interface Article {
@@ -178,15 +179,15 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
     (selectedYear ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
         {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-gray-200">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
           <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
           </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">SciLab</span>
+          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
         </div>
 
         {/* Navigation */}
@@ -198,13 +199,13 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
                   isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <Icon className="w-5 h-5" strokeWidth={2} />
+                <Icon className="w-5 h-5" strokeWidth={1.75} />
                 <span className="text-sm">{item.label}</span>
               </button>
             );
@@ -212,17 +213,17 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
             onClick={() => onNavigate && onNavigate("profile")}
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JS</span>
+            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-gray-500 truncate">jane.smith@uni.edu</p>
+              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
+              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
             </div>
           </div>
         </div>
@@ -231,14 +232,14 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
           <div className="flex-1 max-w-2xl">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search articles by keyword, title, or topic..."
-                className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white"
+                className="pl-10 h-10 bg-surface-raised border-border focus:bg-card"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -246,28 +247,28 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
+            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
+              <Bell className="w-5 h-5 text-muted-foreground" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
             <div
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow"
+              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
               onClick={() => onNavigate && onNavigate("profile")}
             >
-              <span className="text-white text-sm font-medium">JS</span>
+              <span className="text-sm font-medium text-tag">JS</span>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8">
-          <div className="max-w-[1400px] mx-auto space-y-6">
+        <main className="flex-1 overflow-auto py-8">
+          <PageContainer size="wide" className="space-y-6">
             {/* Page Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Article Search</h1>
-                <p className="text-gray-500 mt-1">Discover research articles across all disciplines</p>
+                <h1 className="font-heading text-3xl text-foreground">Article Search</h1>
+                <p className="text-muted-foreground mt-1">Discover research articles across all disciplines</p>
               </div>
 
               <Button
@@ -287,9 +288,9 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
 
             {/* Advanced Filters */}
             {showFilters && (
-              <Card className="p-6 border-gray-200">
+              <Card className="p-6 border-border">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Advanced Filters</h2>
+                  <h2 className="font-heading text-lg text-foreground">Advanced Filters</h2>
                   {activeFilterCount > 0 && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
                       Clear All
@@ -347,7 +348,7 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                     <div className="relative">
                       <select
                         id="year-filter"
-                        className="w-full h-9 px-3 pr-8 bg-white border border-gray-200 rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full h-9 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
                       >
@@ -358,7 +359,7 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -367,9 +368,9 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
 
             {/* Results Header */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                Showing <span className="font-medium text-gray-900">{startIndex + 1}-{Math.min(endIndex, articles.length)}</span> of{" "}
-                <span className="font-medium text-gray-900">{articles.length}</span> articles
+              <p className="text-sm text-muted-foreground">
+                Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(endIndex, articles.length)}</span> of{" "}
+                <span className="font-medium text-foreground">{articles.length}</span> articles
               </p>
             </div>
 
@@ -378,17 +379,17 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
               {currentArticles.map((article) => (
                 <Card
                   key={article.id}
-                  className="p-6 border-gray-200 hover:shadow-md hover:border-gray-300 transition-all"
+                  className="p-6 border-border  hover:border-border transition-all"
                 >
                   <div className="flex gap-6">
                     <div className="flex-1 min-w-0">
                       {/* Title */}
-                      <h3 className="text-xl font-semibold text-gray-900 mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2">
+                      <h3 className="font-heading text-xl text-foreground mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2">
                         {article.title}
                       </h3>
 
                       {/* Authors */}
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                         <span>
                           {article.authors.slice(0, 3).join(", ")}
                           {article.authors.length > 3 && " et al."}
@@ -396,17 +397,17 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                       </div>
 
                       {/* Journal & Year */}
-                      <div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
                         <div className="flex items-center gap-1">
                           <BookOpen className="w-4 h-4" />
                           <span className="font-medium">{article.journal}</span>
                         </div>
-                        <span className="text-gray-300">•</span>
+                        <span className="text-border">•</span>
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           <span>{article.year}</span>
                         </div>
-                        <span className="text-gray-300">•</span>
+                        <span className="text-border">•</span>
                         <div className="flex items-center gap-1">
                           <Quote className="w-4 h-4" />
                           <span>{article.citations} citations</span>
@@ -414,7 +415,7 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                       </div>
 
                       {/* Abstract Preview */}
-                      <p className="text-sm text-gray-700 leading-relaxed mb-4 line-clamp-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-3">
                         {article.abstract}
                       </p>
 
@@ -423,20 +424,20 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                         {article.keywords.slice(0, 4).map((keyword) => (
                           <span
                             key={keyword}
-                            className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-md"
+                            className="px-2.5 py-1 bg-accent text-tag text-xs font-medium rounded-md"
                           >
                             {keyword}
                           </span>
                         ))}
                         {article.keywords.length > 4 && (
-                          <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
+                          <span className="px-2.5 py-1 bg-surface-raised text-muted-foreground text-xs font-medium rounded-md">
                             +{article.keywords.length - 4} more
                           </span>
                         )}
                       </div>
 
                       {/* DOI */}
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         DOI: {article.doi}
                       </div>
                     </div>
@@ -497,7 +498,7 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                     className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
                       currentPage === page
                         ? "bg-primary text-white"
-                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        : "bg-card border border-border text-muted-foreground hover:bg-accent"
                     }`}
                   >
                     {page}
@@ -516,7 +517,7 @@ export default function ArticleSearch({ onNavigate, onViewArticle }: ArticleSear
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
-          </div>
+          </PageContainer>
         </main>
       </div>
     </div>

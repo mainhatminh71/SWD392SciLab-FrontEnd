@@ -48,11 +48,11 @@ const defaultValues: RegisterFormValues = {
 
 const strengthText = ["Very weak", "Weak", "Fair", "Good", "Strong"];
 const strengthColor = [
-  "bg-red-500",
-  "bg-orange-500",
-  "bg-yellow-500",
-  "bg-sky-500",
-  "bg-emerald-500",
+  "bg-destructive/60",
+  "bg-destructive/40",
+  "bg-primary/50",
+  "bg-teal/60",
+  "bg-teal",
 ];
 
 function calculatePasswordStrength(password: string) {
@@ -104,7 +104,7 @@ export default function RegisterScreen({
   const onSubmit = handleSubmit(async (values) => {
     clearErrors();
     setGlobalError("");
-    setStatusMessage("Creating your SciLab account.");
+    setStatusMessage("Creating your ScholarTrend account.");
 
     const validationErrors = validateRegisterForm(values);
     if (Object.keys(validationErrors).length > 0) {
@@ -119,7 +119,7 @@ export default function RegisterScreen({
     try {
       await registerAccount(values);
       setStatusMessage("Account created. Opening your dashboard.");
-      toast.success("SciLab account created.");
+      toast.success("ScholarTrend account created.");
 
       if (onRegisterSuccess) {
         onRegisterSuccess();
@@ -155,96 +155,92 @@ export default function RegisterScreen({
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f8f5ef] text-slate-950 lg:flex">
-      <aside className="hidden lg:flex lg:w-1/2">
-        <div className="relative flex w-full flex-col justify-between overflow-hidden bg-[#263238] px-16 py-12 text-white xl:px-24">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center opacity-10" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#263238] via-[#37474f]/95 to-[#6d4c41]/90" />
-
-          <div className="relative flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-300 text-slate-950 shadow-lg shadow-black/20">
-              <Atom className="h-7 w-7" strokeWidth={2.3} />
+    <div className="min-h-screen w-full flex bg-background">
+      {/* Left — editorial hero */}
+      <div className="hidden lg:flex lg:w-1/2 bg-surface-raised border-r border-border">
+        <div className="flex flex-col justify-between py-12 px-16 xl:px-24 w-full">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary rounded-[var(--radius-card)] flex items-center justify-center">
+              <Atom className="w-6 h-6 text-primary-foreground" strokeWidth={1.75} />
             </div>
-            <span className="text-3xl font-bold tracking-tight">SciLab</span>
+            <span className="font-heading text-2xl text-foreground">ScholarTrend</span>
           </div>
 
-          <div className="relative max-w-xl space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-amber-100">
-              <FlaskConical className="h-4 w-4" />
+          <div className="space-y-8 max-w-lg">
+            <span className="inline-flex items-center gap-2 rounded-[var(--radius-input)] bg-accent px-4 py-2 text-sm text-accent-foreground">
+              <FlaskConical className="h-4 w-4" strokeWidth={1.75} />
               Metadata and trend tracking
-            </div>
+            </span>
 
-            <h1 className="text-5xl font-semibold leading-tight xl:text-6xl">
+            <h1 className="font-heading text-5xl xl:text-6xl text-foreground leading-tight">
               Create your research workspace
             </h1>
 
-            <p className="max-w-lg text-xl leading-relaxed text-slate-100">
+            <p className="text-lg text-muted-foreground leading-relaxed">
               Follow journals, bookmark publication metadata, and compare topic
-              trends from one SciLab account.
+              trends from one ScholarTrend account.
             </p>
 
-            <div className="grid gap-4 pt-4">
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-300/15 text-emerald-100">
-                  <BarChart3 className="h-5 w-5" />
+            <div className="space-y-6 pt-4">
+              {[
+                {
+                  title: "Trend analysis",
+                  desc: "Compare publication patterns by keyword, topic, and year.",
+                },
+                {
+                  title: "Saved discovery",
+                  desc: "Keep useful journals and articles close for dashboard review.",
+                },
+              ].map((item, i) => (
+                <div key={item.title} className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-[var(--radius-card)] bg-accent flex items-center justify-center flex-shrink-0">
+                    {i === 0 ? (
+                      <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                    ) : (
+                      <Sparkles className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-lg text-foreground">{item.title}</h3>
+                    <p className="text-muted-foreground mt-1 text-sm">{item.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="font-semibold">Trend analysis</h2>
-                  <p className="mt-1 text-sm leading-6 text-slate-200">
-                    Compare publication patterns by keyword, topic, and year.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-sky-300/15 text-sky-100">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="font-semibold">Saved discovery</h2>
-                  <p className="mt-1 text-sm leading-6 text-slate-200">
-                    Keep useful journals and articles close for dashboard review.
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          <div className="relative grid grid-cols-3 gap-5 border-t border-white/15 pt-7 text-sm text-slate-200">
-            <div>Journal search</div>
-            <div>Article bookmarks</div>
-            <div>Role-aware access</div>
+          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-border">
+            {["Journal search", "Article bookmarks", "Role-aware access"].map((label) => (
+              <div key={label} className="text-sm text-muted-foreground">
+                {label}
+              </div>
+            ))}
           </div>
         </div>
-      </aside>
+      </div>
 
-      <main className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8 lg:px-12">
+      {/* Right — registration form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12">
         <div className="w-full max-w-[560px]">
           <div className="mb-8 text-center">
-            <div className="mb-6 inline-flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-900 text-amber-200 shadow-lg shadow-slate-900/15">
-                <Atom className="h-6 w-6" strokeWidth={2.2} />
+            <div className="mb-6 inline-flex items-center gap-3 lg:hidden">
+              <div className="w-10 h-10 bg-primary rounded-[var(--radius-card)] flex items-center justify-center">
+                <Atom className="w-5 h-5 text-primary-foreground" strokeWidth={1.75} />
               </div>
-              <span className="text-3xl font-bold tracking-tight">SciLab</span>
+              <span className="font-heading text-2xl text-foreground">ScholarTrend</span>
             </div>
 
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Create your account
-            </h2>
-            <p className="mx-auto mt-3 max-w-sm text-base leading-7 text-slate-600">
+            <h2 className="font-heading text-4xl text-foreground">Create your account</h2>
+            <p className="mx-auto mt-3 max-w-sm text-muted-foreground">
               Start tracking publication metadata and research trends.
             </p>
           </div>
 
-          <Card className="rounded-lg border-slate-200 bg-white shadow-[0_16px_50px_rgb(15,23,42,0.10)]">
-            <CardHeader className="border-b border-slate-100 px-6 py-7 sm:px-10">
+          <Card>
+            <CardHeader className="border-b border-border/60 pb-8 pt-8 px-8">
               {globalError ? (
-                <Alert
-                  variant="destructive"
-                  className="mb-5"
-                  aria-live="polite"
-                >
-                  <AlertCircle className="h-4 w-4" />
+                <Alert variant="destructive" className="mb-5" aria-live="polite">
+                  <AlertCircle className="h-4 w-4" strokeWidth={1.75} />
                   <AlertTitle>Registration issue</AlertTitle>
                   <AlertDescription>{globalError}</AlertDescription>
                 </Alert>
@@ -258,7 +254,7 @@ export default function RegisterScreen({
                     type="email"
                     autoComplete="email"
                     placeholder="name@university.edu"
-                    className="h-12 px-4"
+                    className="h-11"
                     aria-invalid={!!errors.email}
                     aria-describedby={errors.email ? "email-error" : undefined}
                     disabled={isBusy}
@@ -270,11 +266,8 @@ export default function RegisterScreen({
                     })}
                   />
                   {errors.email ? (
-                    <p
-                      id="email-error"
-                      className="flex items-center gap-1 text-sm text-red-600"
-                    >
-                      <X className="h-4 w-4" />
+                    <p id="email-error" className="flex items-center gap-1 text-sm text-destructive">
+                      <X className="h-4 w-4" strokeWidth={1.75} />
                       {errors.email.message}
                     </p>
                   ) : null}
@@ -287,11 +280,9 @@ export default function RegisterScreen({
                     type="text"
                     autoComplete="name"
                     placeholder="Jane Smith"
-                    className="h-12 px-4"
+                    className="h-11"
                     aria-invalid={!!errors.displayName}
-                    aria-describedby={
-                      errors.displayName ? "displayName-error" : undefined
-                    }
+                    aria-describedby={errors.displayName ? "displayName-error" : undefined}
                     disabled={isBusy}
                     {...register("displayName", {
                       onChange: () => {
@@ -301,11 +292,8 @@ export default function RegisterScreen({
                     })}
                   />
                   {errors.displayName ? (
-                    <p
-                      id="displayName-error"
-                      className="flex items-center gap-1 text-sm text-red-600"
-                    >
-                      <X className="h-4 w-4" />
+                    <p id="displayName-error" className="flex items-center gap-1 text-sm text-destructive">
+                      <X className="h-4 w-4" strokeWidth={1.75} />
                       {errors.displayName.message}
                     </p>
                   ) : null}
@@ -318,11 +306,9 @@ export default function RegisterScreen({
                     type="password"
                     autoComplete="new-password"
                     placeholder="Create a strong password"
-                    className="h-12 px-4"
+                    className="h-11"
                     aria-invalid={!!errors.password}
-                    aria-describedby={
-                      errors.password ? "password-error" : "password-status"
-                    }
+                    aria-describedby={errors.password ? "password-error" : "password-status"}
                     disabled={isBusy}
                     {...register("password", {
                       onChange: () => {
@@ -332,11 +318,8 @@ export default function RegisterScreen({
                     })}
                   />
                   {errors.password ? (
-                    <p
-                      id="password-error"
-                      className="flex items-center gap-1 text-sm text-red-600"
-                    >
-                      <X className="h-4 w-4" />
+                    <p id="password-error" className="flex items-center gap-1 text-sm text-destructive">
+                      <X className="h-4 w-4" strokeWidth={1.75} />
                       {errors.password.message}
                     </p>
                   ) : null}
@@ -350,17 +333,14 @@ export default function RegisterScreen({
                             className={`h-1.5 flex-1 rounded-full transition-colors ${
                               index < passwordStrength
                                 ? strengthColor[passwordStrength - 1]
-                                : "bg-slate-200"
+                                : "bg-surface-raised"
                             }`}
                           />
                         ))}
                       </div>
-                      <p
-                        id="password-status"
-                        className="flex items-center gap-1 text-sm text-slate-600"
-                      >
+                      <p id="password-status" className="flex items-center gap-1 text-sm text-muted-foreground">
                         {passwordStrength >= 4 ? (
-                          <Check className="h-4 w-4 text-emerald-600" />
+                          <Check className="h-4 w-4 text-teal" strokeWidth={1.75} />
                         ) : null}
                         {passwordStatus}
                       </p>
@@ -375,12 +355,10 @@ export default function RegisterScreen({
                     type="password"
                     autoComplete="new-password"
                     placeholder="Re-enter your password"
-                    className="h-12 px-4"
+                    className="h-11"
                     aria-invalid={!!errors.confirmPassword}
                     aria-describedby={
-                      errors.confirmPassword
-                        ? "confirmPassword-error"
-                        : "confirmPassword-status"
+                      errors.confirmPassword ? "confirmPassword-error" : "confirmPassword-status"
                     }
                     disabled={isBusy}
                     {...register("confirmPassword", {
@@ -391,22 +369,14 @@ export default function RegisterScreen({
                     })}
                   />
                   {errors.confirmPassword ? (
-                    <p
-                      id="confirmPassword-error"
-                      className="flex items-center gap-1 text-sm text-red-600"
-                    >
-                      <X className="h-4 w-4" />
+                    <p id="confirmPassword-error" className="flex items-center gap-1 text-sm text-destructive">
+                      <X className="h-4 w-4" strokeWidth={1.75} />
                       {errors.confirmPassword.message}
                     </p>
                   ) : null}
-                  {confirmPassword &&
-                  !errors.confirmPassword &&
-                  password === confirmPassword ? (
-                    <p
-                      id="confirmPassword-status"
-                      className="flex items-center gap-1 text-sm text-emerald-700"
-                    >
-                      <Check className="h-4 w-4" />
+                  {confirmPassword && !errors.confirmPassword && password === confirmPassword ? (
+                    <p id="confirmPassword-status" className="flex items-center gap-1 text-sm text-teal">
+                      <Check className="h-4 w-4" strokeWidth={1.75} />
                       Passwords match.
                     </p>
                   ) : null}
@@ -416,11 +386,7 @@ export default function RegisterScreen({
                   {statusMessage}
                 </div>
 
-                <Button
-                  type="submit"
-                  className="h-12 w-full text-base font-medium shadow-md shadow-slate-900/10"
-                  disabled={isBusy}
-                >
+                <Button type="submit" className="h-11 w-full" disabled={isBusy}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -433,62 +399,53 @@ export default function RegisterScreen({
               </form>
             </CardHeader>
 
-            <CardContent className="px-6 py-7 sm:px-10">
-              <div className="space-y-5">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-4 font-medium text-slate-500">
-                      Or continue with
-                    </span>
-                  </div>
+            <CardContent className="px-8 pt-6 pb-8 space-y-5">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
                 </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-card text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
 
-                <Button
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-full"
+                onClick={handleGoogleRegister}
+                disabled={isBusy}
+              >
+                {isGoogleLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connecting
+                  </>
+                ) : (
+                  "Continue with Google"
+                )}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <button
                   type="button"
-                  variant="outline"
-                  className="h-12 w-full text-base font-medium"
-                  onClick={handleGoogleRegister}
+                  onClick={navigateToLogin}
+                  className="text-tag hover:underline font-medium"
                   disabled={isBusy}
                 >
-                  {isGoogleLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Connecting
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full border text-xs font-semibold text-slate-700">
-                        G
-                      </span>
-                      Continue with Google
-                    </>
-                  )}
-                </Button>
-
-                <p className="text-center text-sm text-slate-600">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={navigateToLogin}
-                    className="font-medium text-slate-950 underline-offset-4 transition-colors hover:text-amber-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-                    disabled={isBusy}
-                  >
-                    Sign in
-                  </button>
-                </p>
-              </div>
+                  Sign in
+                </button>
+              </p>
             </CardContent>
           </Card>
 
-          <p className="mt-6 text-center text-sm leading-6 text-slate-500">
-            By creating an account, you agree to SciLab access policies for
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            By creating an account, you agree to ScholarTrend access policies for
             research metadata and dashboard features.
           </p>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
