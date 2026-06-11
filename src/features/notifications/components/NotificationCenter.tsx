@@ -1,16 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
-  Atom,
-  LayoutDashboard,
   BookOpen,
-  FileText,
-  TrendingUp,
-  Bookmark,
   Bell,
-  User,
-  Search,
   Check,
   ExternalLink,
   Circle,
@@ -27,10 +21,6 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
 import { Label } from "@/shared/components/ui/label";
-
-interface NotificationCenterProps {
-  onNavigate?: (view: string) => void;
-}
 
 interface Notification {
   id: string;
@@ -117,21 +107,10 @@ const mockNotifications: Notification[] = [
   },
 ];
 
-export default function NotificationCenter({ onNavigate }: NotificationCenterProps) {
-  const [activeNav, setActiveNav] = useState("notifications");
+export default function NotificationCenter() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [notifications, setNotifications] = useState(mockNotifications);
   const [notificationPreference, setNotificationPreference] = useState("daily");
-
-  const sidebarItems = [
-    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { id: "journals", icon: BookOpen, label: "Journals" },
-    { id: "articles", icon: FileText, label: "Articles" },
-    { id: "trends", icon: TrendingUp, label: "Trend Analysis" },
-    { id: "bookmarks", icon: Bookmark, label: "Bookmarks" },
-    { id: "notifications", icon: Bell, label: "Notifications" },
-    { id: "profile", icon: User, label: "Profile" },
-  ];
 
   const categories = [
     { id: "all", label: "All Notifications", icon: Bell },
@@ -140,13 +119,6 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
     { id: "publication", label: "New Publications", icon: FileCheck },
     { id: "system", label: "System", icon: Settings },
   ];
-
-  const handleNavClick = (navId: string) => {
-    setActiveNav(navId);
-    if (onNavigate) {
-      onNavigate(navId);
-    }
-  };
 
   const handleMarkAsRead = (id: string) => {
     setNotifications(
@@ -214,60 +186,8 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Sidebar */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
-        {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
-          </div>
-          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeNav === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
-                  isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-5 h-5" strokeWidth={1.75} />
-                <span className="text-sm">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-border">
-          <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-            onClick={() => onNavigate && onNavigate("profile")}
-          >
-            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-tag">JS</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
+    <>
+      <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
           <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
@@ -283,24 +203,26 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
+            <Link
+              href="/student/notifications"
+              className="relative p-2 hover:bg-accent rounded-lg transition-colors"
+            >
               <Bell className="w-5 h-5 text-muted-foreground" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
               )}
-            </button>
+            </Link>
 
-            <div
+            <Link
+              href="/student/profile"
               className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-              onClick={() => onNavigate && onNavigate("profile")}
             >
               <span className="text-sm font-medium text-tag">JS</span>
-            </div>
+            </Link>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto">
           <div className="flex h-full">
             {/* Notification Feed */}
             <div className="flex-1 p-8 overflow-auto">
@@ -577,8 +499,7 @@ export default function NotificationCenter({ onNavigate }: NotificationCenterPro
               </div>
             </aside>
           </div>
-        </main>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

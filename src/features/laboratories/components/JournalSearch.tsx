@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Atom,
-  Search,
   Filter,
-  X,
   ChevronDown,
   Globe,
   BookOpen,
@@ -16,16 +14,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
-  LayoutDashboard,
-  FileText,
-  Bookmark,
-  Bell,
-  User,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
 import PageContainer from "@/shared/components/layout/PageContainer";
+import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 
@@ -179,27 +172,12 @@ const publishers = [
 
 const rankingMetrics = ["Impact Factor", "CiteScore", "h-Index", "SJR"];
 
-interface JournalSearchProps {
-  onNavigate?: (view: string) => void;
-  onViewJournal?: (journalId: string) => void;
-}
-
-export default function JournalSearch({ onNavigate, onViewJournal }: JournalSearchProps) {
+export default function JournalSearch() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("relevance");
-  const [activeNav, setActiveNav] = useState("journals");
-
-  const sidebarItems = [
-    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { id: "journals", icon: BookOpen, label: "Journals" },
-    { id: "articles", icon: FileText, label: "Articles" },
-    { id: "trends", icon: TrendingUp, label: "Trend Analysis" },
-    { id: "bookmarks", icon: Bookmark, label: "Bookmarks" },
-    { id: "notifications", icon: Bell, label: "Notifications" },
-    { id: "profile", icon: User, label: "Profile" },
-  ];
 
   const [filters, setFilters] = useState({
     subjectAreas: [] as string[],
@@ -209,13 +187,6 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
     openAccess: false,
     oaDiamond: false,
   });
-
-  const handleNavClick = (navId: string) => {
-    setActiveNav(navId);
-    if (onNavigate) {
-      onNavigate(navId);
-    }
-  };
 
   const itemsPerPage = 8;
   const totalPages = Math.ceil(mockJournals.length / itemsPerPage);
@@ -257,98 +228,14 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
     (filters.oaDiamond ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Sidebar */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-ambient">
-        {/* Logo */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-border">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm shadow-primary/20">
-            <Atom className="w-5 h-5 text-white" strokeWidth={1.75} />
-          </div>
-          <span className="font-heading text-xl text-foreground tracking-tight">ScholarTrend</span>
-        </div>
+    <>
+      <StudentTopHeader
+        searchPlaceholder="Search by journal name, ISSN, subject area, or publisher..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeNav === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-all ${
-                  isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-5 h-5" strokeWidth={1.75} />
-                <span className="text-sm">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-border">
-          <div
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-            onClick={() => onNavigate && onNavigate("profile")}
-          >
-            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-tag">JS</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Dr. Jane Smith</p>
-              <p className="text-xs text-muted-foreground truncate">jane.smith@uni.edu</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 bg-card border-b border-border px-8 flex items-center justify-between">
-          <div className="flex-1 max-w-2xl">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search by journal name, ISSN, subject area, or publisher..."
-                className="pl-10 h-10 bg-surface-raised border-border focus:bg-card"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-accent rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <div
-              className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-              onClick={() => onNavigate && onNavigate("profile")}
-            >
-              <span className="text-sm font-medium text-tag">JS</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto py-8">
+      <main className="flex-1 overflow-auto py-8">
           <PageContainer size="wide" className="space-y-6">
             {/* Page Header */}
             <div>
@@ -540,7 +427,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
                 {currentJournals.map((journal) => (
                   <Card
                     key={journal.id}
-                    onClick={() => onViewJournal && onViewJournal(journal.id)}
+                    onClick={() => router.push(`/student/journals/${journal.id}`)}
                     className="p-6 border-border  hover:border-border transition-all cursor-pointer"
                   >
                     <div className="flex gap-6">
@@ -697,8 +584,7 @@ export default function JournalSearch({ onNavigate, onViewJournal }: JournalSear
             </div>
           </div>
           </PageContainer>
-        </main>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

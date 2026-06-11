@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Shield } from "lucide-react";
 import { ADMIN_NAV_ITEMS } from "@/shared/constants/admin-nav";
+import { ROLE_LABELS } from "@/shared/constants/permissions";
 import PageContainer from "@/shared/components/layout/PageContainer";
+import { useAuth } from "@/providers/auth-provider";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -23,6 +25,12 @@ export default function AdminShell({
 }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/auth/login");
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -33,7 +41,9 @@ export default function AdminShell({
           </div>
           <div>
             <span className="font-heading text-lg text-foreground">ScholarTrend</span>
-            <p className="text-xs text-muted-foreground">Admin Panel</p>
+            <p className="text-xs text-muted-foreground">
+              {user ? ROLE_LABELS[user.role] : "Admin Panel"}
+            </p>
           </div>
         </div>
 
@@ -63,16 +73,16 @@ export default function AdminShell({
         <div className="p-4 border-t border-border">
           <div className="flex items-center gap-3 px-3 py-2 rounded-[var(--radius-card)] bg-surface-raised">
             <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-tag">AD</span>
+              <span className="text-sm font-medium text-tag">{user?.initials ?? "AD"}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Admin User</p>
-              <p className="text-xs text-muted-foreground truncate">admin@ScholarTrend.com</p>
+              <p className="text-sm font-medium text-foreground truncate">{user?.name ?? "Admin User"}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email ?? "admin@demo.com"}</p>
             </div>
           </div>
           <button
             type="button"
-            onClick={() => router.push("/auth/login")}
+            onClick={handleLogout}
             className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-[var(--radius-button)] transition-colors"
           >
             <LogOut className="w-4 h-4" strokeWidth={1.75} />
