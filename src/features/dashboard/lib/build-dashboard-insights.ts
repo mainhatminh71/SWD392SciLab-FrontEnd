@@ -5,6 +5,7 @@ import {
   getArticleTitle,
 } from "@/features/experiments/utils/article-format";
 import type { CatalogSample } from "@/features/dashboard/api/fetch-catalog-sample";
+import catalogTotals from "@/features/dashboard/data/catalog-totals.json";
 
 export type DashboardStat = {
   label: string;
@@ -229,16 +230,16 @@ export function buildDashboardInsights(
 
   const stats: DashboardStat[] = [
     {
-      label: "Journals in sample",
-      value: journals.length,
-      hint: journalsHasMore ? "More available in catalog" : "Catalog page",
+      label: "Journals in catalog",
+      value: catalogTotals.journals,
+      hint: `Catalog total (${catalogTotals.generatedAt})`,
       changePercent: null,
       direction: "flat",
     },
     {
-      label: "Articles sampled",
-      value: articles.length,
-      hint: articlesHasMore ? "Load more in Articles" : "Full sample loaded",
+      label: "Articles in catalog",
+      value: catalogTotals.articles,
+      hint: `Catalog total (${catalogTotals.generatedAt})`,
       changePercent: articleYoY,
       direction: articleYoY > 0 ? "up" : articleYoY < 0 ? "down" : "flat",
     },
