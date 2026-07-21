@@ -24,8 +24,10 @@ import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
 import { RouteDataLoading } from "@/shared/components/layout/RouteDataLoading";
 import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
+import { useQueryClient } from "@tanstack/react-query";
 import { useArticles } from "@/features/experiments/hooks/use-articles";
 import { toggleBookmark as toggleBookmarkApi } from "@/features/submissions/api/bookmarks.api";
+import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
 import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks";
 import type { ArticleGraph } from "@/features/experiments/types/article.types";
 import {
@@ -85,6 +87,7 @@ function matchesAdvancedFilters(
 
 export default function ArticleSearch() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [doiSearch, setDoiSearch] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
@@ -173,6 +176,8 @@ export default function ArticleSearch() {
         }
         return next;
       });
+      // Keep the bookmarks page in sync with the new toggle state.
+      void queryClient.invalidateQueries({ queryKey: bookmarksRootQueryKey });
     } catch {
       // Keep previous bookmark state if the API call fails.
     } finally {

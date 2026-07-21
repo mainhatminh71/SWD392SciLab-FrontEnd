@@ -19,8 +19,10 @@ import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
 import { RouteDataLoading } from "@/shared/components/layout/RouteDataLoading";
 import Can from "@/shared/components/auth/Can";
 import { Card } from "@/shared/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
 import { useArticleDetail } from "@/features/experiments/hooks/use-article-detail";
 import { toggleBookmark } from "@/features/submissions/api/bookmarks.api";
+import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
 import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks";
 import {
   formatVolumeNumber,
@@ -39,6 +41,7 @@ interface ArticleDetailProps {
 
 export default function ArticleDetail({ articleId }: ArticleDetailProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { article, isLoading, error } = useArticleDetail(articleId);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarkPending, setIsBookmarkPending] = useState(false);
@@ -66,6 +69,8 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
         },
       });
       setIsBookmarked(result.bookmarked);
+      // Keep the bookmarks page in sync with the new toggle state.
+      void queryClient.invalidateQueries({ queryKey: bookmarksRootQueryKey });
     } catch {
       // Keep previous bookmark state if the API call fails.
     } finally {
