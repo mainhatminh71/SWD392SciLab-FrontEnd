@@ -21,6 +21,7 @@ import Can from "@/shared/components/auth/Can";
 import { Card } from "@/shared/components/ui/card";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticleDetail } from "@/features/experiments/hooks/use-article-detail";
+import { RelatedWorksGraph } from "@/features/experiments/components/RelatedWorksGraph";
 import { toggleBookmark } from "@/features/submissions/api/bookmarks.api";
 import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
 import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks";
@@ -276,6 +277,13 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
                 </div>
               </section>
             )}
+
+            <section className="space-y-4">
+              <h2 className="font-heading text-2xl text-foreground">
+                Related Works Graph
+              </h2>
+              <RelatedWorksGraph articleId={articleId} />
+            </section>
 
             <section className="space-y-4">
               <h2 className="font-heading text-2xl text-foreground">
