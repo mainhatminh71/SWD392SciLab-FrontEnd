@@ -6,7 +6,7 @@ import type {
   ArticleListResponse,
 } from "@/features/experiments/types/article.types";
 
-const defaultLimit = 20;
+const defaultLimit = 100;
 
 function setOptionalParam(
   params: URLSearchParams,

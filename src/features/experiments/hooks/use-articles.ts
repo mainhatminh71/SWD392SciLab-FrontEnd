@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getUserFriendlyApiErrorMessage } from "@/core/api";
 import {
-  academicListPageSize,
+  academicArticlePageSize,
   listQueryStaleTimeMs,
 } from "@/core/api/query-config";
 import { listArticles } from "@/features/experiments/api/articles.api";
@@ -91,7 +91,7 @@ export function useArticles(
         publisher: trimmedPublisher || undefined,
         country: apiFilters.country || undefined,
         sort,
-        limit: academicListPageSize,
+        limit: academicArticlePageSize,
         cursor: pageParam,
       });
       syncLocalFollowNotifications(page.items);
