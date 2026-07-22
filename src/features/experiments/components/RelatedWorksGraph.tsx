@@ -315,7 +315,6 @@ export function RelatedWorksGraph({
     (!needsCitationFallback || fallbackError);
 
   const relatedCount = Math.max(0, displayNodes.length - 1);
-  const hasNeighbors = relatedCount > 0;
   const countLabel = usingMockData
     ? `${relatedCount} mock related works (UI preview)`
     : hardError
