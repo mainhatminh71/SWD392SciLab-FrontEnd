@@ -2,6 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getArticleById } from "@/features/experiments/api/articles.api";
+import { toGraphPaperInfo } from "@/features/experiments/hooks/use-graph-paper-details";
+import type { GraphPaperInfo } from "@/features/experiments/types/graph-paper.types";
 import type {
   ArticleGraphEdge,
   ArticleGraphNode,
@@ -9,9 +11,10 @@ import type {
 
 const FALLBACK_LIMIT = 15;
 
-type CitedWorksFallback = {
+export type CitedWorksFallback = {
   nodes: ArticleGraphNode[];
   edges: ArticleGraphEdge[];
+  papers: Record<string, GraphPaperInfo>;
 };
 
 /**
@@ -20,7 +23,7 @@ type CitedWorksFallback = {
  */
 export function useCitedWorksFallback(
   articleId: string,
-  rootTitle: string,
+  rootPaper: GraphPaperInfo | null,
   citedArticleIds: string[],
   enabled: boolean,
 ) {
@@ -30,7 +33,8 @@ export function useCitedWorksFallback(
       articleId,
       citedArticleIds.slice(0, FALLBACK_LIMIT),
     ] as const,
-    enabled: enabled && articleId.trim().length > 0 && citedArticleIds.length > 0,
+    enabled:
+      enabled && articleId.trim().length > 0 && citedArticleIds.length > 0,
     staleTime: 60_000,
     queryFn: async (): Promise<CitedWorksFallback> => {
       const rootNodeId = `article:${articleId}`;
@@ -42,8 +46,7 @@ export function useCitedWorksFallback(
       const settled = await Promise.all(
         ids.map(async (id) => {
           try {
-            const detail = await getArticleById(id);
-            return detail.article;
+            return await getArticleById(id);
           } catch {
             return null;
           }
@@ -51,25 +54,41 @@ export function useCitedWorksFallback(
       );
 
       const cited = settled.filter(
-        (article): article is NonNullable<typeof article> => article !== null,
+        (detail): detail is NonNullable<typeof detail> => detail !== null,
       );
 
-      const years = new Set<number>();
+      const papers: Record<string, GraphPaperInfo> = {};
+      if (rootPaper) {
+        papers[articleId] = rootPaper;
+      } else {
+        papers[articleId] = {
+          id: articleId,
+          title: "Current article",
+          authors: [],
+          year: null,
+          journal: null,
+          abstract: null,
+          citationCount: citedArticleIds.length,
+        };
+      }
+
       const nodes: ArticleGraphNode[] = [
         {
           id: rootNodeId,
           type: "article",
-          label: rootTitle.trim() || "Current article",
+          label: papers[articleId].title,
         },
       ];
       const edges: ArticleGraphEdge[] = [];
 
-      for (const article of cited) {
-        const nodeId = `article:${article.id}`;
+      for (const detail of cited) {
+        const info = toGraphPaperInfo(detail);
+        papers[info.id] = info;
+        const nodeId = `article:${info.id}`;
         nodes.push({
           id: nodeId,
           type: "article",
-          label: article.title?.trim() || article.id,
+          label: info.title,
         });
         edges.push({
           id: `${rootNodeId}->${nodeId}`,
@@ -77,28 +96,9 @@ export function useCitedWorksFallback(
           targetId: nodeId,
           type: "RELATED_TO",
         });
-
-        if (article.publicationYear != null) {
-          years.add(article.publicationYear);
-          const yearId = `year:${article.publicationYear}`;
-          edges.push({
-            id: `${nodeId}->${yearId}`,
-            sourceId: nodeId,
-            targetId: yearId,
-            type: "PUBLISHED_IN_YEAR",
-          });
-        }
       }
 
-      for (const year of [...years].sort((a, b) => a - b)) {
-        nodes.push({
-          id: `year:${year}`,
-          type: "year",
-          label: String(year),
-        });
-      }
-
-      return { nodes, edges };
+      return { nodes, edges, papers };
     },
   });
 }

@@ -22,6 +22,7 @@ import { Card } from "@/shared/components/ui/card";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticleDetail } from "@/features/experiments/hooks/use-article-detail";
 import { RelatedWorksGraph } from "@/features/experiments/components/RelatedWorksGraph";
+import { toGraphPaperInfo } from "@/features/experiments/hooks/use-graph-paper-details";
 import { toggleBookmark } from "@/features/submissions/api/bookmarks.api";
 import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
 import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks";
@@ -285,7 +286,7 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
               <RelatedWorksGraph
                 articleId={articleId}
                 citedArticleIds={article.citedArticleIds}
-                rootTitle={getArticleTitle(article)}
+                rootPaper={toGraphPaperInfo(article)}
               />
             </section>
 
