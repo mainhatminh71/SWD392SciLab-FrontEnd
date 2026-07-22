@@ -30,6 +30,7 @@ import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticles } from "@/features/experiments/hooks/use-articles";
+import { useCatalogSample } from "@/features/dashboard/hooks/use-catalog-sample";
 import { useJournals } from "@/features/laboratories/hooks/use-journals";
 import { toggleBookmark as toggleBookmarkApi } from "@/features/submissions/api/bookmarks.api";
 import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
@@ -64,7 +65,6 @@ const itemsPerPage = 10;
 type ClientFilters = {
   doiSearch: string;
   authorSearch: string;
-  topicSearch: string;
   openAccess: "" | "oa" | "subscription";
 };
 
@@ -104,12 +104,6 @@ function FilterSelect({
 function matchesClientFilters(article: ArticleGraph, filters: ClientFilters) {
   const doi = article.article.doi ?? "";
   const authors = getArticleAuthorNames(article).join(" ").toLowerCase();
-  const topicsAndKeywords = [
-    ...getTagNames(article.keywords, 50),
-    ...getTagNames(article.topics, 50),
-  ]
-    .join(" ")
-    .toLowerCase();
 
   if (
     filters.doiSearch &&
@@ -121,13 +115,6 @@ function matchesClientFilters(article: ArticleGraph, filters: ClientFilters) {
   if (
     filters.authorSearch &&
     !authors.includes(filters.authorSearch.toLowerCase())
-  ) {
-    return false;
-  }
-
-  if (
-    filters.topicSearch &&
-    !topicsAndKeywords.includes(filters.topicSearch.toLowerCase())
   ) {
     return false;
   }
@@ -167,8 +154,11 @@ export default function ArticleSearch() {
 
   const [doiSearch, setDoiSearch] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
-  const [topicSearch, setTopicSearch] = useState("");
+  const [keywordId, setKeywordId] = useState("");
+  const [topicId, setTopicId] = useState("");
   const [openAccess, setOpenAccess] = useState<"" | "oa" | "subscription">("");
+
+  const { data: catalogSample } = useCatalogSample();
 
   const {
     items: journals,
@@ -176,6 +166,36 @@ export default function ArticleSearch() {
     isLoadingMore: isLoadingMoreJournals,
     loadMore: loadMoreJournals,
   } = useJournals("");
+
+  const keywordOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of catalogSample?.articles ?? []) {
+      for (const keyword of item.keywords) {
+        const name = keyword.displayName?.trim();
+        if (keyword.id && name) {
+          map.set(keyword.id, name);
+        }
+      }
+    }
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }, [catalogSample?.articles]);
+
+  const topicOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of catalogSample?.articles ?? []) {
+      for (const topic of item.topics) {
+        const name = topic.displayName?.trim();
+        if (topic.id && name) {
+          map.set(topic.id, name);
+        }
+      }
+    }
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }, [catalogSample?.articles]);
 
   const publisherOptions = useMemo(() => {
     const values = new Set<string>();
@@ -202,6 +222,8 @@ export default function ArticleSearch() {
   const apiFilters = useMemo<ArticleApiFilters>(
     () => ({
       sort,
+      keywordId: keywordId || undefined,
+      topicId: topicId || undefined,
       journalId: journalId || undefined,
       publisher: publisher || undefined,
       country: country || undefined,
@@ -209,7 +231,17 @@ export default function ArticleSearch() {
       publicationYearFrom: selectedYear ? undefined : yearFrom || undefined,
       publicationYearTo: selectedYear ? undefined : yearTo || undefined,
     }),
-    [sort, journalId, publisher, country, selectedYear, yearFrom, yearTo],
+    [
+      sort,
+      keywordId,
+      topicId,
+      journalId,
+      publisher,
+      country,
+      selectedYear,
+      yearFrom,
+      yearTo,
+    ],
   );
 
   const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
@@ -221,11 +253,10 @@ export default function ArticleSearch() {
         matchesClientFilters(article, {
           doiSearch,
           authorSearch,
-          topicSearch,
           openAccess,
         }),
       ),
-    [items, doiSearch, authorSearch, topicSearch, openAccess],
+    [items, doiSearch, authorSearch, openAccess],
   );
 
   const totalPages = Math.max(
@@ -241,6 +272,8 @@ export default function ArticleSearch() {
   }, [
     searchQuery,
     sort,
+    keywordId,
+    topicId,
     journalId,
     publisher,
     country,
@@ -249,7 +282,6 @@ export default function ArticleSearch() {
     yearTo,
     doiSearch,
     authorSearch,
-    topicSearch,
     openAccess,
   ]);
 
@@ -307,6 +339,8 @@ export default function ArticleSearch() {
 
   const clearFilters = () => {
     setSort("relevant");
+    setKeywordId("");
+    setTopicId("");
     setJournalId("");
     setPublisher("");
     setCountry("");
@@ -315,12 +349,13 @@ export default function ArticleSearch() {
     setYearTo("2025");
     setDoiSearch("");
     setAuthorSearch("");
-    setTopicSearch("");
     setOpenAccess("");
   };
 
   const activeFilterCount =
     (sort !== "relevant" ? 1 : 0) +
+    (keywordId ? 1 : 0) +
+    (topicId ? 1 : 0) +
     (journalId ? 1 : 0) +
     (publisher ? 1 : 0) +
     (country ? 1 : 0) +
@@ -329,7 +364,6 @@ export default function ArticleSearch() {
     (yearTo && yearTo !== "2025" ? 1 : 0) +
     (doiSearch ? 1 : 0) +
     (authorSearch ? 1 : 0) +
-    (topicSearch ? 1 : 0) +
     (openAccess ? 1 : 0);
 
   return (
@@ -360,7 +394,7 @@ export default function ArticleSearch() {
                 htmlFor="article-name-search"
                 className="text-sm font-medium"
               >
-                Search by article title
+                Search by title, abstract, keyword, or topic
               </Label>
               <div className="relative max-w-2xl">
                 <Search
@@ -370,7 +404,7 @@ export default function ArticleSearch() {
                 <Input
                   id="article-name-search"
                   type="search"
-                  placeholder="Type an article name…"
+                  placeholder="Type a title, keyword, or topic…"
                   className="pl-10 h-11 bg-card"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -558,6 +592,36 @@ export default function ArticleSearch() {
                     </div>
 
                     <div className="pt-4 border-t border-border space-y-5">
+                      <FilterSelect
+                        id="keyword-filter"
+                        label="Keyword"
+                        value={keywordId}
+                        onChange={setKeywordId}
+                      >
+                        <option value="">All keywords</option>
+                        {keywordOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.name}
+                          </option>
+                        ))}
+                      </FilterSelect>
+
+                      <FilterSelect
+                        id="topic-filter"
+                        label="Topic"
+                        value={topicId}
+                        onChange={setTopicId}
+                      >
+                        <option value="">All topics</option>
+                        {topicOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.name}
+                          </option>
+                        ))}
+                      </FilterSelect>
+                    </div>
+
+                    <div className="pt-4 border-t border-border space-y-5">
                       <div className="space-y-2">
                         <Label
                           htmlFor="doi-search"
@@ -590,25 +654,6 @@ export default function ArticleSearch() {
                           value={authorSearch}
                           onChange={(event) =>
                             setAuthorSearch(event.target.value)
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="topic-search"
-                          className="text-sm font-semibold text-foreground"
-                        >
-                          Keyword / topic
-                        </Label>
-                        <Input
-                          id="topic-search"
-                          type="text"
-                          placeholder="Keyword or topic"
-                          className="h-9"
-                          value={topicSearch}
-                          onChange={(event) =>
-                            setTopicSearch(event.target.value)
                           }
                         />
                       </div>

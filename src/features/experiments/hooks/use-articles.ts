@@ -59,15 +59,21 @@ export function useArticles(
 
   const trimmedQuery = debouncedSearch.trim();
   const trimmedPublisher = debouncedPublisher.trim();
-  // Auto-prefer partial/relevant ranking whenever the user types a query.
-  const effectiveSort =
-    trimmedQuery.length > 0
-      ? resolveSort(apiFilters.sort ?? "relevant", true)
-      : resolveSort(apiFilters.sort ?? "newest", false);
+  const hasResearchQuery =
+    trimmedQuery.length > 0 ||
+    Boolean(apiFilters.keywordId?.trim()) ||
+    Boolean(apiFilters.topicId?.trim());
+
+  // Prefer relevant ranking for text / keyword / topic searches.
+  const effectiveSort = hasResearchQuery
+    ? resolveSort(apiFilters.sort ?? "relevant", true)
+    : resolveSort(apiFilters.sort ?? "newest", false);
 
   const queryKey = [
     "articles",
     trimmedQuery,
+    apiFilters.keywordId ?? "",
+    apiFilters.topicId ?? "",
     apiFilters.journalId ?? "",
     apiFilters.publicationYear ?? "",
     apiFilters.publicationYearFrom ?? "",
@@ -84,6 +90,8 @@ export function useArticles(
     queryFn: async ({ pageParam }) => {
       const page = await listArticles({
         q: trimmedQuery || undefined,
+        keywordId: apiFilters.keywordId || undefined,
+        topicId: apiFilters.topicId || undefined,
         journalId: apiFilters.journalId || undefined,
         publicationYear: apiFilters.publicationYear || undefined,
         publicationYearFrom: apiFilters.publicationYear

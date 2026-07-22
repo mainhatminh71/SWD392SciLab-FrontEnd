@@ -80,6 +80,8 @@ export type ArticleSort = "relevant" | "newest" | "most_cited";
 
 /** Filters sent to GET /academic/articles (excluding cursor/limit/q). */
 export type ArticleApiFilters = {
+  keywordId?: string;
+  topicId?: string;
   journalId?: string;
   publicationYear?: string;
   publicationYearFrom?: string;
