@@ -282,7 +282,11 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
               <h2 className="font-heading text-2xl text-foreground">
                 Related Works Graph
               </h2>
-              <RelatedWorksGraph articleId={articleId} />
+              <RelatedWorksGraph
+                articleId={articleId}
+                citedArticleIds={article.citedArticleIds}
+                rootTitle={getArticleTitle(article)}
+              />
             </section>
 
             <section className="space-y-4">

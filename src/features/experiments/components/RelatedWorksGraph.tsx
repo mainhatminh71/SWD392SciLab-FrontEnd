@@ -6,6 +6,7 @@ import { Loader2, Network } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { useArticleGraph } from "@/features/experiments/hooks/use-article-graph";
+import { useCitedWorksFallback } from "@/features/experiments/hooks/use-cited-works-fallback";
 import { articleIdFromNodeId } from "@/features/experiments/types/article-graph.types";
 import type { ArticleGraphNode } from "@/features/experiments/types/article-graph.types";
 
@@ -46,11 +47,70 @@ function truncateLabel(label: string, max = 32) {
   return label.length > max ? `${label.slice(0, max - 1)}…` : label;
 }
 
+function articleNodeCount(nodes: ArticleGraphNode[]) {
+  return nodes.filter((node) => node.type === "article").length;
+}
+
+type RelatedWorksGraphProps = {
+  articleId: string;
+  /** Used when RELATED_TO neighbors are not synced yet. */
+  citedArticleIds?: string[];
+  rootTitle?: string;
+};
+
 /** Radial knowledge-graph view backed by GET /academic/graphs/article/:id. */
-export function RelatedWorksGraph({ articleId }: { articleId: string }) {
+export function RelatedWorksGraph({
+  articleId,
+  citedArticleIds = [],
+  rootTitle = "",
+}: RelatedWorksGraphProps) {
   const router = useRouter();
-  const { nodes, edges, isLoading, isLoadingMore, hasMore, error, loadMore } =
-    useArticleGraph(articleId);
+  const {
+    nodes: relatedNodes,
+    edges: relatedEdges,
+    isLoading: isRelatedLoading,
+    isLoadingMore,
+    hasMore,
+    error: relatedError,
+    loadMore,
+  } = useArticleGraph(articleId);
+
+  const relatedArticleCount = articleNodeCount(relatedNodes);
+  const needsCitationFallback =
+    !isRelatedLoading &&
+    (Boolean(relatedError) || relatedArticleCount <= 1) &&
+    citedArticleIds.length > 0;
+
+  const {
+    data: citationFallback,
+    isLoading: isFallbackLoading,
+    error: fallbackError,
+  } = useCitedWorksFallback(
+    articleId,
+    rootTitle,
+    citedArticleIds,
+    needsCitationFallback,
+  );
+
+  const usingCitationFallback =
+    needsCitationFallback &&
+    Boolean(citationFallback) &&
+    articleNodeCount(citationFallback?.nodes ?? []) > 1;
+
+  const nodes = useMemo(
+    () =>
+      usingCitationFallback
+        ? (citationFallback?.nodes ?? [])
+        : relatedNodes,
+    [usingCitationFallback, citationFallback?.nodes, relatedNodes],
+  );
+  const edges = useMemo(
+    () =>
+      usingCitationFallback
+        ? (citationFallback?.edges ?? [])
+        : relatedEdges,
+    [usingCitationFallback, citationFallback?.edges, relatedEdges],
+  );
 
   const rootNodeId = `article:${articleId}`;
   const positioned = useMemo(
@@ -65,7 +125,7 @@ export function RelatedWorksGraph({ articleId }: { articleId: string }) {
     }
   };
 
-  if (isLoading) {
+  if (isRelatedLoading || (needsCitationFallback && isFallbackLoading)) {
     return (
       <Card className="p-8 border-border flex items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="w-4 h-4 animate-spin" />
@@ -74,32 +134,42 @@ export function RelatedWorksGraph({ articleId }: { articleId: string }) {
     );
   }
 
-  if (error) {
+  if (
+    !usingCitationFallback &&
+    relatedError &&
+    (!needsCitationFallback || fallbackError)
+  ) {
     return (
       <Card className="p-8 border-border text-center text-muted-foreground">
-        {error}
+        {relatedError}
       </Card>
     );
   }
 
-  // Root + only a year node means there is nothing meaningful to draw yet.
-  if (nodes.filter((node) => node.type === "article").length <= 1) {
+  if (articleNodeCount(nodes) <= 1) {
     return (
-      <Card className="p-8 border-border text-center text-muted-foreground">
-        No related works available for this article yet.
+      <Card className="p-8 border-border text-center text-muted-foreground space-y-2">
+        <p>No related or cited works available for this article yet.</p>
+        <p className="text-xs">
+          The graph API is reachable; OpenAlex related-work links may still be
+          syncing for this paper.
+        </p>
       </Card>
     );
   }
+
+  const relatedCount = articleNodeCount(nodes) - 1;
 
   return (
     <Card className="p-4 border-border space-y-3">
-      <div className="flex items-center justify-between px-2">
+      <div className="flex items-center justify-between px-2 gap-3 flex-wrap">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Network className="w-4 h-4" />
-          {nodes.filter((node) => node.type === "article").length - 1} related
-          works
+          {usingCitationFallback
+            ? `${relatedCount} cited works`
+            : `${relatedCount} related works`}
         </div>
-        {hasMore && (
+        {!usingCitationFallback && hasMore && (
           <Button
             variant="outline"
             size="sm"
