@@ -3,12 +3,10 @@
  *
  * - `connect-papers` — build the graph from cited articles already in the catalog (preferred default)
  * - `public-api` — GET /academic/graphs/article/:id (OpenAlex RELATED_TO)
- * - `mock` — fixed mock papers for UI preview
  */
 export const RELATED_WORKS_GRAPH_SOURCE = {
   CONNECT_PAPERS: "connect-papers",
   PUBLIC_API: "public-api",
-  MOCK: "mock",
 } as const;
 
 export type RelatedWorksGraphSource =
@@ -41,8 +39,4 @@ export function isPublicApiGraphSource(
   source = relatedWorksGraphSource,
 ): boolean {
   return source === RELATED_WORKS_GRAPH_SOURCE.PUBLIC_API;
-}
-
-export function isMockGraphSource(source = relatedWorksGraphSource): boolean {
-  return source === RELATED_WORKS_GRAPH_SOURCE.MOCK;
 }

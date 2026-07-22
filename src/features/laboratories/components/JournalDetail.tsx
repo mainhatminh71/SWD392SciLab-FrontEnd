@@ -247,22 +247,6 @@ export default function JournalDetail({ journalId }: JournalDetailProps) {
                   </div>
                 </Card>
               </div>
-
-              <Card className="p-6 border-border">
-                <h2 className="font-heading text-lg text-foreground mb-4">
-                  Browse related articles
-                </h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Articles linked to this journal are available from the article
-                  search page.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push("/student/articles")}
-                >
-                  Open Article Search
-                </Button>
-              </Card>
             </div>
 
             <div className="space-y-6">

@@ -31,12 +31,7 @@ import type {
 import type { GraphPaperInfo } from "@/features/experiments/types/graph-paper.types";
 import { shortAuthorLabel } from "@/features/experiments/types/graph-paper.types";
 import {
-  buildMockRelatedWorksGraph,
-  isMockGraphPaperId,
-} from "@/features/experiments/data/mock-related-works-graph";
-import {
   isConnectPapersSource,
-  isMockGraphSource,
   isPublicApiGraphSource,
   relatedWorksGraphSource,
 } from "@/features/experiments/config/related-works-graph.config";
@@ -129,7 +124,6 @@ export function RelatedWorksGraph({
 
   const usePublicApi = isPublicApiGraphSource();
   const useConnectPapers = isConnectPapersSource();
-  const useMockOnly = isMockGraphSource();
 
   const {
     nodes: relatedNodes,
@@ -239,32 +233,12 @@ export function RelatedWorksGraph({
     useGraphPaperDetails(
       detailIds,
       seededPapers,
-      !useMockOnly && articleNodes.length > 1,
+      articleNodes.length > 1,
     );
 
-  // Mock ONLY when explicitly configured — never auto-fallback.
-  const usingMockData = useMockOnly;
-
-  const mockGraph = useMemo(
-    () =>
-      usingMockData
-        ? buildMockRelatedWorksGraph(articleId, rootPaper)
-        : null,
-    [usingMockData, articleId, rootPaper],
-  );
-
-  const papers = useMemo(
-    () => ({
-      ...(mockGraph?.papers ?? {}),
-      ...fetchedPapers,
-    }),
-    [mockGraph?.papers, fetchedPapers],
-  );
+  const papers = fetchedPapers;
 
   const displayNodes = useMemo(() => {
-    if (usingMockData) {
-      return mockGraph?.nodes ?? [];
-    }
     if (articleNodes.length > 0) {
       return articleNodes;
     }
@@ -275,20 +249,9 @@ export function RelatedWorksGraph({
         label: rootPaper?.title ?? "Current article",
       },
     ];
-  }, [
-    usingMockData,
-    mockGraph?.nodes,
-    articleNodes,
-    rootNodeId,
-    rootPaper?.title,
-  ]);
+  }, [articleNodes, rootNodeId, rootPaper?.title]);
 
-  const displayEdges = useMemo(() => {
-    if (usingMockData) {
-      return mockGraph?.edges ?? [];
-    }
-    return articleEdges;
-  }, [usingMockData, mockGraph?.edges, articleEdges]);
+  const displayEdges = articleEdges;
 
   const displayPositioned = useMemo(
     () => layoutArticleNodes(rootNodeId, displayNodes, papers),
@@ -338,9 +301,6 @@ export function RelatedWorksGraph({
         if (right.id === articleId) {
           return 1;
         }
-        if (isMockGraphPaperId(left.id) !== isMockGraphPaperId(right.id)) {
-          return isMockGraphPaperId(left.id) ? 1 : -1;
-        }
         return left.title.localeCompare(right.title);
       });
   }, [displayNodes, papers, articleId]);
@@ -368,20 +328,15 @@ export function RelatedWorksGraph({
       !connectHasNeighbors);
 
   const relatedCount = Math.max(0, displayNodes.length - 1);
-  const countLabel = usingMockData
-    ? `${relatedCount} mock related works (config = mock)`
-    : useConnectPapers
-      ? relatedCount > 0
-        ? `${relatedCount} connected papers`
-        : "Origin paper only — no citations in catalog"
-      : relatedCount > 0
-        ? `${relatedCount} related works`
-        : "Origin paper only — no public-api neighbors";
+  const countLabel = useConnectPapers
+    ? relatedCount > 0
+      ? `${relatedCount} connected papers`
+      : "Origin paper only — no citations in catalog"
+    : relatedCount > 0
+      ? `${relatedCount} related works`
+      : "Origin paper only — no public-api neighbors";
 
   const openPaper = (paperId: string) => {
-    if (isMockGraphPaperId(paperId)) {
-      return;
-    }
     setOpen(false);
     router.push(`/student/articles/${paperId}`);
   };
@@ -399,11 +354,8 @@ export function RelatedWorksGraph({
             </p>
             <p className="text-sm text-muted-foreground">
               {countLabel}
-              {useConnectPapers && !usingMockData
-                ? " · built from catalog citations"
-                : ""}
-              . Open the full graph to inspect papers
-              {!usingMockData ? " and jump to details" : ""}.
+              {useConnectPapers ? " · built from catalog citations" : ""}
+              . Open the full graph to inspect papers and jump to details.
             </p>
           </div>
         </div>
@@ -422,30 +374,23 @@ export function RelatedWorksGraph({
             </DialogTitle>
             <DialogDescription>
               {countLabel}
-              {useConnectPapers && !usingMockData
+              {useConnectPapers
                 ? " · connect-papers source"
-                : usePublicApi && !usingMockData
+                : usePublicApi
                   ? " · public-api source"
                   : ""}
-              . Click a node to inspect
-              {usingMockData ? " the mock layout" : ", then View article"}.
+              . Click a node to inspect, then View article.
             </DialogDescription>
           </DialogHeader>
 
-          {usingMockData && (
-            <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-amber-500/10 shrink-0">
-              Config source is <code>mock</code> — showing preview papers only.
-            </div>
-          )}
-
-          {!usingMockData && useConnectPapers && relatedCount === 0 && (
+          {useConnectPapers && relatedCount === 0 && (
             <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-muted/30 shrink-0">
               No cited article IDs on this paper yet. Graph shows the origin
               paper only (source = {relatedWorksGraphSource}).
             </div>
           )}
 
-          {!usingMockData && hardError && (
+          {hardError && (
             <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-muted/30 shrink-0">
               {relatedError ??
                 (connectError instanceof Error
@@ -456,7 +401,7 @@ export function RelatedWorksGraph({
           )}
 
           <div className="flex items-center justify-end gap-2 px-4 py-2 border-b border-border bg-muted/20 shrink-0">
-            {usePublicApi && hasMore && !usingMockData && (
+            {usePublicApi && hasMore && (
               <Button
                 variant="outline"
                 size="sm"
@@ -684,10 +629,7 @@ export function RelatedWorksGraph({
 
                       <Button
                         className="w-full"
-                        disabled={
-                          (selectedPaper ?? rootPaper)!.id === articleId ||
-                          isMockGraphPaperId((selectedPaper ?? rootPaper)!.id)
-                        }
+                        disabled={(selectedPaper ?? rootPaper)!.id === articleId}
                         onClick={() =>
                           openPaper((selectedPaper ?? rootPaper)!.id)
                         }
@@ -698,13 +640,6 @@ export function RelatedWorksGraph({
                       {(selectedPaper ?? rootPaper)!.id === articleId && (
                         <p className="text-xs text-center text-muted-foreground">
                           You are already viewing this article.
-                        </p>
-                      )}
-                      {isMockGraphPaperId(
-                        (selectedPaper ?? rootPaper)!.id,
-                      ) && (
-                        <p className="text-xs text-center text-muted-foreground">
-                          Mock paper — View is disabled in preview mode.
                         </p>
                       )}
                     </>

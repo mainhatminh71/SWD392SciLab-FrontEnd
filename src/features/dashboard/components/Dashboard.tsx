@@ -410,7 +410,7 @@ export default function Dashboard() {
                 {data.sampleSize.articlesHasMore ? "+" : ""} ·{" "}
                 {data.sampleSize.journals} journals
                 {data.sampleSize.journalsHasMore ? "+" : ""}. Metrics are
-                computed from the live catalog, not mock data.
+                computed from the live catalog.
               </p>
             </>
           )}
