@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Filter,
@@ -30,10 +30,20 @@ import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticles } from "@/features/experiments/hooks/use-articles";
+import { useJournals } from "@/features/laboratories/hooks/use-journals";
 import { toggleBookmark as toggleBookmarkApi } from "@/features/submissions/api/bookmarks.api";
 import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
 import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks";
-import type { ArticleGraph } from "@/features/experiments/types/article.types";
+import type {
+  ArticleApiFilters,
+  ArticleGraph,
+  ArticleSort,
+} from "@/features/experiments/types/article.types";
+import {
+  articleSortOptions,
+  countryFilterOptions,
+  yearOptions,
+} from "@/features/experiments/types/article.types";
 import {
   getArticleAbstract,
   getArticleAuthorNames,
@@ -43,23 +53,62 @@ import {
   getArticleYear,
   getTagNames,
 } from "@/features/experiments/utils/article-format";
-import { yearOptions } from "@/features/experiments/types/article.types";
+import {
+  getJournalName,
+  getJournalPublisher,
+} from "@/features/laboratories/utils/journal-format";
 
 const itemsPerPage = 10;
 
-function matchesAdvancedFilters(
-  article: ArticleGraph,
-  filters: {
-    doiSearch: string;
-    authorSearch: string;
-    journalSearch: string;
-    selectedYear: string;
-  },
-) {
+type ClientFilters = {
+  doiSearch: string;
+  authorSearch: string;
+  topicSearch: string;
+  openAccess: "" | "oa" | "subscription";
+};
+
+function FilterSelect({
+  id,
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </Label>
+      <div className="relative">
+        <select
+          id={id}
+          className="w-full h-9 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          {children}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      </div>
+    </div>
+  );
+}
+
+function matchesClientFilters(article: ArticleGraph, filters: ClientFilters) {
   const doi = article.article.doi ?? "";
   const authors = getArticleAuthorNames(article).join(" ").toLowerCase();
-  const journal = getArticleJournal(article).toLowerCase();
-  const year = article.article.publicationYear?.toString() ?? "";
+  const topicsAndKeywords = [
+    ...getTagNames(article.keywords, 50),
+    ...getTagNames(article.topics, 50),
+  ]
+    .join(" ")
+    .toLowerCase();
 
   if (
     filters.doiSearch &&
@@ -76,13 +125,20 @@ function matchesAdvancedFilters(
   }
 
   if (
-    filters.journalSearch &&
-    !journal.includes(filters.journalSearch.toLowerCase())
+    filters.topicSearch &&
+    !topicsAndKeywords.includes(filters.topicSearch.toLowerCase())
   ) {
     return false;
   }
 
-  if (filters.selectedYear && year !== filters.selectedYear) {
+  if (filters.openAccess === "oa" && article.journal?.isOpenAccess !== true) {
+    return false;
+  }
+
+  if (
+    filters.openAccess === "subscription" &&
+    article.journal?.isOpenAccess === true
+  ) {
     return false;
   }
 
@@ -93,44 +149,78 @@ export default function ArticleSearch() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
-  const [doiSearch, setDoiSearch] = useState("");
-  const [authorSearch, setAuthorSearch] = useState("");
-  const [journalSearch, setJournalSearch] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [bookmarkPendingIds, setBookmarkPendingIds] = useState<Set<string>>(
     new Set(),
   );
 
-  const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
-    useArticles(searchQuery);
+  const [sort, setSort] = useState<ArticleSort>("newest");
+  const [journalId, setJournalId] = useState("");
+  const [publisher, setPublisher] = useState("");
+  const [country, setCountry] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [yearFrom, setYearFrom] = useState("");
+  const [yearTo, setYearTo] = useState("");
 
-  const filteredArticles = useMemo(() => {
-    const titleQuery = searchQuery.trim().toLowerCase();
-    return items.filter((article) => {
-      if (
-        titleQuery &&
-        !getArticleTitle(article).toLowerCase().includes(titleQuery)
-      ) {
-        return false;
+  const [doiSearch, setDoiSearch] = useState("");
+  const [authorSearch, setAuthorSearch] = useState("");
+  const [topicSearch, setTopicSearch] = useState("");
+  const [openAccess, setOpenAccess] = useState<"" | "oa" | "subscription">("");
+
+  const { items: journals } = useJournals("");
+
+  const publisherOptions = useMemo(() => {
+    const values = new Set<string>();
+    for (const journal of journals) {
+      const name = getJournalPublisher(journal);
+      if (name && name !== "—") {
+        values.add(name);
       }
-      return matchesAdvancedFilters(article, {
-        doiSearch,
-        authorSearch,
-        journalSearch,
-        selectedYear,
-      });
-    });
-  }, [
-    items,
-    searchQuery,
-    doiSearch,
-    authorSearch,
-    journalSearch,
-    selectedYear,
-  ]);
+    }
+    return [...values].sort((left, right) => left.localeCompare(right));
+  }, [journals]);
+
+  const journalOptions = useMemo(
+    () =>
+      [...journals]
+        .map((journal) => ({
+          id: journal.id,
+          name: getJournalName(journal),
+        }))
+        .sort((left, right) => left.name.localeCompare(right.name)),
+    [journals],
+  );
+
+  const apiFilters = useMemo<ArticleApiFilters>(
+    () => ({
+      sort,
+      journalId: journalId || undefined,
+      publisher: publisher || undefined,
+      country: country || undefined,
+      publicationYear: selectedYear || undefined,
+      publicationYearFrom: selectedYear ? undefined : yearFrom || undefined,
+      publicationYearTo: selectedYear ? undefined : yearTo || undefined,
+    }),
+    [sort, journalId, publisher, country, selectedYear, yearFrom, yearTo],
+  );
+
+  const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
+    useArticles(searchQuery, apiFilters);
+
+  const filteredArticles = useMemo(
+    () =>
+      items.filter((article) =>
+        matchesClientFilters(article, {
+          doiSearch,
+          authorSearch,
+          topicSearch,
+          openAccess,
+        }),
+      ),
+    [items, doiSearch, authorSearch, topicSearch, openAccess],
+  );
 
   const totalPages = Math.max(
     1,
@@ -139,6 +229,23 @@ export default function ArticleSearch() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentArticles = filteredArticles.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchQuery,
+    sort,
+    journalId,
+    publisher,
+    country,
+    selectedYear,
+    yearFrom,
+    yearTo,
+    doiSearch,
+    authorSearch,
+    topicSearch,
+    openAccess,
+  ]);
 
   useEffect(() => {
     setBookmarkedIds((previous) => {
@@ -180,7 +287,6 @@ export default function ArticleSearch() {
         }
         return next;
       });
-      // Keep the bookmarks page in sync with the new toggle state.
       void queryClient.invalidateQueries({ queryKey: bookmarksRootQueryKey });
     } catch {
       // Keep previous bookmark state if the API call fails.
@@ -194,28 +300,38 @@ export default function ArticleSearch() {
   };
 
   const clearFilters = () => {
+    setSort("newest");
+    setJournalId("");
+    setPublisher("");
+    setCountry("");
+    setSelectedYear("");
+    setYearFrom("");
+    setYearTo("");
     setDoiSearch("");
     setAuthorSearch("");
-    setJournalSearch("");
-    setSelectedYear("");
-    setCurrentPage(1);
+    setTopicSearch("");
+    setOpenAccess("");
   };
 
   const activeFilterCount =
+    (sort !== "newest" ? 1 : 0) +
+    (journalId ? 1 : 0) +
+    (publisher ? 1 : 0) +
+    (country ? 1 : 0) +
+    (selectedYear ? 1 : 0) +
+    (yearFrom ? 1 : 0) +
+    (yearTo ? 1 : 0) +
     (doiSearch ? 1 : 0) +
     (authorSearch ? 1 : 0) +
-    (journalSearch ? 1 : 0) +
-    (selectedYear ? 1 : 0);
+    (topicSearch ? 1 : 0) +
+    (openAccess ? 1 : 0);
 
   return (
     <>
       <StudentTopHeader
         searchPlaceholder="Search articles by title..."
         searchValue={searchQuery}
-        onSearchChange={(value) => {
-          setSearchQuery(value);
-          setCurrentPage(1);
-        }}
+        onSearchChange={setSearchQuery}
       />
 
       <ListPageMain>
@@ -224,388 +340,492 @@ export default function ArticleSearch() {
           className="flex-1 min-h-0 flex flex-col gap-4 py-6"
         >
           <div className="shrink-0 space-y-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="font-heading text-3xl text-foreground">
-                Article Search
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Discover research articles across all disciplines
-              </p>
-            </div>
-
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="h-10"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              {showFilters ? "Hide Filters" : "Advanced Filters"}
-              {activeFilterCount > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <Label
-              htmlFor="article-name-search"
-              className="text-sm font-medium"
-            >
-              Search by article title
-            </Label>
-            <div className="relative max-w-2xl">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-                strokeWidth={1.75}
-              />
-              <Input
-                id="article-name-search"
-                type="search"
-                placeholder="Type an article name…"
-                className="pl-10 h-11 bg-card"
-                value={searchQuery}
-                onChange={(event) => {
-                  setSearchQuery(event.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-          </div>
-
-          {showFilters && (
-            <Card className="p-6 border-border">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-lg text-foreground">
-                  Advanced Filters
-                </h2>
-                {activeFilterCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="text-xs"
-                  >
-                    Clear All
-                  </Button>
-                )}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <h1 className="font-heading text-3xl text-foreground">
+                  Article Search
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Discover research articles across all disciplines
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="doi-search" className="text-sm font-medium">
-                    DOI
-                  </Label>
-                  <Input
-                    id="doi-search"
-                    type="text"
-                    placeholder="10.1038/..."
-                    className="h-9"
-                    value={doiSearch}
-                    onChange={(e) => {
-                      setDoiSearch(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  />
-                </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-10"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                {showFilters ? "Hide Filters" : "Advanced Filters"}
+                {activeFilterCount > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </div>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="author-search"
-                    className="text-sm font-medium"
-                  >
-                    Author
-                  </Label>
-                  <Input
-                    id="author-search"
-                    type="text"
-                    placeholder="Author name"
-                    className="h-9"
-                    value={authorSearch}
-                    onChange={(e) => {
-                      setAuthorSearch(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="article-name-search"
+                className="text-sm font-medium"
+              >
+                Search by article title
+              </Label>
+              <div className="relative max-w-2xl">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+                  strokeWidth={1.75}
+                />
+                <Input
+                  id="article-name-search"
+                  type="search"
+                  placeholder="Type an article name…"
+                  className="pl-10 h-11 bg-card"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="journal-search"
-                    className="text-sm font-medium"
-                  >
-                    Journal
-                  </Label>
-                  <Input
-                    id="journal-search"
-                    type="text"
-                    placeholder="Journal name"
-                    className="h-9"
-                    value={journalSearch}
-                    onChange={(e) => {
-                      setJournalSearch(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="year-filter" className="text-sm font-medium">
-                    Year
-                  </Label>
-                  <div className="relative">
-                    <select
-                      id="year-filter"
-                      className="w-full h-9 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
-                      value={selectedYear}
-                      onChange={(e) => {
-                        setSelectedYear(e.target.value);
-                        setCurrentPage(1);
-                      }}
+            {showFilters && (
+              <Card className="p-6 border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-heading text-lg text-foreground">
+                    Advanced Filters
+                  </h2>
+                  {activeFilterCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="text-xs"
                     >
-                      <option value="">All years</option>
-                      {yearOptions.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                      Clear All
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <FilterSelect
+                    id="sort-filter"
+                    label="Sort"
+                    value={sort}
+                    onChange={(value) => setSort(value as ArticleSort)}
+                  >
+                    {articleSortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </FilterSelect>
+
+                  <FilterSelect
+                    id="journal-filter"
+                    label="Journal"
+                    value={journalId}
+                    onChange={setJournalId}
+                  >
+                    <option value="">All journals</option>
+                    {journalOptions.map((journal) => (
+                      <option key={journal.id} value={journal.id}>
+                        {journal.name}
+                      </option>
+                    ))}
+                  </FilterSelect>
+
+                  <FilterSelect
+                    id="publisher-filter"
+                    label="Publisher"
+                    value={publisher}
+                    onChange={setPublisher}
+                  >
+                    <option value="">All publishers</option>
+                    {publisherOptions.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </FilterSelect>
+
+                  <FilterSelect
+                    id="country-filter"
+                    label="Country"
+                    value={country}
+                    onChange={setCountry}
+                  >
+                    <option value="">All countries</option>
+                    {countryFilterOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </FilterSelect>
+
+                  <FilterSelect
+                    id="year-filter"
+                    label="Exact year"
+                    value={selectedYear}
+                    onChange={(value) => {
+                      setSelectedYear(value);
+                      if (value) {
+                        setYearFrom("");
+                        setYearTo("");
+                      }
+                    }}
+                  >
+                    <option value="">Any year</option>
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </FilterSelect>
+
+                  <FilterSelect
+                    id="year-from-filter"
+                    label="Year from"
+                    value={yearFrom}
+                    onChange={(value) => {
+                      setYearFrom(value);
+                      if (value) {
+                        setSelectedYear("");
+                      }
+                    }}
+                  >
+                    <option value="">No lower bound</option>
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </FilterSelect>
+
+                  <FilterSelect
+                    id="year-to-filter"
+                    label="Year to"
+                    value={yearTo}
+                    onChange={(value) => {
+                      setYearTo(value);
+                      if (value) {
+                        setSelectedYear("");
+                      }
+                    }}
+                  >
+                    <option value="">No upper bound</option>
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </FilterSelect>
+
+                  <FilterSelect
+                    id="oa-filter"
+                    label="Access"
+                    value={openAccess}
+                    onChange={(value) =>
+                      setOpenAccess(value as "" | "oa" | "subscription")
+                    }
+                  >
+                    <option value="">Any access</option>
+                    <option value="oa">Open Access</option>
+                    <option value="subscription">Subscription</option>
+                  </FilterSelect>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="doi-search" className="text-sm font-medium">
+                      DOI
+                    </Label>
+                    <Input
+                      id="doi-search"
+                      type="text"
+                      placeholder="10.1038/..."
+                      className="h-9"
+                      value={doiSearch}
+                      onChange={(event) => setDoiSearch(event.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="author-search"
+                      className="text-sm font-medium"
+                    >
+                      Author
+                    </Label>
+                    <Input
+                      id="author-search"
+                      type="text"
+                      placeholder="Author name"
+                      className="h-9"
+                      value={authorSearch}
+                      onChange={(event) => setAuthorSearch(event.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label
+                      htmlFor="topic-search"
+                      className="text-sm font-medium"
+                    >
+                      Keyword / topic
+                    </Label>
+                    <Input
+                      id="topic-search"
+                      type="text"
+                      placeholder="Filter by keyword or topic name"
+                      className="h-9"
+                      value={topicSearch}
+                      onChange={(event) => setTopicSearch(event.target.value)}
+                    />
                   </div>
                 </div>
-              </div>
-            </Card>
-          )}
+
+                {sort === "relevant" && !searchQuery.trim() && (
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    “Most relevant” needs a search query. Until then results
+                    sort by newest.
+                  </p>
+                )}
+              </Card>
+            )}
           </div>
 
           <div className="flex-1 min-h-0 flex flex-col gap-3">
-          <div className="shrink-0 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {isLoading ? (
-                "Loading articles..."
-              ) : (
-                <>
-                  Showing{" "}
-                  <span className="font-medium text-foreground">
-                    {filteredArticles.length === 0
-                      ? 0
-                      : `${startIndex + 1}-${Math.min(endIndex, filteredArticles.length)}`}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-medium text-foreground">
-                    {filteredArticles.length}
-                    {hasMore ? "+" : ""}
-                  </span>{" "}
-                  articles
-                </>
-              )}
-            </p>
-          </div>
-
-          {error && (
-            <Card className="p-6 border-border shrink-0">
-              <p className="text-sm text-destructive mb-4">{error}</p>
-              <Button variant="outline" size="sm" onClick={() => void reload()}>
-                Try again
-              </Button>
-            </Card>
-          )}
-
-          {isLoading && <RouteDataLoading label="Loading articles…" />}
-
-          {!isLoading && !error && currentArticles.length === 0 && (
-            <Card className="p-8 border-border text-center text-muted-foreground">
-              No articles found. Try another keyword or clear your filters.
-            </Card>
-          )}
-
-          <ListScrollArea className="pr-1">
-          <div className="space-y-4 pb-2">
-            {currentArticles.map((article) => {
-              const articleId = article.article.id;
-              const keywords = getTagNames(article.keywords);
-              const isBookmarked = bookmarkedIds.has(articleId);
-
-              return (
-                <Card
-                  key={articleId}
-                  className="p-6 border-border hover:border-border transition-all"
-                >
-                  <div className="flex gap-6">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-heading text-xl text-foreground mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2">
-                        {getArticleTitle(article)}
-                      </h3>
-
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                        <span>{getArticleAuthorNames(article).join(", ")}</span>
-                      </div>
-
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
-                        <div className="flex items-center gap-1 min-w-0">
-                          <BookOpen className="w-4 h-4 shrink-0" />
-                          {article.journal?.id ? (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                router.push(
-                                  `/student/journals/${encodeURIComponent(article.journal!.id)}`,
-                                );
-                              }}
-                              className="font-medium hover:underline text-left truncate"
-                            >
-                              {getArticleJournal(article)}
-                            </button>
-                          ) : (
-                            <span className="font-medium truncate">
-                              {getArticleJournal(article)}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-border">•</span>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{getArticleYear(article) ?? "—"}</span>
-                        </div>
-                        <span className="text-border">•</span>
-                        <div className="flex items-center gap-1">
-                          <Quote className="w-4 h-4" />
-                          <span>
-                            {article.citedArticleIds.length} citations
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-3">
-                        {getArticleAbstract(article)}
-                      </p>
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {keywords.map((keyword) => (
-                          <span
-                            key={keyword}
-                            className="px-2.5 py-1 bg-accent text-tag text-xs font-medium rounded-md"
-                          >
-                            {keyword}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="text-xs text-muted-foreground">
-                        DOI: {getArticleDoi(article)}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 flex-shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-4"
-                        onClick={() =>
-                          router.push(`/student/articles/${articleId}`)
-                        }
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View
-                      </Button>
-                      <Can permission="bookmark">
-                        <Button
-                          variant={isBookmarked ? "default" : "outline"}
-                          size="sm"
-                          disabled={bookmarkPendingIds.has(articleId)}
-                          onClick={() => void toggleBookmark(article)}
-                          className="h-9 px-4"
-                        >
-                          {isBookmarked ? (
-                            <>
-                              <BookmarkCheck className="w-4 h-4 mr-2" />
-                              Saved
-                            </>
-                          ) : (
-                            <>
-                              <BookmarkPlus className="w-4 h-4 mr-2" />
-                              Save
-                            </>
-                          )}
-                        </Button>
-                      </Can>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-          </ListScrollArea>
-
-          {!isLoading && filteredArticles.length > 0 && (
-            <div className="shrink-0 flex items-center justify-between pt-2 border-t border-border">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                className="h-9"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </Button>
-
-              <div className="flex items-center gap-2">
-                {Array.from(
-                  { length: Math.min(totalPages, 5) },
-                  (_, i) => i + 1,
-                ).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === page
-                        ? "bg-primary text-white"
-                        : "bg-card border border-border text-muted-foreground hover:bg-accent"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={
-                  isLoadingMore || (currentPage === totalPages && !hasMore)
-                }
-                onClick={() => {
-                  if (currentPage < totalPages) {
-                    setCurrentPage((prev) => prev + 1);
-                    return;
-                  }
-
-                  void loadMore().then((loaded) => {
-                    if (loaded) {
-                      setCurrentPage((prev) => prev + 1);
-                    }
-                  });
-                }}
-                className="h-9"
-              >
-                {isLoadingMore ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    Loading
-                  </>
+            <div className="shrink-0 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {isLoading ? (
+                  "Loading articles..."
                 ) : (
                   <>
-                    Next
-                    <ChevronRight className="w-4 h-4 ml-1" />
+                    Showing{" "}
+                    <span className="font-medium text-foreground">
+                      {filteredArticles.length === 0
+                        ? 0
+                        : `${startIndex + 1}-${Math.min(endIndex, filteredArticles.length)}`}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-medium text-foreground">
+                      {filteredArticles.length}
+                      {hasMore ? "+" : ""}
+                    </span>{" "}
+                    articles
                   </>
                 )}
-              </Button>
+              </p>
             </div>
-          )}
+
+            {error && (
+              <Card className="p-6 border-border shrink-0">
+                <p className="text-sm text-destructive mb-4">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void reload()}
+                >
+                  Try again
+                </Button>
+              </Card>
+            )}
+
+            {isLoading && <RouteDataLoading label="Loading articles…" />}
+
+            {!isLoading && !error && currentArticles.length === 0 && (
+              <Card className="p-8 border-border text-center text-muted-foreground">
+                No articles found. Try another keyword or clear your filters.
+              </Card>
+            )}
+
+            <ListScrollArea className="pr-1">
+              <div className="space-y-4 pb-2">
+                {currentArticles.map((article) => {
+                  const articleId = article.article.id;
+                  const keywords = getTagNames(article.keywords);
+                  const isBookmarked = bookmarkedIds.has(articleId);
+
+                  return (
+                    <Card
+                      key={articleId}
+                      className="p-6 border-border hover:border-border transition-all"
+                    >
+                      <div className="flex gap-6">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-heading text-xl text-foreground mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2">
+                            {getArticleTitle(article)}
+                          </h3>
+
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                            <span>
+                              {getArticleAuthorNames(article).join(", ")}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
+                            <div className="flex items-center gap-1 min-w-0">
+                              <BookOpen className="w-4 h-4 shrink-0" />
+                              {article.journal?.id ? (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    router.push(
+                                      `/student/journals/${encodeURIComponent(article.journal!.id)}`,
+                                    );
+                                  }}
+                                  className="font-medium hover:underline text-left truncate"
+                                >
+                                  {getArticleJournal(article)}
+                                </button>
+                              ) : (
+                                <span className="font-medium truncate">
+                                  {getArticleJournal(article)}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-border">•</span>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              <span>{getArticleYear(article) ?? "—"}</span>
+                            </div>
+                            <span className="text-border">•</span>
+                            <div className="flex items-center gap-1">
+                              <Quote className="w-4 h-4" />
+                              <span>
+                                {article.citedArticleIds.length} citations
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-3">
+                            {getArticleAbstract(article)}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {keywords.map((keyword) => (
+                              <span
+                                key={keyword}
+                                className="px-2.5 py-1 bg-accent text-tag text-xs font-medium rounded-md"
+                              >
+                                {keyword}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="text-xs text-muted-foreground">
+                            DOI: {getArticleDoi(article)}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-4"
+                            onClick={() =>
+                              router.push(`/student/articles/${articleId}`)
+                            }
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                          <Can permission="bookmark">
+                            <Button
+                              variant={isBookmarked ? "default" : "outline"}
+                              size="sm"
+                              disabled={bookmarkPendingIds.has(articleId)}
+                              onClick={() => void toggleBookmark(article)}
+                              className="h-9 px-4"
+                            >
+                              {isBookmarked ? (
+                                <>
+                                  <BookmarkCheck className="w-4 h-4 mr-2" />
+                                  Saved
+                                </>
+                              ) : (
+                                <>
+                                  <BookmarkPlus className="w-4 h-4 mr-2" />
+                                  Save
+                                </>
+                              )}
+                            </Button>
+                          </Can>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </ListScrollArea>
+
+            {!isLoading && filteredArticles.length > 0 && (
+              <div className="shrink-0 flex items-center justify-between pt-2 border-t border-border">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  className="h-9"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  {Array.from(
+                    { length: Math.min(totalPages, 5) },
+                    (_, i) => i + 1,
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? "bg-primary text-white"
+                          : "bg-card border border-border text-muted-foreground hover:bg-accent"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    isLoadingMore || (currentPage === totalPages && !hasMore)
+                  }
+                  onClick={() => {
+                    if (currentPage < totalPages) {
+                      setCurrentPage((prev) => prev + 1);
+                      return;
+                    }
+
+                    void loadMore().then((loaded) => {
+                      if (loaded) {
+                        setCurrentPage((prev) => prev + 1);
+                      }
+                    });
+                  }}
+                  className="h-9"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      Loading
+                    </>
+                  ) : (
+                    <>
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </PageContainer>
       </ListPageMain>

@@ -9,11 +9,37 @@ import {
 } from "@/core/api/query-config";
 import { listArticles } from "@/features/experiments/api/articles.api";
 import { syncLocalFollowNotifications } from "@/features/notifications/api/local-notifications";
+import type {
+  ArticleApiFilters,
+  ArticleSort,
+} from "@/features/experiments/types/article.types";
 
 const searchDebounceMs = 350;
 
-export function useArticles(searchText: string) {
+function resolveSort(
+  sort: ArticleSort | undefined,
+  hasResearchQuery: boolean,
+): ArticleSort | undefined {
+  if (!sort) {
+    return undefined;
+  }
+
+  // API requires a research query for `relevant`.
+  if (sort === "relevant" && !hasResearchQuery) {
+    return "newest";
+  }
+
+  return sort;
+}
+
+export function useArticles(
+  searchText: string,
+  apiFilters: ArticleApiFilters = {},
+) {
   const [debouncedSearch, setDebouncedSearch] = useState(searchText);
+  const [debouncedPublisher, setDebouncedPublisher] = useState(
+    apiFilters.publisher ?? "",
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -23,8 +49,29 @@ export function useArticles(searchText: string) {
     return () => window.clearTimeout(timer);
   }, [searchText]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedPublisher(apiFilters.publisher ?? "");
+    }, searchDebounceMs);
+
+    return () => window.clearTimeout(timer);
+  }, [apiFilters.publisher]);
+
   const trimmedQuery = debouncedSearch.trim();
-  const queryKey = ["articles", trimmedQuery] as const;
+  const trimmedPublisher = debouncedPublisher.trim();
+  const sort = resolveSort(apiFilters.sort, trimmedQuery.length > 0);
+
+  const queryKey = [
+    "articles",
+    trimmedQuery,
+    apiFilters.journalId ?? "",
+    apiFilters.publicationYear ?? "",
+    apiFilters.publicationYearFrom ?? "",
+    apiFilters.publicationYearTo ?? "",
+    trimmedPublisher,
+    apiFilters.country ?? "",
+    sort ?? "",
+  ] as const;
 
   const query = useInfiniteQuery({
     queryKey,
@@ -33,6 +80,17 @@ export function useArticles(searchText: string) {
     queryFn: async ({ pageParam }) => {
       const page = await listArticles({
         q: trimmedQuery || undefined,
+        journalId: apiFilters.journalId || undefined,
+        publicationYear: apiFilters.publicationYear || undefined,
+        publicationYearFrom: apiFilters.publicationYear
+          ? undefined
+          : apiFilters.publicationYearFrom || undefined,
+        publicationYearTo: apiFilters.publicationYear
+          ? undefined
+          : apiFilters.publicationYearTo || undefined,
+        publisher: trimmedPublisher || undefined,
+        country: apiFilters.country || undefined,
+        sort,
         limit: academicListPageSize,
         cursor: pageParam,
       });
