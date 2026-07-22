@@ -14,6 +14,7 @@ const EXACT_ROUTES: Record<string, RouteAccessRule> = {
   "/forbidden": { public: true },
   "/student": { public: true },
   "/student/journals": { public: true },
+  "/student/rankings": { public: true },
   "/student/articles": { public: true },
   "/student/dashboard": { permission: "dashboard" },
   "/student/advanced": { permission: "advanced_dashboard" },

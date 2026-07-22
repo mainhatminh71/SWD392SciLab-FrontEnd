@@ -11,6 +11,7 @@ export const routes = {
     advanced: "/student/advanced",
     journals: "/student/journals",
     journalDetail: (id: string) => `/student/journals/${id}`,
+    rankings: "/student/rankings",
     articles: "/student/articles",
     articleDetail: (id: string) => `/student/articles/${id}`,
     trends: "/student/trends",

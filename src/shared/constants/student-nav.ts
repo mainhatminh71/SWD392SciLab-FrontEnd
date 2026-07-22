@@ -6,6 +6,7 @@ import {
   BookOpen,
   FileText,
   LayoutDashboard,
+  Trophy,
   TrendingUp,
   User,
 } from "lucide-react";
@@ -39,6 +40,12 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
     label: "Journals",
     href: "/student/journals",
     icon: BookOpen,
+  },
+  {
+    id: "rankings",
+    label: "Rankings",
+    href: "/student/rankings",
+    icon: Trophy,
   },
   {
     id: "articles",
