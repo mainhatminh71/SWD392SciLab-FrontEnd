@@ -30,14 +30,26 @@ export function toGraphPaperInfo(detail: ArticleGraph): GraphPaperInfo {
   };
 }
 
+/** True when we only have a thin graph-node seed (label/citations). */
+export function isSparseGraphPaper(paper?: GraphPaperInfo | null) {
+  if (!paper) {
+    return true;
+  }
+  return paper.authors.length === 0 && !paper.journal && !paper.abstract;
+}
+
 /** Prefetch paper detail cards for graph article node ids. */
 export function useGraphPaperDetails(
   articleIds: string[],
   seeded: Record<string, GraphPaperInfo> = {},
   enabled = true,
 ) {
-  const uniqueIds = [...new Set(articleIds.map((id) => id.trim()).filter(Boolean))];
-  const missingIds = uniqueIds.filter((id) => !seeded[id]);
+  const uniqueIds = [
+    ...new Set(articleIds.map((id) => id.trim()).filter(Boolean)),
+  ];
+
+  // Still hydrate papers that were only seeded from graph labels.
+  const missingIds = uniqueIds.filter((id) => isSparseGraphPaper(seeded[id]));
 
   const query = useQuery({
     queryKey: ["graph-paper-details", missingIds] as const,
@@ -70,8 +82,26 @@ export function useGraphPaperDetails(
     ...(query.data ?? {}),
   };
 
+  // Prefer richer citation counts from the graph seed when detail omits them.
+  for (const id of uniqueIds) {
+    const seededPaper = seeded[id];
+    const paper = papers[id];
+    if (
+      paper &&
+      seededPaper &&
+      (paper.citationCount ?? 0) === 0 &&
+      (seededPaper.citationCount ?? 0) > 0
+    ) {
+      papers[id] = {
+        ...paper,
+        citationCount: seededPaper.citationCount,
+      };
+    }
+  }
+
   return {
     papers,
     isLoading: query.isLoading && missingIds.length > 0,
+    pendingCount: missingIds.length,
   };
 }

@@ -23,6 +23,7 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { useArticleGraph } from "@/features/experiments/hooks/use-article-graph";
 import { useCitedWorksFallback } from "@/features/experiments/hooks/use-cited-works-fallback";
 import { useGraphPaperDetails } from "@/features/experiments/hooks/use-graph-paper-details";
+import { isSparseGraphPaper } from "@/features/experiments/hooks/use-graph-paper-details";
 import { articleIdFromNodeId } from "@/features/experiments/types/article-graph.types";
 import type {
   ArticleGraphEdge,
@@ -226,18 +227,21 @@ export function RelatedWorksGraph({
       ...(citationGraph?.papers ?? {}),
     };
 
-    // Seed from the live graph API labels so neighbors render even if
-    // GET /academic/articles/:id is missing for some related nodes.
+    // Thin seeds from graph labels (title + citationCount). Full metadata is
+    // hydrated via GET /academic/articles/:id in useGraphPaperDetails.
     for (const node of articleNodes) {
       const id = articleIdFromNodeId(node.id);
       if (!id || map[id]) {
         continue;
       }
+      const yearMatch = node.label.match(/\((\d{4})\)\s*$/);
       map[id] = {
         id,
-        title: node.label,
+        title: yearMatch
+          ? node.label.replace(/\s*\(\d{4}\)\s*$/, "").trim()
+          : node.label,
         authors: [],
-        year: null,
+        year: yearMatch ? Number(yearMatch[1]) : null,
         journal: null,
         abstract: null,
         citationCount: node.citationCount ?? 0,
@@ -478,8 +482,11 @@ export function RelatedWorksGraph({
                             {paper.title}
                           </div>
                           <div className="mt-1 text-xs text-muted-foreground line-clamp-1">
-                            {paper.authors.slice(0, 2).join(", ") ||
-                              "Unknown authors"}
+                            {paper.authors.length > 0
+                              ? paper.authors.slice(0, 2).join(", ")
+                              : isDetailsLoading && isSparseGraphPaper(paper)
+                                ? "Loading authors…"
+                                : "Unknown authors"}
                             {paper.year != null ? ` · ${paper.year}` : ""}
                           </div>
                         </button>
@@ -629,7 +636,10 @@ export function RelatedWorksGraph({
                         <p className="text-sm text-muted-foreground">
                           {(selectedPaper ?? rootPaper)!.authors.length > 0
                             ? (selectedPaper ?? rootPaper)!.authors.join(", ")
-                            : "Unknown authors"}
+                            : isDetailsLoading &&
+                                isSparseGraphPaper(selectedPaper ?? rootPaper)
+                              ? "Loading authors…"
+                              : "Unknown authors"}
                           {(selectedPaper ?? rootPaper)!.year != null
                             ? `, ${(selectedPaper ?? rootPaper)!.year}`
                             : ""}
