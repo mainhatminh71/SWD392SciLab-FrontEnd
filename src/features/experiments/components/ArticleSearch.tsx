@@ -737,7 +737,7 @@ export default function ArticleSearch() {
                       >
                         <div className="flex gap-6">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3 line-clamp-2 leading-snug">
+                            <h3 className="font-sans font-semibold text-2xl md:text-3xl text-foreground mb-3 line-clamp-2 leading-snug">
                               <button
                                 type="button"
                                 onClick={() => router.push(articleHref)}
