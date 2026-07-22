@@ -30,6 +30,10 @@ import type {
 } from "@/features/experiments/types/article-graph.types";
 import type { GraphPaperInfo } from "@/features/experiments/types/graph-paper.types";
 import { shortAuthorLabel } from "@/features/experiments/types/graph-paper.types";
+import {
+  buildMockRelatedWorksGraph,
+  isMockGraphPaperId,
+} from "@/features/experiments/data/mock-related-works-graph";
 import { cn } from "@/shared/components/ui/utils";
 
 const WIDTH = 920;
@@ -197,27 +201,43 @@ export function RelatedWorksGraph({
     [articleNodes],
   );
 
-  const { papers, isLoading: isDetailsLoading } = useGraphPaperDetails(
-    detailIds,
-    seededPapers,
-    articleNodes.length > 1,
+  const { papers: fetchedPapers, isLoading: isDetailsLoading } =
+    useGraphPaperDetails(
+      detailIds,
+      seededPapers,
+      articleNodes.length > 1,
+    );
+
+  const usingMockData = articleNodes.length <= 1;
+  const mockGraph = useMemo(
+    () =>
+      usingMockData
+        ? buildMockRelatedWorksGraph(articleId, rootPaper)
+        : null,
+    [usingMockData, articleId, rootPaper],
+  );
+
+  const papers = useMemo(
+    () => ({
+      ...(mockGraph?.papers ?? {}),
+      ...fetchedPapers,
+    }),
+    [mockGraph?.papers, fetchedPapers],
   );
 
   const displayNodes = useMemo(() => {
-    if (articleNodes.length > 0) {
+    if (!usingMockData) {
       return articleNodes;
     }
+    return mockGraph?.nodes ?? [];
+  }, [usingMockData, articleNodes, mockGraph?.nodes]);
 
-    return [
-      {
-        id: rootNodeId,
-        type: "article" as const,
-        label: rootPaper?.title ?? "Current article",
-      },
-    ];
-  }, [articleNodes, rootNodeId, rootPaper?.title]);
-
-  const displayEdges = articleNodes.length > 1 ? articleEdges : [];
+  const displayEdges = useMemo(() => {
+    if (!usingMockData) {
+      return articleEdges;
+    }
+    return mockGraph?.edges ?? [];
+  }, [usingMockData, articleEdges, mockGraph?.edges]);
 
   const displayPositioned = useMemo(
     () => layoutArticleNodes(rootNodeId, displayNodes, papers),
@@ -241,7 +261,8 @@ export function RelatedWorksGraph({
     (selectedPaperId === articleId ? rootPaper : null);
 
   const listPapers = useMemo(() => {
-    return articleNodes
+    const sourceNodes = usingMockData ? displayNodes : articleNodes;
+    return sourceNodes
       .map((node) => {
         const id = articleIdFromNodeId(node.id);
         if (!id) {
@@ -267,31 +288,14 @@ export function RelatedWorksGraph({
         if (right.id === articleId) {
           return 1;
         }
+        if (isMockGraphPaperId(left.id) !== isMockGraphPaperId(right.id)) {
+          return isMockGraphPaperId(left.id) ? 1 : -1;
+        }
         return left.title.localeCompare(right.title);
       });
-  }, [articleNodes, papers, articleId]);
+  }, [usingMockData, displayNodes, articleNodes, papers, articleId]);
 
-  const displayListPapers = useMemo(() => {
-    if (listPapers.length > 0) {
-      return listPapers;
-    }
-
-    if (rootPaper) {
-      return [rootPaper];
-    }
-
-    return [
-      {
-        id: articleId,
-        title: "Current article",
-        authors: [] as string[],
-        year: null,
-        journal: null,
-        abstract: null,
-        citationCount: 0,
-      } satisfies GraphPaperInfo,
-    ];
-  }, [listPapers, rootPaper, articleId]);
+  const displayListPapers = listPapers;
 
   const isGraphLoading =
     isRelatedLoading || (needsCitationFallback && isFallbackLoading);
@@ -312,15 +316,18 @@ export function RelatedWorksGraph({
 
   const relatedCount = Math.max(0, displayNodes.length - 1);
   const hasNeighbors = relatedCount > 0;
-  const countLabel = hardError
-    ? "Graph temporarily unavailable"
-    : !hasNeighbors
-      ? "No related works yet — UI preview"
+  const countLabel = usingMockData
+    ? `${relatedCount} mock related works (UI preview)`
+    : hardError
+      ? "Graph temporarily unavailable"
       : usingCitationFallback
         ? `${relatedCount} cited works`
         : `${relatedCount} related works`;
 
   const openPaper = (paperId: string) => {
+    if (isMockGraphPaperId(paperId)) {
+      return;
+    }
     setOpen(false);
     router.push(`/student/articles/${paperId}`);
   };
@@ -338,11 +345,11 @@ export function RelatedWorksGraph({
             </p>
             <p className="text-sm text-muted-foreground">
               {countLabel}
-              {usingCitationFallback && hasNeighbors
+              {usingCitationFallback && !usingMockData
                 ? " · using citations while related links sync"
                 : ""}
-              . Open the full graph to inspect the layout
-              {hasNeighbors ? " and jump to details" : ""}.
+              . Open the full graph to inspect papers
+              {!usingMockData ? " and jump to details" : ""}.
             </p>
           </div>
         </div>
@@ -361,23 +368,29 @@ export function RelatedWorksGraph({
             </DialogTitle>
             <DialogDescription>
               {countLabel}
-              {usingCitationFallback && hasNeighbors
+              {usingCitationFallback && !usingMockData
                 ? " · citation fallback while related links sync"
                 : ""}
-              . Click a node to inspect, then View article.
+              . Click a node to inspect
+              {usingMockData ? " the mock layout" : ", then View article"}.
             </DialogDescription>
           </DialogHeader>
 
-          {!hasNeighbors && (
+          {usingMockData && (
+            <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-amber-500/10 shrink-0">
+              Showing mock related works for UI preview. Live OpenAlex neighbors
+              are not synced for this article yet.
+            </div>
+          )}
+
+          {!usingMockData && hardError && (
             <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-muted/30 shrink-0">
-              {hardError
-                ? `${relatedError ?? "Could not load related works."} Showing origin-paper layout preview.`
-                : "No related or cited works synced for this article yet. Showing the explorer UI with the origin paper so you can review the layout."}
+              {relatedError ?? "Could not load related works."}
             </div>
           )}
 
           <div className="flex items-center justify-end gap-2 px-4 py-2 border-b border-border bg-muted/20 shrink-0">
-            {!usingCitationFallback && hasMore && hasNeighbors && (
+            {!usingCitationFallback && hasMore && !usingMockData && (
               <Button
                 variant="outline"
                 size="sm"
@@ -605,7 +618,10 @@ export function RelatedWorksGraph({
 
                       <Button
                         className="w-full"
-                        disabled={(selectedPaper ?? rootPaper)!.id === articleId}
+                        disabled={
+                          (selectedPaper ?? rootPaper)!.id === articleId ||
+                          isMockGraphPaperId((selectedPaper ?? rootPaper)!.id)
+                        }
                         onClick={() =>
                           openPaper((selectedPaper ?? rootPaper)!.id)
                         }
@@ -616,6 +632,13 @@ export function RelatedWorksGraph({
                       {(selectedPaper ?? rootPaper)!.id === articleId && (
                         <p className="text-xs text-center text-muted-foreground">
                           You are already viewing this article.
+                        </p>
+                      )}
+                      {isMockGraphPaperId(
+                        (selectedPaper ?? rootPaper)!.id,
+                      ) && (
+                        <p className="text-xs text-center text-muted-foreground">
+                          Mock paper — View is disabled in preview mode.
                         </p>
                       )}
                     </>
