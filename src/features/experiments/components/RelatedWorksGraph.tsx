@@ -203,9 +203,25 @@ export function RelatedWorksGraph({
     articleNodes.length > 1,
   );
 
-  const positioned = useMemo(
-    () => layoutArticleNodes(rootNodeId, articleNodes, papers),
-    [rootNodeId, articleNodes, papers],
+  const displayNodes = useMemo(() => {
+    if (articleNodes.length > 0) {
+      return articleNodes;
+    }
+
+    return [
+      {
+        id: rootNodeId,
+        type: "article" as const,
+        label: rootPaper?.title ?? "Current article",
+      },
+    ];
+  }, [articleNodes, rootNodeId, rootPaper?.title]);
+
+  const displayEdges = articleNodes.length > 1 ? articleEdges : [];
+
+  const displayPositioned = useMemo(
+    () => layoutArticleNodes(rootNodeId, displayNodes, papers),
+    [rootNodeId, displayNodes, papers],
   );
 
   useEffect(() => {
@@ -214,10 +230,10 @@ export function RelatedWorksGraph({
   }, [articleId, rootNodeId]);
 
   useEffect(() => {
-    if (!positioned.has(selectedId) && positioned.size > 0) {
+    if (!displayPositioned.has(selectedId) && displayPositioned.size > 0) {
       setSelectedId(rootNodeId);
     }
-  }, [positioned, rootNodeId, selectedId]);
+  }, [displayPositioned, rootNodeId, selectedId]);
 
   const selectedPaperId = articleIdFromNodeId(selectedId);
   const selectedPaper =
@@ -255,7 +271,32 @@ export function RelatedWorksGraph({
       });
   }, [articleNodes, papers, articleId]);
 
-  if (isRelatedLoading || (needsCitationFallback && isFallbackLoading)) {
+  const displayListPapers = useMemo(() => {
+    if (listPapers.length > 0) {
+      return listPapers;
+    }
+
+    if (rootPaper) {
+      return [rootPaper];
+    }
+
+    return [
+      {
+        id: articleId,
+        title: "Current article",
+        authors: [] as string[],
+        year: null,
+        journal: null,
+        abstract: null,
+        citationCount: 0,
+      } satisfies GraphPaperInfo,
+    ];
+  }, [listPapers, rootPaper, articleId]);
+
+  const isGraphLoading =
+    isRelatedLoading || (needsCitationFallback && isFallbackLoading);
+
+  if (isGraphLoading) {
     return (
       <Card className="p-8 border-border flex items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="w-4 h-4 animate-spin" />
@@ -264,34 +305,20 @@ export function RelatedWorksGraph({
     );
   }
 
-  if (
+  const hardError =
     !usingCitationFallback &&
     relatedError &&
-    (!needsCitationFallback || fallbackError)
-  ) {
-    return (
-      <Card className="p-8 border-border text-center text-muted-foreground">
-        {relatedError}
-      </Card>
-    );
-  }
+    (!needsCitationFallback || fallbackError);
 
-  if (articleNodes.length <= 1) {
-    return (
-      <Card className="p-8 border-border text-center text-muted-foreground space-y-2">
-        <p>No related or cited works available for this article yet.</p>
-        <p className="text-xs">
-          The graph API is reachable; OpenAlex related-work links may still be
-          syncing for this paper.
-        </p>
-      </Card>
-    );
-  }
-
-  const relatedCount = articleNodes.length - 1;
-  const countLabel = usingCitationFallback
-    ? `${relatedCount} cited works`
-    : `${relatedCount} related works`;
+  const relatedCount = Math.max(0, displayNodes.length - 1);
+  const hasNeighbors = relatedCount > 0;
+  const countLabel = hardError
+    ? "Graph temporarily unavailable"
+    : !hasNeighbors
+      ? "No related works yet — UI preview"
+      : usingCitationFallback
+        ? `${relatedCount} cited works`
+        : `${relatedCount} related works`;
 
   const openPaper = (paperId: string) => {
     setOpen(false);
@@ -311,10 +338,11 @@ export function RelatedWorksGraph({
             </p>
             <p className="text-sm text-muted-foreground">
               {countLabel}
-              {usingCitationFallback
+              {usingCitationFallback && hasNeighbors
                 ? " · using citations while related links sync"
                 : ""}
-              . Open the full graph to inspect papers and jump to details.
+              . Open the full graph to inspect the layout
+              {hasNeighbors ? " and jump to details" : ""}.
             </p>
           </div>
         </div>
@@ -333,15 +361,23 @@ export function RelatedWorksGraph({
             </DialogTitle>
             <DialogDescription>
               {countLabel}
-              {usingCitationFallback
+              {usingCitationFallback && hasNeighbors
                 ? " · citation fallback while related links sync"
                 : ""}
               . Click a node to inspect, then View article.
             </DialogDescription>
           </DialogHeader>
 
+          {!hasNeighbors && (
+            <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-muted/30 shrink-0">
+              {hardError
+                ? `${relatedError ?? "Could not load related works."} Showing origin-paper layout preview.`
+                : "No related or cited works synced for this article yet. Showing the explorer UI with the origin paper so you can review the layout."}
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-2 px-4 py-2 border-b border-border bg-muted/20 shrink-0">
-            {!usingCitationFallback && hasMore && (
+            {!usingCitationFallback && hasMore && hasNeighbors && (
               <Button
                 variant="outline"
                 size="sm"
@@ -363,7 +399,7 @@ export function RelatedWorksGraph({
               </div>
               <ScrollArea className="flex-1 min-h-0">
                 <ul className="p-2 space-y-1">
-                  {listPapers.map((paper) => {
+                  {displayListPapers.map((paper) => {
                     const nodeId = `article:${paper.id}`;
                     const isOrigin = paper.id === articleId;
                     const isSelected = selectedId === nodeId;
@@ -411,9 +447,9 @@ export function RelatedWorksGraph({
                 <g
                   transform={`translate(${CENTER_X}, ${CENTER_Y}) scale(${zoom}) translate(${-CENTER_X}, ${-CENTER_Y})`}
                 >
-                  {articleEdges.map((edge: ArticleGraphEdge) => {
-                    const source = positioned.get(edge.sourceId);
-                    const target = positioned.get(edge.targetId);
+                  {displayEdges.map((edge: ArticleGraphEdge) => {
+                    const source = displayPositioned.get(edge.sourceId);
+                    const target = displayPositioned.get(edge.targetId);
                     if (!source || !target) {
                       return null;
                     }
@@ -437,7 +473,7 @@ export function RelatedWorksGraph({
                     );
                   })}
 
-                  {[...positioned.values()].map((node) => {
+                  {[...displayPositioned.values()].map((node) => {
                     const isRoot = node.id === rootNodeId;
                     const isSelected = node.id === selectedId;
                     const paperId = articleIdFromNodeId(node.id);
@@ -525,9 +561,9 @@ export function RelatedWorksGraph({
               </div>
               <ScrollArea className="flex-1 min-h-0">
                 <div className="p-4 space-y-4">
-                  {selectedPaper ? (
+                  {selectedPaper || rootPaper ? (
                     <>
-                      {selectedPaper.id === articleId && (
+                      {(selectedPaper ?? rootPaper)!.id === articleId && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
                           <Sparkles className="w-3 h-3" />
                           Origin paper
@@ -535,47 +571,49 @@ export function RelatedWorksGraph({
                       )}
                       <div className="space-y-2">
                         <h3 className="font-heading text-lg leading-snug text-foreground">
-                          {selectedPaper.title}
+                          {(selectedPaper ?? rootPaper)!.title}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {selectedPaper.authors.length > 0
-                            ? selectedPaper.authors.join(", ")
+                          {(selectedPaper ?? rootPaper)!.authors.length > 0
+                            ? (selectedPaper ?? rootPaper)!.authors.join(", ")
                             : "Unknown authors"}
-                          {selectedPaper.year != null
-                            ? `, ${selectedPaper.year}`
+                          {(selectedPaper ?? rootPaper)!.year != null
+                            ? `, ${(selectedPaper ?? rootPaper)!.year}`
                             : ""}
                         </p>
-                        {selectedPaper.journal && (
+                        {(selectedPaper ?? rootPaper)!.journal && (
                           <p className="text-xs text-muted-foreground">
-                            {selectedPaper.journal}
+                            {(selectedPaper ?? rootPaper)!.journal}
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          {selectedPaper.citationCount} outbound citations in
-                          catalog
+                          {(selectedPaper ?? rootPaper)!.citationCount} outbound
+                          citations in catalog
                         </p>
                       </div>
 
-                      {selectedPaper.abstract && (
+                      {(selectedPaper ?? rootPaper)!.abstract && (
                         <div className="space-y-1.5">
                           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Abstract
                           </p>
                           <p className="text-sm text-muted-foreground leading-relaxed">
-                            {selectedPaper.abstract}
+                            {(selectedPaper ?? rootPaper)!.abstract}
                           </p>
                         </div>
                       )}
 
                       <Button
                         className="w-full"
-                        disabled={selectedPaper.id === articleId}
-                        onClick={() => openPaper(selectedPaper.id)}
+                        disabled={(selectedPaper ?? rootPaper)!.id === articleId}
+                        onClick={() =>
+                          openPaper((selectedPaper ?? rootPaper)!.id)
+                        }
                       >
                         View article
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
-                      {selectedPaper.id === articleId && (
+                      {(selectedPaper ?? rootPaper)!.id === articleId && (
                         <p className="text-xs text-center text-muted-foreground">
                           You are already viewing this article.
                         </p>
