@@ -149,7 +149,7 @@ export function RelatedWorksGraph({
     articleId,
     rootPaper,
     citedArticleIds,
-    useConnectPapers && citedArticleIds.length > 0,
+    useConnectPapers,
   );
 
   const connectHasNeighbors =
@@ -349,7 +349,7 @@ export function RelatedWorksGraph({
 
   const isGraphLoading =
     (usePublicApi && isRelatedLoading) ||
-    (useConnectPapers && citedArticleIds.length > 0 && isConnectLoading);
+    (useConnectPapers && isConnectLoading);
 
   if (isGraphLoading) {
     return (
