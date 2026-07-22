@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getUserFriendlyApiErrorMessage } from "@/core/api";
 import {
-  academicListPageSize,
+  academicArticlePageSize,
   listQueryStaleTimeMs,
 } from "@/core/api/query-config";
 import { listJournals } from "@/features/experiments/api/journals.api";
@@ -30,8 +30,8 @@ export function useJournals(searchText = "") {
     staleTime: listQueryStaleTimeMs,
     queryFn: async ({ pageParam }) =>
       listJournals({
-        q: trimmedQuery || undefined,
-        limit: academicListPageSize,
+        // Backend journals list has no `q` yet; fetch larger pages for client partial search.
+        limit: academicArticlePageSize,
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,

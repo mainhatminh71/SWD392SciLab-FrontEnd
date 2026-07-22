@@ -59,7 +59,11 @@ export function useArticles(
 
   const trimmedQuery = debouncedSearch.trim();
   const trimmedPublisher = debouncedPublisher.trim();
-  const sort = resolveSort(apiFilters.sort, trimmedQuery.length > 0);
+  // Auto-prefer partial/relevant ranking whenever the user types a query.
+  const effectiveSort =
+    trimmedQuery.length > 0
+      ? resolveSort(apiFilters.sort ?? "relevant", true)
+      : resolveSort(apiFilters.sort ?? "newest", false);
 
   const queryKey = [
     "articles",
@@ -70,7 +74,7 @@ export function useArticles(
     apiFilters.publicationYearTo ?? "",
     trimmedPublisher,
     apiFilters.country ?? "",
-    sort ?? "",
+    effectiveSort ?? "",
   ] as const;
 
   const query = useInfiniteQuery({
@@ -90,7 +94,7 @@ export function useArticles(
           : apiFilters.publicationYearTo || undefined,
         publisher: trimmedPublisher || undefined,
         country: apiFilters.country || undefined,
-        sort,
+        sort: effectiveSort,
         limit: academicArticlePageSize,
         cursor: pageParam,
       });

@@ -84,18 +84,42 @@ function collectFacetOptions(
     .map((entry) => entry.label);
 }
 
+function journalPartialScore(journal: JournalListItem, query: string) {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) {
+    return 0;
+  }
+
+  const name = getJournalName(journal).toLowerCase();
+  const issn = getJournalIssn(journal).toLowerCase();
+  const publisher = getJournalPublisher(journal).toLowerCase();
+  const country = getJournalCountry(journal).toLowerCase();
+  const subjects = getJournalSubjects(journal)
+    .join(" ")
+    .toLowerCase();
+  const haystack = [name, issn, publisher, country, subjects].join(" ");
+
+  if (name === normalized) return 100;
+  if (name.startsWith(normalized)) return 80;
+  if (name.includes(normalized)) return 60;
+  if (subjects.includes(normalized)) return 40;
+  if (publisher.includes(normalized) || issn.includes(normalized)) return 30;
+  if (haystack.includes(normalized)) return 10;
+  // Token partial: every query token appears somewhere.
+  const tokens = normalized.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1 && tokens.every((token) => haystack.includes(token))) {
+    return 20;
+  }
+  return -1;
+}
+
 function matchesJournalFilters(
   journal: JournalListItem,
   searchQuery: string,
   filters: JournalFilters,
 ) {
-  const query = searchQuery.trim().toLowerCase();
-
-  if (query) {
-    const name = getJournalName(journal).toLowerCase();
-    if (!name.includes(query)) {
-      return false;
-    }
+  if (journalPartialScore(journal, searchQuery) < 0) {
+    return false;
   }
 
   if (filters.subjectAreas.length > 0) {
@@ -180,13 +204,42 @@ export default function JournalSearch() {
     [items],
   );
 
-  const filteredJournals = useMemo(
-    () =>
-      items.filter((journal) =>
-        matchesJournalFilters(journal, searchQuery, filters),
-      ),
-    [items, searchQuery, filters],
-  );
+  const filteredJournals = useMemo(() => {
+    const matched = items.filter((journal) =>
+      matchesJournalFilters(journal, searchQuery, filters),
+    );
+
+    if (!searchQuery.trim()) {
+      return matched;
+    }
+
+    // Partial-match relevance: exact / prefix / contains first.
+    return [...matched].sort(
+      (left, right) =>
+        journalPartialScore(right, searchQuery) -
+        journalPartialScore(left, searchQuery),
+    );
+  }, [items, searchQuery, filters]);
+
+  // Journals API has no `q` param — keep loading pages while searching
+  // until we have enough partial matches or run out of catalog pages.
+  useEffect(() => {
+    if (!searchQuery.trim() || isLoading || isLoadingMore || !hasMore) {
+      return;
+    }
+    if (filteredJournals.length >= itemsPerPage) {
+      return;
+    }
+    void loadMore();
+  }, [
+    searchQuery,
+    filteredJournals.length,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    itemsPerPage,
+  ]);
 
   const totalPages = Math.max(
     1,

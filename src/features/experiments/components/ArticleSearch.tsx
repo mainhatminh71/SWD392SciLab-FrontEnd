@@ -157,7 +157,7 @@ export default function ArticleSearch() {
     new Set(),
   );
 
-  const [sort, setSort] = useState<ArticleSort>("newest");
+  const [sort, setSort] = useState<ArticleSort>("relevant");
   const [journalId, setJournalId] = useState("");
   const [publisher, setPublisher] = useState("");
   const [country, setCountry] = useState("");
@@ -306,7 +306,7 @@ export default function ArticleSearch() {
   };
 
   const clearFilters = () => {
-    setSort("newest");
+    setSort("relevant");
     setJournalId("");
     setPublisher("");
     setCountry("");
@@ -320,13 +320,13 @@ export default function ArticleSearch() {
   };
 
   const activeFilterCount =
-    (sort !== "newest" ? 1 : 0) +
+    (sort !== "relevant" ? 1 : 0) +
     (journalId ? 1 : 0) +
     (publisher ? 1 : 0) +
     (country ? 1 : 0) +
     (selectedYear ? 1 : 0) +
-    (yearFrom ? 1 : 0) +
-    (yearTo ? 1 : 0) +
+    (yearFrom && yearFrom !== "2023" ? 1 : 0) +
+    (yearTo && yearTo !== "2025" ? 1 : 0) +
     (doiSearch ? 1 : 0) +
     (authorSearch ? 1 : 0) +
     (topicSearch ? 1 : 0) +

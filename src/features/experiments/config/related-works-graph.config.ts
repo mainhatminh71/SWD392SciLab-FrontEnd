@@ -1,8 +1,8 @@
 /**
  * Related Works Graph data source.
  *
- * - `connect-papers` — build the graph from cited articles already in the catalog (preferred default)
- * - `public-api` — GET /academic/graphs/article/:id (OpenAlex RELATED_TO)
+ * - `public-api` — GET /academic/graphs/article/:id (preferred; real RELATED_TO neighbors)
+ * - `connect-papers` — build the graph from cited articles already in the catalog
  */
 export const RELATED_WORKS_GRAPH_SOURCE = {
   CONNECT_PAPERS: "connect-papers",
@@ -22,11 +22,11 @@ function resolveRelatedWorksGraphSource(
     return normalized as RelatedWorksGraphSource;
   }
 
-  // Prefer connecting existing catalog papers when unset / invalid.
-  return RELATED_WORKS_GRAPH_SOURCE.CONNECT_PAPERS;
+  // Prefer the live article-graph endpoint (many RELATED_TO neighbors).
+  return RELATED_WORKS_GRAPH_SOURCE.PUBLIC_API;
 }
 
-/** Active graph source — default prioritizes connecting existing papers. */
+/** Active graph source — default uses the public article graph API. */
 export const relatedWorksGraphSource = resolveRelatedWorksGraphSource();
 
 export function isConnectPapersSource(

@@ -95,9 +95,9 @@ export type ArticleDetailResponse = ArticleGraph;
 export const yearOptions = ["2025", "2024", "2023"];
 
 export const articleSortOptions: { value: ArticleSort; label: string }[] = [
+  { value: "relevant", label: "Partial match (relevant)" },
   { value: "newest", label: "Newest first" },
   { value: "most_cited", label: "Most cited" },
-  { value: "relevant", label: "Most relevant" },
 ];
 
 export const countryFilterOptions: { value: string; label: string }[] = [

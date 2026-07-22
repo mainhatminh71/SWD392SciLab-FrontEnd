@@ -83,7 +83,12 @@ function layoutArticleNodes(
       t * Math.PI * 2 +
       (hashUnit(`${node.id}:a`) - 0.5) * 0.55;
     const ring = 0.32 + hashUnit(`${node.id}:r`) * 0.28;
-    const radius = 8 + Math.min(10, (paper?.citationCount ?? 0) / 4);
+    const radius =
+      8 +
+      Math.min(
+        10,
+        ((paper?.citationCount ?? node.citationCount ?? 0) as number) / 4,
+      );
 
     positioned.set(node.id, {
       ...node,
@@ -155,23 +160,27 @@ export function RelatedWorksGraph({
     usePublicApi && articleNodeCount(relatedNodes) > 1;
 
   const graphNodes = useMemo(() => {
+    const seed = [
+      {
+        id: rootNodeId,
+        type: "article" as const,
+        label: rootPaper?.title ?? "Current article",
+        citationCount: rootPaper?.citationCount ?? null,
+      },
+    ];
+
+    if (usePublicApi) {
+      return relatedNodes.length > 0 ? relatedNodes : seed;
+    }
+
     if (useConnectPapers) {
-      // Even before fetch finishes, seed origin so the UI is never empty.
       if (citationGraph?.nodes?.length) {
         return citationGraph.nodes;
       }
-      return [
-        {
-          id: rootNodeId,
-          type: "article" as const,
-          label: rootPaper?.title ?? "Current article",
-        },
-      ];
+      return seed;
     }
-    if (usePublicApi) {
-      return relatedNodes;
-    }
-    return [];
+
+    return seed;
   }, [
     useConnectPapers,
     usePublicApi,
@@ -179,6 +188,7 @@ export function RelatedWorksGraph({
     relatedNodes,
     rootNodeId,
     rootPaper?.title,
+    rootPaper?.citationCount,
   ]);
 
   const graphEdges = useMemo(() => {
@@ -215,11 +225,30 @@ export function RelatedWorksGraph({
     const map: Record<string, GraphPaperInfo> = {
       ...(citationGraph?.papers ?? {}),
     };
+
+    // Seed from the live graph API labels so neighbors render even if
+    // GET /academic/articles/:id is missing for some related nodes.
+    for (const node of articleNodes) {
+      const id = articleIdFromNodeId(node.id);
+      if (!id || map[id]) {
+        continue;
+      }
+      map[id] = {
+        id,
+        title: node.label,
+        authors: [],
+        year: null,
+        journal: null,
+        abstract: null,
+        citationCount: node.citationCount ?? 0,
+      };
+    }
+
     if (rootPaper) {
       map[articleId] = rootPaper;
     }
     return map;
-  }, [articleId, citationGraph?.papers, rootPaper]);
+  }, [articleId, articleNodes, citationGraph?.papers, rootPaper]);
 
   const detailIds = useMemo(
     () =>

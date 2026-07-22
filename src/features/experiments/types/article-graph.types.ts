@@ -8,6 +8,8 @@ export type ArticleGraphNode = {
   id: string;
   type: ArticleGraphNodeType;
   label: string;
+  /** Optional inbound citation count from the graph API. */
+  citationCount?: number | null;
 };
 
 export type ArticleGraphEdge = {

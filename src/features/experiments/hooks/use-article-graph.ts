@@ -10,7 +10,7 @@ import type {
   ArticleGraphNode,
 } from "@/features/experiments/types/article-graph.types";
 
-const GRAPH_PAGE_LIMIT = 20;
+const GRAPH_PAGE_LIMIT = 100;
 
 /** Loads the article knowledge graph page by page and merges the results. */
 export function useArticleGraph(articleId: string, enabled = true) {
