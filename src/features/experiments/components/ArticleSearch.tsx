@@ -444,11 +444,26 @@ export default function ArticleSearch() {
                       </div>
 
                       <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="w-4 h-4" />
-                          <span className="font-medium">
-                            {getArticleJournal(article)}
-                          </span>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <BookOpen className="w-4 h-4 shrink-0" />
+                          {article.journal?.id ? (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                router.push(
+                                  `/student/journals/${encodeURIComponent(article.journal!.id)}`,
+                                );
+                              }}
+                              className="font-medium hover:underline text-left truncate"
+                            >
+                              {getArticleJournal(article)}
+                            </button>
+                          ) : (
+                            <span className="font-medium truncate">
+                              {getArticleJournal(article)}
+                            </span>
+                          )}
                         </div>
                         <span className="text-border">•</span>
                         <div className="flex items-center gap-1">

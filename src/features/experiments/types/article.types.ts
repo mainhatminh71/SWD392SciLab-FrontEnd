@@ -59,6 +59,8 @@ export type ArticleListParams = {
   cursor?: string | null;
   /** Free-text search (`q` on GET /academic/articles). */
   q?: string | null;
+  /** Exact journal id (`journalId` on GET /academic/articles). */
+  journalId?: string | null;
   limit?: number;
 };
 

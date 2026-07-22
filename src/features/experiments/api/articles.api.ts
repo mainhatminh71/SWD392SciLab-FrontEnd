@@ -11,10 +11,12 @@ const defaultLimit = 20;
 function buildArticleQuery({
   cursor,
   q,
+  journalId,
   limit = defaultLimit,
 }: ArticleListParams = {}) {
   const params = new URLSearchParams({ limit: String(limit) });
   const trimmedQuery = q?.trim();
+  const trimmedJournalId = journalId?.trim();
 
   if (cursor) {
     params.set("cursor", cursor);
@@ -22,6 +24,10 @@ function buildArticleQuery({
 
   if (trimmedQuery) {
     params.set("q", trimmedQuery);
+  }
+
+  if (trimmedJournalId) {
+    params.set("journalId", trimmedJournalId);
   }
 
   return params.toString();

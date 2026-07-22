@@ -177,11 +177,25 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
               </div>
 
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-base text-muted-foreground pb-6 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-medium">
-                    {getArticleJournal(article)}
-                  </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <BookOpen className="w-5 h-5 text-muted-foreground shrink-0" />
+                  {article.journal?.id ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(
+                          `/student/journals/${encodeURIComponent(article.journal!.id)}`,
+                        )
+                      }
+                      className="font-medium text-foreground hover:underline text-left"
+                    >
+                      {getArticleJournal(article)}
+                    </button>
+                  ) : (
+                    <span className="font-medium">
+                      {getArticleJournal(article)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-muted-foreground" />
@@ -326,6 +340,28 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
                   </div>
 
                   <div className="pt-4 border-t border-border grid grid-cols-2 gap-6">
+                    <div className="col-span-2">
+                      <p className="text-sm font-semibold text-muted-foreground mb-1">
+                        Journal
+                      </p>
+                      {article.journal?.id ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(
+                              `/student/journals/${encodeURIComponent(article.journal!.id)}`,
+                            )
+                          }
+                          className="text-base text-foreground hover:underline text-left"
+                        >
+                          {getArticleJournal(article)}
+                        </button>
+                      ) : (
+                        <p className="text-base text-foreground">
+                          {getArticleJournal(article)}
+                        </p>
+                      )}
+                    </div>
                     <div>
                       <p className="text-sm font-semibold text-muted-foreground mb-1">
                         Volume
