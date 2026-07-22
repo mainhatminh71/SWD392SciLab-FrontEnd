@@ -29,6 +29,7 @@ import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks"
 import {
   formatVolumeNumber,
   getArticleAbstract,
+  getArticleCitationCount,
   getArticleDoi,
   getArticleJournal,
   getArticleTitle,
@@ -203,7 +204,7 @@ export default function ArticleDetail({ articleId }: ArticleDetailProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Quote className="w-5 h-5 text-muted-foreground" />
-                  <span>{article.citedArticleIds.length} citations</span>
+                  <span>{getArticleCitationCount(article)} citations</span>
                 </div>
               </div>
             </div>

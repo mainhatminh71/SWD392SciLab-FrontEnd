@@ -47,6 +47,7 @@ import {
 import {
   getArticleAbstract,
   getArticleAuthorNames,
+  getArticleCitationCount,
   getArticleDoi,
   getArticleJournal,
   getArticleTitle,
@@ -727,7 +728,7 @@ export default function ArticleSearch() {
                               <div className="flex items-center gap-1">
                                 <Quote className="w-4 h-4" />
                                 <span>
-                                  {article.citedArticleIds.length} citations
+                                  {getArticleCitationCount(article)} citations
                                 </span>
                               </div>
                             </div>

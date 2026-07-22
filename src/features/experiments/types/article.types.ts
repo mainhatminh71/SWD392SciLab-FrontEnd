@@ -20,6 +20,8 @@ export type ArticleNode = {
   version: string | null;
   volumeNumber: number | string | null;
   issueNumber: string | null;
+  /** OpenAlex cited_by_count (inbound citations). */
+  citationCount: number | null;
   createdAt: string | null;
   updatedAt: string | null;
 };

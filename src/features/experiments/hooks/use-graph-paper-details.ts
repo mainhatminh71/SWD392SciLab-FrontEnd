@@ -26,7 +26,7 @@ export function toGraphPaperInfo(detail: ArticleGraph): GraphPaperInfo {
       getArticleAbstract(detail) === "Abstract unavailable."
         ? null
         : getArticleAbstract(detail),
-    citationCount: detail.citedArticleIds.length,
+    citationCount: detail.article.citationCount ?? 0,
   };
 }
 

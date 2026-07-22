@@ -53,6 +53,11 @@ export function getArticleYear(article: ArticleGraph) {
   return article.article.publicationYear;
 }
 
+/** Inbound citation count from OpenAlex (`article.citationCount`). */
+export function getArticleCitationCount(article: ArticleGraph) {
+  return article.article.citationCount ?? 0;
+}
+
 export function getArticleDoi(article: ArticleGraph) {
   return article.article.doi?.trim() || "—";
 }

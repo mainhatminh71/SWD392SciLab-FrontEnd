@@ -5,7 +5,7 @@ export type GraphPaperInfo = {
   year: number | null;
   journal: string | null;
   abstract: string | null;
-  /** Proxy metric from citedArticleIds length when true citation count is unavailable. */
+  /** Inbound citation count from the academic API (`article.citationCount`). */
   citationCount: number;
 };
 

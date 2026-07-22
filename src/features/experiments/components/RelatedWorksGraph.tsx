@@ -611,8 +611,7 @@ export function RelatedWorksGraph({
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          {(selectedPaper ?? rootPaper)!.citationCount} outbound
-                          citations in catalog
+                          {(selectedPaper ?? rootPaper)!.citationCount} citations
                         </p>
                       </div>
 

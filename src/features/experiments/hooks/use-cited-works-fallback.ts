@@ -83,6 +83,7 @@ export function useCitedWorksFallback(
             version: null,
             volumeNumber: null,
             issueNumber: null,
+            citationCount: rootPaper.citationCount,
             createdAt: null,
             updatedAt: null,
           },
