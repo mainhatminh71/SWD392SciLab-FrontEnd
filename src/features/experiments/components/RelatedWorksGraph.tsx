@@ -39,7 +39,6 @@ import {
   isMockGraphSource,
   isPublicApiGraphSource,
   relatedWorksGraphSource,
-  RELATED_WORKS_GRAPH_SOURCE,
 } from "@/features/experiments/config/related-works-graph.config";
 import { cn } from "@/shared/components/ui/utils";
 
@@ -163,7 +162,17 @@ export function RelatedWorksGraph({
 
   const graphNodes = useMemo(() => {
     if (useConnectPapers) {
-      return citationGraph?.nodes ?? [];
+      // Even before fetch finishes, seed origin so the UI is never empty.
+      if (citationGraph?.nodes?.length) {
+        return citationGraph.nodes;
+      }
+      return [
+        {
+          id: rootNodeId,
+          type: "article" as const,
+          label: rootPaper?.title ?? "Current article",
+        },
+      ];
     }
     if (usePublicApi) {
       return relatedNodes;
@@ -174,6 +183,8 @@ export function RelatedWorksGraph({
     usePublicApi,
     citationGraph?.nodes,
     relatedNodes,
+    rootNodeId,
+    rootPaper?.title,
   ]);
 
   const graphEdges = useMemo(() => {
@@ -231,11 +242,8 @@ export function RelatedWorksGraph({
       !useMockOnly && articleNodes.length > 1,
     );
 
-  // Mock only when configured, or when the preferred connect/api source has no neighbors.
-  const usingMockData =
-    useMockOnly ||
-    (useConnectPapers && !connectHasNeighbors) ||
-    (usePublicApi && !publicApiHasNeighbors && !isRelatedLoading);
+  // Mock ONLY when explicitly configured — never auto-fallback.
+  const usingMockData = useMockOnly;
 
   const mockGraph = useMemo(
     () =>
@@ -257,8 +265,23 @@ export function RelatedWorksGraph({
     if (usingMockData) {
       return mockGraph?.nodes ?? [];
     }
-    return articleNodes;
-  }, [usingMockData, mockGraph?.nodes, articleNodes]);
+    if (articleNodes.length > 0) {
+      return articleNodes;
+    }
+    return [
+      {
+        id: rootNodeId,
+        type: "article" as const,
+        label: rootPaper?.title ?? "Current article",
+      },
+    ];
+  }, [
+    usingMockData,
+    mockGraph?.nodes,
+    articleNodes,
+    rootNodeId,
+    rootPaper?.title,
+  ]);
 
   const displayEdges = useMemo(() => {
     if (usingMockData) {
@@ -289,8 +312,7 @@ export function RelatedWorksGraph({
     (selectedPaperId === articleId ? rootPaper : null);
 
   const listPapers = useMemo(() => {
-    const sourceNodes = usingMockData ? displayNodes : articleNodes;
-    return sourceNodes
+    return displayNodes
       .map((node) => {
         const id = articleIdFromNodeId(node.id);
         if (!id) {
@@ -321,13 +343,13 @@ export function RelatedWorksGraph({
         }
         return left.title.localeCompare(right.title);
       });
-  }, [usingMockData, displayNodes, articleNodes, papers, articleId]);
+  }, [displayNodes, papers, articleId]);
 
   const displayListPapers = listPapers;
 
   const isGraphLoading =
     (usePublicApi && isRelatedLoading) ||
-    (useConnectPapers && isConnectLoading);
+    (useConnectPapers && citedArticleIds.length > 0 && isConnectLoading);
 
   if (isGraphLoading) {
     return (
@@ -346,17 +368,15 @@ export function RelatedWorksGraph({
       !connectHasNeighbors);
 
   const relatedCount = Math.max(0, displayNodes.length - 1);
-  const sourceLabel =
-    relatedWorksGraphSource === RELATED_WORKS_GRAPH_SOURCE.CONNECT_PAPERS
-      ? "connect-papers"
-      : relatedWorksGraphSource === RELATED_WORKS_GRAPH_SOURCE.PUBLIC_API
-        ? "public-api"
-        : "mock";
   const countLabel = usingMockData
-    ? `${relatedCount} mock related works (UI preview · config ${sourceLabel})`
+    ? `${relatedCount} mock related works (config = mock)`
     : useConnectPapers
-      ? `${relatedCount} connected papers`
-      : `${relatedCount} related works`;
+      ? relatedCount > 0
+        ? `${relatedCount} connected papers`
+        : "Origin paper only — no citations in catalog"
+      : relatedCount > 0
+        ? `${relatedCount} related works`
+        : "Origin paper only — no public-api neighbors";
 
   const openPaper = (paperId: string) => {
     if (isMockGraphPaperId(paperId)) {
@@ -414,10 +434,14 @@ export function RelatedWorksGraph({
 
           {usingMockData && (
             <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-amber-500/10 shrink-0">
-              Showing mock related works for UI preview
-              {useMockOnly
-                ? " (config = mock)."
-                : ` because ${sourceLabel} returned no neighbors.`}
+              Config source is <code>mock</code> — showing preview papers only.
+            </div>
+          )}
+
+          {!usingMockData && useConnectPapers && relatedCount === 0 && (
+            <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-muted/30 shrink-0">
+              No cited article IDs on this paper yet. Graph shows the origin
+              paper only (source = {relatedWorksGraphSource}).
             </div>
           )}
 

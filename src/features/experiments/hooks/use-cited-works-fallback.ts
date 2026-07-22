@@ -46,15 +46,12 @@ export function useCitedWorksFallback(
       const settled = await Promise.all(
         ids.map(async (id) => {
           try {
-            return await getArticleById(id);
+            const detail = await getArticleById(id);
+            return { id, detail } as const;
           } catch {
-            return null;
+            return { id, detail: null } as const;
           }
         }),
-      );
-
-      const cited = settled.filter(
-        (detail): detail is NonNullable<typeof detail> => detail !== null,
       );
 
       const papers: Record<string, GraphPaperInfo> = {};
@@ -81,8 +78,18 @@ export function useCitedWorksFallback(
       ];
       const edges: ArticleGraphEdge[] = [];
 
-      for (const detail of cited) {
-        const info = toGraphPaperInfo(detail);
+      for (const entry of settled) {
+        const info = entry.detail
+          ? toGraphPaperInfo(entry.detail)
+          : {
+              id: entry.id,
+              title: entry.id,
+              authors: [] as string[],
+              year: null,
+              journal: null,
+              abstract: null,
+              citationCount: 0,
+            };
         papers[info.id] = info;
         const nodeId = `article:${info.id}`;
         nodes.push({
