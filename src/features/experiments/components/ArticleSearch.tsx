@@ -162,8 +162,8 @@ export default function ArticleSearch() {
   const [publisher, setPublisher] = useState("");
   const [country, setCountry] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
-  const [yearFrom, setYearFrom] = useState("");
-  const [yearTo, setYearTo] = useState("");
+  const [yearFrom, setYearFrom] = useState("2023");
+  const [yearTo, setYearTo] = useState("2025");
 
   const [doiSearch, setDoiSearch] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
@@ -311,8 +311,8 @@ export default function ArticleSearch() {
     setPublisher("");
     setCountry("");
     setSelectedYear("");
-    setYearFrom("");
-    setYearTo("");
+    setYearFrom("2023");
+    setYearTo("2025");
     setDoiSearch("");
     setAuthorSearch("");
     setTopicSearch("");

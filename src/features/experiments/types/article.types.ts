@@ -92,9 +92,7 @@ export type ArticleApiFilters = {
 export type ArticleListResponse = CursorPage<ArticleGraph>;
 export type ArticleDetailResponse = ArticleGraph;
 
-export const yearOptions = Array.from({ length: 16 }, (_, index) =>
-  String(2026 - index),
-);
+export const yearOptions = ["2025", "2024", "2023"];
 
 export const articleSortOptions: { value: ArticleSort; label: string }[] = [
   { value: "newest", label: "Newest first" },
