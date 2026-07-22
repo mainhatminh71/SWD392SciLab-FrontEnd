@@ -21,6 +21,10 @@ import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
+import {
+  ListPageMain,
+  ListScrollArea,
+} from "@/shared/components/layout/ListPageScroll";
 import { RouteDataLoading } from "@/shared/components/layout/RouteDataLoading";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
@@ -200,9 +204,13 @@ export default function JournalSearch() {
         }}
       />
 
-      <main className="flex-1 overflow-auto py-8">
-        <PageContainer size="wide" className="space-y-6">
+      <ListPageMain>
+        <PageContainer
+          size="wide"
+          className="flex-1 min-h-0 flex flex-col gap-4 py-6"
+        >
           {/* Page Header */}
+          <div className="shrink-0 space-y-4">
           <div>
             <h1 className="font-heading text-3xl text-foreground">
               Journal Search
@@ -237,13 +245,14 @@ export default function JournalSearch() {
               />
             </div>
           </div>
+          </div>
 
-          <div className="flex gap-8">
+          <div className="flex-1 min-h-0 flex gap-8">
             {/* Filters Sidebar */}
             {showFilters && (
-              <aside className="w-72 flex-shrink-0">
-                <Card className="p-6 border-border sticky top-0">
-                  <div className="flex items-center justify-between mb-6">
+              <aside className="w-72 flex-shrink-0 min-h-0">
+                <Card className="p-6 border-border h-full min-h-0 flex flex-col">
+                  <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-2">
                       <Filter className="w-5 h-5 text-muted-foreground" />
                       <h2 className="font-heading text-lg text-foreground">
@@ -265,7 +274,7 @@ export default function JournalSearch() {
                     </Button>
                   </div>
 
-                  <div className="space-y-6 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
+                  <div className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-2">
                     {/* Subject Area */}
                     <div>
                       <h3 className="text-sm font-semibold text-foreground mb-3">
@@ -429,9 +438,9 @@ export default function JournalSearch() {
             )}
 
             {/* Results Area */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 min-h-0 flex flex-col">
               {/* Results Header */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="shrink-0 flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <Button
                     variant="outline"
@@ -477,7 +486,7 @@ export default function JournalSearch() {
               </div>
 
               {error && (
-                <Card className="p-6 border-border mb-4">
+                <Card className="p-6 border-border mb-4 shrink-0">
                   <p className="text-sm text-destructive mb-4">{error}</p>
                   <Button
                     variant="outline"
@@ -498,7 +507,8 @@ export default function JournalSearch() {
               )}
 
               {/* Journal Cards */}
-              <div className="space-y-4">
+              <ListScrollArea className="pr-1">
+              <div className="space-y-4 pb-2">
                 {currentJournals.map((journal) => {
                   const subjects = getJournalSubjects(journal);
 
@@ -611,10 +621,11 @@ export default function JournalSearch() {
                   );
                 })}
               </div>
+              </ListScrollArea>
 
               {/* Pagination */}
               {!isLoading && filteredJournals.length > 0 && (
-                <div className="flex items-center justify-between mt-8">
+                <div className="shrink-0 flex items-center justify-between mt-4 pt-2 border-t border-border">
                   <Button
                     variant="outline"
                     size="sm"
@@ -684,7 +695,7 @@ export default function JournalSearch() {
             </div>
           </div>
         </PageContainer>
-      </main>
+      </ListPageMain>
     </>
   );
 }

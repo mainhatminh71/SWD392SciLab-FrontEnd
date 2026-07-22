@@ -32,6 +32,10 @@ import {
 } from "@/shared/components/ui/table";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
+import {
+  ListPageMain,
+  ListScrollArea,
+} from "@/shared/components/layout/ListPageScroll";
 import { RouteDataLoading } from "@/shared/components/layout/RouteDataLoading";
 import { useJournalRankings } from "@/features/laboratories/hooks/use-journal-rankings";
 import {
@@ -275,32 +279,36 @@ export default function JournalRankings() {
         }}
       />
 
-      <main className="flex-1 overflow-auto py-8">
-        <PageContainer size="wide" className="space-y-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-primary" />
-                <h1 className="font-heading text-3xl text-foreground">
-                  Rankings
-                </h1>
+      <ListPageMain>
+        <PageContainer
+          size="wide"
+          className="flex-1 min-h-0 flex flex-col gap-4 py-6"
+        >
+          <div className="shrink-0 space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-primary" />
+                  <h1 className="font-heading text-3xl text-foreground">
+                    Rankings
+                  </h1>
+                </div>
+                <p className="text-muted-foreground mt-1">
+                  SCImago Journal Rankings for researchers and students.
+                </p>
               </div>
-              <p className="text-muted-foreground mt-1">
-                SCImago Journal Rankings for researchers and students.
-              </p>
+              <Button
+                variant="outline"
+                className="h-10"
+                disabled={filtered.length === 0}
+                onClick={() => downloadCsv(filtered, year)}
+              >
+                <ArrowDownToLine className="w-4 h-4 mr-2" />
+                Download
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              className="h-10"
-              disabled={filtered.length === 0}
-              onClick={() => downloadCsv(filtered, year)}
-            >
-              <ArrowDownToLine className="w-4 h-4 mr-2" />
-              Download
-            </Button>
-          </div>
 
-          <Card className="p-5 border-border space-y-4">
+            <Card className="p-5 border-border space-y-4">
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1.5 min-w-[140px]">
                 <Label className="text-xs text-muted-foreground">Year</Label>
@@ -426,9 +434,10 @@ export default function JournalRankings() {
               </Button>
             </div>
           </Card>
+          </div>
 
           {error && (
-            <Card className="p-6 border-border">
+            <Card className="p-6 border-border shrink-0">
               <p className="text-sm text-destructive mb-4">{error}</p>
               <Button variant="outline" size="sm" onClick={() => void reload()}>
                 Try again
@@ -439,8 +448,8 @@ export default function JournalRankings() {
           {isLoading && <RouteDataLoading label="Loading journal rankings…" />}
 
           {!isLoading && !error && (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1 min-h-0 flex flex-col gap-3">
+              <div className="shrink-0 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-primary" />
                   {filtered.length.toLocaleString()} journals
@@ -468,9 +477,10 @@ export default function JournalRankings() {
                 )}
               </div>
 
-              <Card className="border-border overflow-hidden">
+              <Card className="border-border flex-1 min-h-0 overflow-hidden flex flex-col">
+                <ListScrollArea className="rounded-[inherit]">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-14">#</TableHead>
                       <TableHead className="min-w-[240px]">Title</TableHead>
@@ -588,9 +598,10 @@ export default function JournalRankings() {
                     )}
                   </TableBody>
                 </Table>
+                </ListScrollArea>
               </Card>
 
-              <div className="flex items-center justify-between gap-3">
+              <div className="shrink-0 flex items-center justify-between gap-3">
                 <p className="text-sm text-muted-foreground">
                   Page {currentPage} of {totalPages}
                 </p>
@@ -621,10 +632,10 @@ export default function JournalRankings() {
                   </Button>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </PageContainer>
-      </main>
+      </ListPageMain>
     </>
   );
 }

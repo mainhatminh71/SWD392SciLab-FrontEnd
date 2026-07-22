@@ -21,6 +21,10 @@ import { Input } from "@/shared/components/ui/input";
 import { Card } from "@/shared/components/ui/card";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
+import {
+  ListPageMain,
+  ListScrollArea,
+} from "@/shared/components/layout/ListPageScroll";
 import { RouteDataLoading } from "@/shared/components/layout/RouteDataLoading";
 import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
@@ -214,8 +218,12 @@ export default function ArticleSearch() {
         }}
       />
 
-      <main className="flex-1 overflow-auto py-8">
-        <PageContainer size="wide" className="space-y-6">
+      <ListPageMain>
+        <PageContainer
+          size="wide"
+          className="flex-1 min-h-0 flex flex-col gap-4 py-6"
+        >
+          <div className="shrink-0 space-y-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h1 className="font-heading text-3xl text-foreground">
@@ -370,8 +378,10 @@ export default function ArticleSearch() {
               </div>
             </Card>
           )}
+          </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex-1 min-h-0 flex flex-col gap-3">
+          <div className="shrink-0 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               {isLoading ? (
                 "Loading articles..."
@@ -395,7 +405,7 @@ export default function ArticleSearch() {
           </div>
 
           {error && (
-            <Card className="p-6 border-border">
+            <Card className="p-6 border-border shrink-0">
               <p className="text-sm text-destructive mb-4">{error}</p>
               <Button variant="outline" size="sm" onClick={() => void reload()}>
                 Try again
@@ -411,7 +421,8 @@ export default function ArticleSearch() {
             </Card>
           )}
 
-          <div className="space-y-4">
+          <ListScrollArea className="pr-1">
+          <div className="space-y-4 pb-2">
             {currentArticles.map((article) => {
               const articleId = article.article.id;
               const keywords = getTagNames(article.keywords);
@@ -512,9 +523,10 @@ export default function ArticleSearch() {
               );
             })}
           </div>
+          </ListScrollArea>
 
           {!isLoading && filteredArticles.length > 0 && (
-            <div className="flex items-center justify-between mt-8">
+            <div className="shrink-0 flex items-center justify-between pt-2 border-t border-border">
               <Button
                 variant="outline"
                 size="sm"
@@ -579,8 +591,9 @@ export default function ArticleSearch() {
               </Button>
             </div>
           )}
+          </div>
         </PageContainer>
-      </main>
+      </ListPageMain>
     </>
   );
 }
