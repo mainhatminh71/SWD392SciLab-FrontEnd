@@ -478,8 +478,13 @@ export default function JournalRankings() {
               </div>
 
               <Card className="border-border flex-1 min-h-0 overflow-hidden flex flex-col">
-                <ListScrollArea className="rounded-[inherit]">
-                <Table>
+                {/*
+                  Horizontal scroll on the outer viewport so the x-scrollbar stays
+                  visible at the bottom of the card; vertical scroll is inner.
+                */}
+                <div className="flex-1 min-h-0 overflow-x-auto overscroll-contain">
+                  <ListScrollArea className="min-w-[1100px] overflow-x-hidden">
+                    <Table containerClassName="overflow-visible">
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-14">#</TableHead>
@@ -598,7 +603,8 @@ export default function JournalRankings() {
                     )}
                   </TableBody>
                 </Table>
-                </ListScrollArea>
+                  </ListScrollArea>
+                </div>
               </Card>
 
               <div className="shrink-0 flex items-center justify-between gap-3">
