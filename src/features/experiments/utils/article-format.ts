@@ -73,6 +73,24 @@ export function getTagNames(items: (KeywordNode | TopicNode)[], maxCount = 4) {
     .slice(0, maxCount);
 }
 
+/** Primary OpenAlex topics for an article (isPrimary = true). */
+export function getPrimaryTopics(article: ArticleGraph, maxCount = 3) {
+  return article.topics
+    .filter((topic) => topic.isPrimary)
+    .map((topic) => topic.displayName?.trim())
+    .filter((name): name is string => Boolean(name))
+    .slice(0, maxCount);
+}
+
+/** Non-primary related topics for an article. */
+export function getRelatedTopics(article: ArticleGraph, maxCount = 4) {
+  return article.topics
+    .filter((topic) => !topic.isPrimary)
+    .map((topic) => topic.displayName?.trim())
+    .filter((name): name is string => Boolean(name))
+    .slice(0, maxCount);
+}
+
 export function getAuthorDisplayName(author: Pick<AuthorNode, "displayName">) {
   return author.displayName?.trim() || "Unknown author";
 }

@@ -53,6 +53,8 @@ import {
   getArticleJournal,
   getArticleTitle,
   getArticleYear,
+  getPrimaryTopics,
+  getRelatedTopics,
   getTagNames,
 } from "@/features/experiments/utils/article-format";
 import {
@@ -722,8 +724,11 @@ export default function ArticleSearch() {
                 <div className="space-y-4 pb-2">
                   {currentArticles.map((article) => {
                     const articleId = article.article.id;
-                    const keywords = getTagNames(article.keywords);
+                    const keywords = getTagNames(article.keywords, 4);
+                    const primaryTopics = getPrimaryTopics(article);
+                    const relatedTopics = getRelatedTopics(article);
                     const isBookmarked = bookmarkedIds.has(articleId);
+                    const articleHref = `/student/articles/${encodeURIComponent(articleId)}`;
 
                     return (
                       <Card
@@ -732,8 +737,14 @@ export default function ArticleSearch() {
                       >
                         <div className="flex gap-6">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-heading text-xl text-foreground mb-3 hover:text-primary transition-colors cursor-pointer line-clamp-2">
-                              {getArticleTitle(article)}
+                            <h3 className="font-heading text-xl text-foreground mb-3 line-clamp-2">
+                              <button
+                                type="button"
+                                onClick={() => router.push(articleHref)}
+                                className="text-left hover:text-primary transition-colors"
+                              >
+                                {getArticleTitle(article)}
+                              </button>
                             </h3>
 
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
@@ -782,16 +793,65 @@ export default function ArticleSearch() {
                               {getArticleAbstract(article)}
                             </p>
 
-                            <div className="flex flex-wrap gap-2 mb-4">
-                              {keywords.map((keyword) => (
-                                <span
-                                  key={keyword}
-                                  className="px-2.5 py-1 bg-accent text-tag text-xs font-medium rounded-md"
-                                >
-                                  {keyword}
-                                </span>
-                              ))}
-                            </div>
+                            {(primaryTopics.length > 0 ||
+                              relatedTopics.length > 0 ||
+                              keywords.length > 0) && (
+                              <div className="space-y-3 mb-4">
+                                {primaryTopics.length > 0 && (
+                                  <div className="space-y-1.5">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                      Primary topic
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {primaryTopics.map((topic) => (
+                                        <span
+                                          key={`primary-${topic}`}
+                                          className="px-2.5 py-1 bg-primary/15 text-foreground text-xs font-medium rounded-md border border-primary/25"
+                                        >
+                                          {topic}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {relatedTopics.length > 0 && (
+                                  <div className="space-y-1.5">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                      Related topics
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {relatedTopics.map((topic) => (
+                                        <span
+                                          key={`related-${topic}`}
+                                          className="px-2.5 py-1 bg-accent text-tag text-xs font-medium rounded-md"
+                                        >
+                                          {topic}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {keywords.length > 0 && (
+                                  <div className="space-y-1.5">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                      Keywords
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {keywords.map((keyword) => (
+                                        <span
+                                          key={`keyword-${keyword}`}
+                                          className="px-2.5 py-1 bg-muted text-muted-foreground text-xs font-medium rounded-md"
+                                        >
+                                          {keyword}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             <div className="text-xs text-muted-foreground">
                               DOI: {getArticleDoi(article)}
@@ -803,9 +863,7 @@ export default function ArticleSearch() {
                               variant="outline"
                               size="sm"
                               className="h-9 px-4"
-                              onClick={() =>
-                                router.push(`/student/articles/${articleId}`)
-                              }
+                              onClick={() => router.push(articleHref)}
                             >
                               <ExternalLink className="w-4 h-4 mr-2" />
                               View
