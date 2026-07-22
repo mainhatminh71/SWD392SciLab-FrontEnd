@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Filter,
@@ -38,48 +38,56 @@ import {
   getJournalSubjects,
 } from "@/features/laboratories/utils/journal-format";
 
-const subjectAreas = [
-  "Artificial Intelligence",
-  "Machine Learning",
-  "Climate Science",
-  "Computational Biology",
-  "Quantum Computing",
-  "Genomics",
-  "Environmental Science",
-  "Materials Science",
-];
+const FACET_OPTION_LIMIT = 24;
 
-const countries = [
-  "United States",
-  "United Kingdom",
-  "Netherlands",
-  "Germany",
-  "China",
-  "Japan",
-];
+type JournalFilters = {
+  subjectAreas: string[];
+  countries: string[];
+  publishers: string[];
+  openAccess: boolean;
+  oaDiamond: boolean;
+};
 
-const publishers = [
-  "Nature Publishing Group",
-  "Elsevier",
-  "Springer",
-  "Wiley",
-  "Public Library of Science",
-  "IOP Publishing",
-  "BioMed Central",
-];
+function normalizeFacet(value: string) {
+  return value.trim().toLowerCase();
+}
 
-const rankingMetrics = ["Impact Factor", "CiteScore", "h-Index", "SJR"];
+function collectFacetOptions(
+  values: Iterable<string>,
+  limit = FACET_OPTION_LIMIT,
+) {
+  const counts = new Map<string, { label: string; count: number }>();
+
+  for (const raw of values) {
+    const label = raw.trim();
+    if (!label || label === "—") {
+      continue;
+    }
+
+    const key = normalizeFacet(label);
+    const existing = counts.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      counts.set(key, { label, count: 1 });
+    }
+  }
+
+  return [...counts.values()]
+    .sort(
+      (a, b) =>
+        b.count - a.count || a.label.localeCompare(b.label, undefined, {
+          sensitivity: "base",
+        }),
+    )
+    .slice(0, limit)
+    .map((entry) => entry.label);
+}
 
 function matchesJournalFilters(
   journal: JournalListItem,
   searchQuery: string,
-  filters: {
-    subjectAreas: string[];
-    countries: string[];
-    publishers: string[];
-    openAccess: boolean;
-    oaDiamond: boolean;
-  },
+  filters: JournalFilters,
 ) {
   const query = searchQuery.trim().toLowerCase();
 
@@ -90,27 +98,34 @@ function matchesJournalFilters(
     }
   }
 
-  if (
-    filters.subjectAreas.length > 0 &&
-    !filters.subjectAreas.some((subject) =>
-      getJournalSubjects(journal).includes(subject),
-    )
-  ) {
-    return false;
+  if (filters.subjectAreas.length > 0) {
+    const subjects = getJournalSubjects(journal).map(normalizeFacet);
+    const selected = filters.subjectAreas.map(normalizeFacet);
+    if (!selected.some((subject) => subjects.includes(subject))) {
+      return false;
+    }
   }
 
-  if (
-    filters.countries.length > 0 &&
-    !filters.countries.includes(getJournalCountry(journal))
-  ) {
-    return false;
+  if (filters.countries.length > 0) {
+    const country = normalizeFacet(getJournalCountry(journal));
+    if (
+      !country ||
+      country === "—" ||
+      !filters.countries.some((value) => normalizeFacet(value) === country)
+    ) {
+      return false;
+    }
   }
 
-  if (
-    filters.publishers.length > 0 &&
-    !filters.publishers.includes(getJournalPublisher(journal))
-  ) {
-    return false;
+  if (filters.publishers.length > 0) {
+    const publisher = normalizeFacet(getJournalPublisher(journal));
+    if (
+      !publisher ||
+      publisher === "—" ||
+      !filters.publishers.some((value) => normalizeFacet(value) === publisher)
+    ) {
+      return false;
+    }
   }
 
   if (filters.openAccess && !journal.isOpenAccess) {
@@ -133,16 +148,37 @@ export default function JournalSearch() {
   const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
     useJournals(searchQuery);
 
-  const [filters, setFilters] = useState({
-    subjectAreas: [] as string[],
-    countries: [] as string[],
-    publishers: [] as string[],
-    rankingMetrics: [] as string[],
+  const [filters, setFilters] = useState<JournalFilters>({
+    subjectAreas: [],
+    countries: [],
+    publishers: [],
     openAccess: false,
     oaDiamond: false,
   });
 
   const itemsPerPage = 8;
+
+  const subjectAreaOptions = useMemo(
+    () =>
+      collectFacetOptions(
+        items.flatMap((journal) => getJournalSubjects(journal)),
+      ),
+    [items],
+  );
+
+  const countryOptions = useMemo(
+    () =>
+      collectFacetOptions(items.map((journal) => getJournalCountry(journal))),
+    [items],
+  );
+
+  const publisherOptions = useMemo(
+    () =>
+      collectFacetOptions(
+        items.map((journal) => getJournalPublisher(journal)),
+      ),
+    [items],
+  );
 
   const filteredJournals = useMemo(
     () =>
@@ -156,40 +192,57 @@ export default function JournalSearch() {
     1,
     Math.ceil(filteredJournals.length / itemsPerPage),
   );
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentJournals = filteredJournals.slice(startIndex, endIndex);
 
-  const handleFilterChange = (category: string, value: string) => {
+  useEffect(() => {
+    if (currentPage !== safePage) {
+      setCurrentPage(safePage);
+    }
+  }, [currentPage, safePage]);
+
+  const handleFilterChange = (
+    category: "subjectAreas" | "countries" | "publishers",
+    value: string,
+  ) => {
+    setCurrentPage(1);
     setFilters((prev) => {
-      const currentValues = prev[category as keyof typeof prev] as string[];
-      const isSelected = currentValues.includes(value);
+      const currentValues = prev[category];
+      const isSelected = currentValues.some(
+        (entry) => normalizeFacet(entry) === normalizeFacet(value),
+      );
 
       return {
         ...prev,
         [category]: isSelected
-          ? currentValues.filter((v) => v !== value)
+          ? currentValues.filter(
+              (entry) => normalizeFacet(entry) !== normalizeFacet(value),
+            )
           : [...currentValues, value],
       };
     });
   };
 
   const clearAllFilters = () => {
+    setCurrentPage(1);
     setFilters({
       subjectAreas: [],
       countries: [],
       publishers: [],
-      rankingMetrics: [],
       openAccess: false,
       oaDiamond: false,
     });
   };
 
+  const isFacetSelected = (selected: string[], value: string) =>
+    selected.some((entry) => normalizeFacet(entry) === normalizeFacet(value));
+
   const activeFilterCount =
     filters.subjectAreas.length +
     filters.countries.length +
     filters.publishers.length +
-    filters.rankingMetrics.length +
     (filters.openAccess ? 1 : 0) +
     (filters.oaDiamond ? 1 : 0);
 
@@ -280,28 +333,37 @@ export default function JournalSearch() {
                       <h3 className="text-sm font-semibold text-foreground mb-3">
                         Subject Area
                       </h3>
-                      <div className="space-y-2">
-                        {subjectAreas.slice(0, 5).map((subject) => (
-                          <div
-                            key={subject}
-                            className="flex items-center gap-2"
-                          >
-                            <Checkbox
-                              id={`subject-${subject}`}
-                              checked={filters.subjectAreas.includes(subject)}
-                              onCheckedChange={() =>
-                                handleFilterChange("subjectAreas", subject)
-                              }
-                            />
-                            <Label
-                              htmlFor={`subject-${subject}`}
-                              className="text-sm text-muted-foreground cursor-pointer"
+                      {subjectAreaOptions.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          No subject data in the current results.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {subjectAreaOptions.map((subject) => (
+                            <div
+                              key={subject}
+                              className="flex items-center gap-2"
                             >
-                              {subject}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
+                              <Checkbox
+                                id={`subject-${subject}`}
+                                checked={isFacetSelected(
+                                  filters.subjectAreas,
+                                  subject,
+                                )}
+                                onCheckedChange={() =>
+                                  handleFilterChange("subjectAreas", subject)
+                                }
+                              />
+                              <Label
+                                htmlFor={`subject-${subject}`}
+                                className="text-sm text-muted-foreground cursor-pointer"
+                              >
+                                {subject}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Country */}
@@ -309,28 +371,37 @@ export default function JournalSearch() {
                       <h3 className="text-sm font-semibold text-foreground mb-3">
                         Country
                       </h3>
-                      <div className="space-y-2">
-                        {countries.slice(0, 5).map((country) => (
-                          <div
-                            key={country}
-                            className="flex items-center gap-2"
-                          >
-                            <Checkbox
-                              id={`country-${country}`}
-                              checked={filters.countries.includes(country)}
-                              onCheckedChange={() =>
-                                handleFilterChange("countries", country)
-                              }
-                            />
-                            <Label
-                              htmlFor={`country-${country}`}
-                              className="text-sm text-muted-foreground cursor-pointer"
+                      {countryOptions.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          No country data in the current results.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {countryOptions.map((country) => (
+                            <div
+                              key={country}
+                              className="flex items-center gap-2"
                             >
-                              {country}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
+                              <Checkbox
+                                id={`country-${country}`}
+                                checked={isFacetSelected(
+                                  filters.countries,
+                                  country,
+                                )}
+                                onCheckedChange={() =>
+                                  handleFilterChange("countries", country)
+                                }
+                              />
+                              <Label
+                                htmlFor={`country-${country}`}
+                                className="text-sm text-muted-foreground cursor-pointer"
+                              >
+                                {country}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Publisher */}
@@ -338,54 +409,37 @@ export default function JournalSearch() {
                       <h3 className="text-sm font-semibold text-foreground mb-3">
                         Publisher
                       </h3>
-                      <div className="space-y-2">
-                        {publishers.slice(0, 5).map((publisher) => (
-                          <div
-                            key={publisher}
-                            className="flex items-center gap-2"
-                          >
-                            <Checkbox
-                              id={`publisher-${publisher}`}
-                              checked={filters.publishers.includes(publisher)}
-                              onCheckedChange={() =>
-                                handleFilterChange("publishers", publisher)
-                              }
-                            />
-                            <Label
-                              htmlFor={`publisher-${publisher}`}
-                              className="text-sm text-muted-foreground cursor-pointer"
+                      {publisherOptions.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          No publisher data in the current results.
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {publisherOptions.map((publisher) => (
+                            <div
+                              key={publisher}
+                              className="flex items-center gap-2"
                             >
-                              {publisher}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Ranking Metric */}
-                    <div className="pt-6 border-t border-border">
-                      <h3 className="text-sm font-semibold text-foreground mb-3">
-                        Ranking Metric
-                      </h3>
-                      <div className="space-y-2">
-                        {rankingMetrics.map((metric) => (
-                          <div key={metric} className="flex items-center gap-2">
-                            <Checkbox
-                              id={`metric-${metric}`}
-                              checked={filters.rankingMetrics.includes(metric)}
-                              onCheckedChange={() =>
-                                handleFilterChange("rankingMetrics", metric)
-                              }
-                            />
-                            <Label
-                              htmlFor={`metric-${metric}`}
-                              className="text-sm text-muted-foreground cursor-pointer"
-                            >
-                              {metric}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
+                              <Checkbox
+                                id={`publisher-${publisher}`}
+                                checked={isFacetSelected(
+                                  filters.publishers,
+                                  publisher,
+                                )}
+                                onCheckedChange={() =>
+                                  handleFilterChange("publishers", publisher)
+                                }
+                              />
+                              <Label
+                                htmlFor={`publisher-${publisher}`}
+                                className="text-sm text-muted-foreground cursor-pointer"
+                              >
+                                {publisher}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Open Access */}
@@ -398,12 +452,13 @@ export default function JournalSearch() {
                           <Checkbox
                             id="open-access"
                             checked={filters.openAccess}
-                            onCheckedChange={(checked) =>
-                              setFilters({
-                                ...filters,
-                                openAccess: checked as boolean,
-                              })
-                            }
+                            onCheckedChange={(checked) => {
+                              setCurrentPage(1);
+                              setFilters((prev) => ({
+                                ...prev,
+                                openAccess: checked === true,
+                              }));
+                            }}
                           />
                           <Label
                             htmlFor="open-access"
@@ -416,12 +471,13 @@ export default function JournalSearch() {
                           <Checkbox
                             id="oa-diamond"
                             checked={filters.oaDiamond}
-                            onCheckedChange={(checked) =>
-                              setFilters({
-                                ...filters,
-                                oaDiamond: checked as boolean,
-                              })
-                            }
+                            onCheckedChange={(checked) => {
+                              setCurrentPage(1);
+                              setFilters((prev) => ({
+                                ...prev,
+                                oaDiamond: checked === true,
+                              }));
+                            }}
                           />
                           <Label
                             htmlFor="oa-diamond"
@@ -629,7 +685,7 @@ export default function JournalSearch() {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={currentPage === 1}
+                    disabled={safePage === 1}
                     onClick={() =>
                       setCurrentPage((prev) => Math.max(1, prev - 1))
                     }
@@ -648,7 +704,7 @@ export default function JournalSearch() {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
-                          currentPage === page
+                          safePage === page
                             ? "bg-primary text-white"
                             : "bg-card border border-border text-muted-foreground hover:bg-accent"
                         }`}
@@ -662,10 +718,10 @@ export default function JournalSearch() {
                     variant="outline"
                     size="sm"
                     disabled={
-                      isLoadingMore || (currentPage === totalPages && !hasMore)
+                      isLoadingMore || (safePage === totalPages && !hasMore)
                     }
                     onClick={() => {
-                      if (currentPage < totalPages) {
+                      if (safePage < totalPages) {
                         setCurrentPage((prev) => prev + 1);
                         return;
                       }
