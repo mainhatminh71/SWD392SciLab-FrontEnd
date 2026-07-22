@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownToLine,
@@ -32,10 +32,7 @@ import {
 } from "@/shared/components/ui/table";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import StudentTopHeader from "@/shared/components/layout/StudentTopHeader";
-import {
-  ListPageMain,
-  ListScrollArea,
-} from "@/shared/components/layout/ListPageScroll";
+import { ListPageMain } from "@/shared/components/layout/ListPageScroll";
 import { RouteDataLoading } from "@/shared/components/layout/RouteDataLoading";
 import { useJournalRankings } from "@/features/laboratories/hooks/use-journal-rankings";
 import {
@@ -43,6 +40,127 @@ import {
   JOURNAL_RANKING_YEARS,
   type JournalRankingItem,
 } from "@/features/laboratories/types/journal-ranking.types";
+import { cn } from "@/shared/components/ui/utils";
+
+/**
+ * Single viewport for both axes so the horizontal scrollbar stays visible,
+ * plus click-drag panning and Shift+wheel horizontal scroll.
+ */
+function RankingsTableViewport({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef<{
+    active: boolean;
+    moved: boolean;
+    startX: number;
+    startY: number;
+    scrollLeft: number;
+    scrollTop: number;
+  } | null>(null);
+  const suppressClick = useRef(false);
+  const [grabbing, setGrabbing] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+
+    const onWheel = (event: WheelEvent) => {
+      // Trackpads already send deltaX; mice usually need Shift+wheel.
+      if (event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+        event.preventDefault();
+        el.scrollLeft += event.deltaY;
+      }
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("button, a, input, select, textarea, label")) {
+        return;
+      }
+
+      drag.current = {
+        active: true,
+        moved: false,
+        startX: event.clientX,
+        startY: event.clientY,
+        scrollLeft: el.scrollLeft,
+        scrollTop: el.scrollTop,
+      };
+      setGrabbing(true);
+      el.setPointerCapture(event.pointerId);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      const state = drag.current;
+      if (!state?.active) {
+        return;
+      }
+      const dx = event.clientX - state.startX;
+      const dy = event.clientY - state.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        state.moved = true;
+      }
+      el.scrollLeft = state.scrollLeft - dx;
+      el.scrollTop = state.scrollTop - dy;
+    };
+
+    const endDrag = (event: PointerEvent) => {
+      const state = drag.current;
+      if (!state?.active) {
+        return;
+      }
+      if (state.moved) {
+        suppressClick.current = true;
+      }
+      drag.current = null;
+      setGrabbing(false);
+      if (el.hasPointerCapture(event.pointerId)) {
+        el.releasePointerCapture(event.pointerId);
+      }
+    };
+
+    const onClickCapture = (event: MouseEvent) => {
+      if (!suppressClick.current) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClick.current = false;
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+    el.addEventListener("click", onClickCapture, true);
+
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", endDrag);
+      el.removeEventListener("pointercancel", endDrag);
+      el.removeEventListener("click", onClickCapture, true);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "flex-1 min-h-0 overflow-auto overscroll-contain",
+        grabbing ? "cursor-grabbing select-none" : "cursor-grab",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
 
 const PAGE_SIZE = 25;
 
@@ -478,13 +596,11 @@ export default function JournalRankings() {
               </div>
 
               <Card className="border-border flex-1 min-h-0 overflow-hidden flex flex-col">
-                {/*
-                  Horizontal scroll on the outer viewport so the x-scrollbar stays
-                  visible at the bottom of the card; vertical scroll is inner.
-                */}
-                <div className="flex-1 min-h-0 overflow-x-auto overscroll-contain">
-                  <ListScrollArea className="min-w-[1100px] overflow-x-hidden">
-                    <Table containerClassName="overflow-visible">
+                <RankingsTableViewport>
+                  <Table
+                    className="w-max min-w-full"
+                    containerClassName="overflow-visible w-max min-w-full"
+                  >
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableHead className="w-14">#</TableHead>
@@ -603,8 +719,7 @@ export default function JournalRankings() {
                     )}
                   </TableBody>
                 </Table>
-                  </ListScrollArea>
-                </div>
+                </RankingsTableViewport>
               </Card>
 
               <div className="shrink-0 flex items-center justify-between gap-3">
