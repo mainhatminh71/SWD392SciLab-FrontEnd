@@ -34,6 +34,13 @@ import {
   buildMockRelatedWorksGraph,
   isMockGraphPaperId,
 } from "@/features/experiments/data/mock-related-works-graph";
+import {
+  isConnectPapersSource,
+  isMockGraphSource,
+  isPublicApiGraphSource,
+  relatedWorksGraphSource,
+  RELATED_WORKS_GRAPH_SOURCE,
+} from "@/features/experiments/config/related-works-graph.config";
 import { cn } from "@/shared/components/ui/utils";
 
 const WIDTH = 920;
@@ -121,6 +128,10 @@ export function RelatedWorksGraph({
   const [selectedId, setSelectedId] = useState(rootNodeId);
   const [zoom, setZoom] = useState(1);
 
+  const usePublicApi = isPublicApiGraphSource();
+  const useConnectPapers = isConnectPapersSource();
+  const useMockOnly = isMockGraphSource();
+
   const {
     nodes: relatedNodes,
     edges: relatedEdges,
@@ -129,44 +140,56 @@ export function RelatedWorksGraph({
     hasMore,
     error: relatedError,
     loadMore,
-  } = useArticleGraph(articleId);
-
-  const relatedArticleCount = articleNodeCount(relatedNodes);
-  const needsCitationFallback =
-    !isRelatedLoading &&
-    (Boolean(relatedError) || relatedArticleCount <= 1) &&
-    citedArticleIds.length > 0;
+  } = useArticleGraph(articleId, usePublicApi);
 
   const {
-    data: citationFallback,
-    isLoading: isFallbackLoading,
-    error: fallbackError,
+    data: citationGraph,
+    isLoading: isConnectLoading,
+    error: connectError,
   } = useCitedWorksFallback(
     articleId,
     rootPaper,
     citedArticleIds,
-    needsCitationFallback,
+    useConnectPapers && citedArticleIds.length > 0,
   );
 
-  const usingCitationFallback =
-    needsCitationFallback &&
-    Boolean(citationFallback) &&
-    articleNodeCount(citationFallback?.nodes ?? []) > 1;
+  const connectHasNeighbors =
+    useConnectPapers &&
+    Boolean(citationGraph) &&
+    articleNodeCount(citationGraph?.nodes ?? []) > 1;
 
-  const graphNodes = useMemo(
-    () =>
-      usingCitationFallback
-        ? (citationFallback?.nodes ?? [])
-        : relatedNodes,
-    [usingCitationFallback, citationFallback?.nodes, relatedNodes],
-  );
-  const graphEdges = useMemo(
-    () =>
-      usingCitationFallback
-        ? (citationFallback?.edges ?? [])
-        : relatedEdges,
-    [usingCitationFallback, citationFallback?.edges, relatedEdges],
-  );
+  const publicApiHasNeighbors =
+    usePublicApi && articleNodeCount(relatedNodes) > 1;
+
+  const graphNodes = useMemo(() => {
+    if (useConnectPapers) {
+      return citationGraph?.nodes ?? [];
+    }
+    if (usePublicApi) {
+      return relatedNodes;
+    }
+    return [];
+  }, [
+    useConnectPapers,
+    usePublicApi,
+    citationGraph?.nodes,
+    relatedNodes,
+  ]);
+
+  const graphEdges = useMemo(() => {
+    if (useConnectPapers) {
+      return citationGraph?.edges ?? [];
+    }
+    if (usePublicApi) {
+      return relatedEdges;
+    }
+    return [];
+  }, [
+    useConnectPapers,
+    usePublicApi,
+    citationGraph?.edges,
+    relatedEdges,
+  ]);
 
   const articleNodes = useMemo(
     () => graphNodes.filter((node) => node.type === "article"),
@@ -185,13 +208,13 @@ export function RelatedWorksGraph({
 
   const seededPapers = useMemo(() => {
     const map: Record<string, GraphPaperInfo> = {
-      ...(citationFallback?.papers ?? {}),
+      ...(citationGraph?.papers ?? {}),
     };
     if (rootPaper) {
       map[articleId] = rootPaper;
     }
     return map;
-  }, [articleId, citationFallback?.papers, rootPaper]);
+  }, [articleId, citationGraph?.papers, rootPaper]);
 
   const detailIds = useMemo(
     () =>
@@ -205,10 +228,15 @@ export function RelatedWorksGraph({
     useGraphPaperDetails(
       detailIds,
       seededPapers,
-      articleNodes.length > 1,
+      !useMockOnly && articleNodes.length > 1,
     );
 
-  const usingMockData = articleNodes.length <= 1;
+  // Mock only when configured, or when the preferred connect/api source has no neighbors.
+  const usingMockData =
+    useMockOnly ||
+    (useConnectPapers && !connectHasNeighbors) ||
+    (usePublicApi && !publicApiHasNeighbors && !isRelatedLoading);
+
   const mockGraph = useMemo(
     () =>
       usingMockData
@@ -226,18 +254,18 @@ export function RelatedWorksGraph({
   );
 
   const displayNodes = useMemo(() => {
-    if (!usingMockData) {
-      return articleNodes;
+    if (usingMockData) {
+      return mockGraph?.nodes ?? [];
     }
-    return mockGraph?.nodes ?? [];
-  }, [usingMockData, articleNodes, mockGraph?.nodes]);
+    return articleNodes;
+  }, [usingMockData, mockGraph?.nodes, articleNodes]);
 
   const displayEdges = useMemo(() => {
-    if (!usingMockData) {
-      return articleEdges;
+    if (usingMockData) {
+      return mockGraph?.edges ?? [];
     }
-    return mockGraph?.edges ?? [];
-  }, [usingMockData, articleEdges, mockGraph?.edges]);
+    return articleEdges;
+  }, [usingMockData, mockGraph?.edges, articleEdges]);
 
   const displayPositioned = useMemo(
     () => layoutArticleNodes(rootNodeId, displayNodes, papers),
@@ -298,7 +326,8 @@ export function RelatedWorksGraph({
   const displayListPapers = listPapers;
 
   const isGraphLoading =
-    isRelatedLoading || (needsCitationFallback && isFallbackLoading);
+    (usePublicApi && isRelatedLoading) ||
+    (useConnectPapers && isConnectLoading);
 
   if (isGraphLoading) {
     return (
@@ -310,18 +339,24 @@ export function RelatedWorksGraph({
   }
 
   const hardError =
-    !usingCitationFallback &&
-    relatedError &&
-    (!needsCitationFallback || fallbackError);
+    (usePublicApi && Boolean(relatedError) && !publicApiHasNeighbors) ||
+    (useConnectPapers &&
+      Boolean(connectError) &&
+      citedArticleIds.length > 0 &&
+      !connectHasNeighbors);
 
   const relatedCount = Math.max(0, displayNodes.length - 1);
+  const sourceLabel =
+    relatedWorksGraphSource === RELATED_WORKS_GRAPH_SOURCE.CONNECT_PAPERS
+      ? "connect-papers"
+      : relatedWorksGraphSource === RELATED_WORKS_GRAPH_SOURCE.PUBLIC_API
+        ? "public-api"
+        : "mock";
   const countLabel = usingMockData
-    ? `${relatedCount} mock related works (UI preview)`
-    : hardError
-      ? "Graph temporarily unavailable"
-      : usingCitationFallback
-        ? `${relatedCount} cited works`
-        : `${relatedCount} related works`;
+    ? `${relatedCount} mock related works (UI preview · config ${sourceLabel})`
+    : useConnectPapers
+      ? `${relatedCount} connected papers`
+      : `${relatedCount} related works`;
 
   const openPaper = (paperId: string) => {
     if (isMockGraphPaperId(paperId)) {
@@ -344,8 +379,8 @@ export function RelatedWorksGraph({
             </p>
             <p className="text-sm text-muted-foreground">
               {countLabel}
-              {usingCitationFallback && !usingMockData
-                ? " · using citations while related links sync"
+              {useConnectPapers && !usingMockData
+                ? " · built from catalog citations"
                 : ""}
               . Open the full graph to inspect papers
               {!usingMockData ? " and jump to details" : ""}.
@@ -367,9 +402,11 @@ export function RelatedWorksGraph({
             </DialogTitle>
             <DialogDescription>
               {countLabel}
-              {usingCitationFallback && !usingMockData
-                ? " · citation fallback while related links sync"
-                : ""}
+              {useConnectPapers && !usingMockData
+                ? " · connect-papers source"
+                : usePublicApi && !usingMockData
+                  ? " · public-api source"
+                  : ""}
               . Click a node to inspect
               {usingMockData ? " the mock layout" : ", then View article"}.
             </DialogDescription>
@@ -377,19 +414,25 @@ export function RelatedWorksGraph({
 
           {usingMockData && (
             <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-amber-500/10 shrink-0">
-              Showing mock related works for UI preview. Live OpenAlex neighbors
-              are not synced for this article yet.
+              Showing mock related works for UI preview
+              {useMockOnly
+                ? " (config = mock)."
+                : ` because ${sourceLabel} returned no neighbors.`}
             </div>
           )}
 
           {!usingMockData && hardError && (
             <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-muted/30 shrink-0">
-              {relatedError ?? "Could not load related works."}
+              {relatedError ??
+                (connectError instanceof Error
+                  ? connectError.message
+                  : null) ??
+                "Could not load related works."}
             </div>
           )}
 
           <div className="flex items-center justify-end gap-2 px-4 py-2 border-b border-border bg-muted/20 shrink-0">
-            {!usingCitationFallback && hasMore && !usingMockData && (
+            {usePublicApi && hasMore && !usingMockData && (
               <Button
                 variant="outline"
                 size="sm"

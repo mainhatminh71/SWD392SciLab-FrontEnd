@@ -13,7 +13,7 @@ import type {
 const GRAPH_PAGE_LIMIT = 20;
 
 /** Loads the article knowledge graph page by page and merges the results. */
-export function useArticleGraph(articleId: string) {
+export function useArticleGraph(articleId: string, enabled = true) {
   const query = useInfiniteQuery({
     queryKey: ["article-graph", articleId],
     staleTime: listQueryStaleTimeMs,
@@ -24,7 +24,7 @@ export function useArticleGraph(articleId: string) {
         limit: GRAPH_PAGE_LIMIT,
       }),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: articleId.trim().length > 0,
+    enabled: enabled && articleId.trim().length > 0,
   });
 
   const { nodes, edges } = useMemo(() => {
