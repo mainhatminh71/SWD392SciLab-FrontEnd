@@ -28,7 +28,7 @@ function yearWindowFromRange(dateRange: TrendFilters["dateRange"]) {
 
 export function useTrendAnalysis(filters: TrendFilters) {
   const query = useQuery({
-    queryKey: ["trends", "catalog-sample"] as const,
+    queryKey: ["trends", "catalog-api", 100, 100] as const,
     staleTime: listQueryStaleTimeMs,
     queryFn: fetchCatalogSample,
   });

@@ -9,7 +9,7 @@ import type { CatalogSample } from "@/features/dashboard/api/fetch-catalog-sampl
 /** Shared catalog sample for Dashboard / Advanced Dashboard (same cache key). */
 export function useCatalogSample() {
   return useQuery({
-    queryKey: ["dashboard", "catalog-sample"] as const,
+    queryKey: ["dashboard", "catalog-api", 100, 100] as const,
     staleTime: listQueryStaleTimeMs,
     queryFn: fetchCatalogSample,
   });
