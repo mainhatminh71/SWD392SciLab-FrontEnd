@@ -80,9 +80,7 @@ function layoutArticleNodes(
     const paperId = articleIdFromNodeId(node.id) ?? node.id;
     const paper = papers[paperId];
     const t = (index + 0.5) / Math.max(satellites.length, 1);
-    const angle =
-      t * Math.PI * 2 +
-      (hashUnit(`${node.id}:a`) - 0.5) * 0.55;
+    const angle = t * Math.PI * 2 + (hashUnit(`${node.id}:a`) - 0.5) * 0.55;
     const ring = 0.32 + hashUnit(`${node.id}:r`) * 0.28;
     const radius =
       8 +
@@ -200,12 +198,7 @@ export function RelatedWorksGraph({
       return relatedEdges;
     }
     return [];
-  }, [
-    useConnectPapers,
-    usePublicApi,
-    citationGraph?.edges,
-    relatedEdges,
-  ]);
+  }, [useConnectPapers, usePublicApi, citationGraph?.edges, relatedEdges]);
 
   const articleNodes = useMemo(
     () => graphNodes.filter((node) => node.type === "article"),
@@ -263,11 +256,7 @@ export function RelatedWorksGraph({
   );
 
   const { papers: fetchedPapers, isLoading: isDetailsLoading } =
-    useGraphPaperDetails(
-      detailIds,
-      seededPapers,
-      articleNodes.length > 1,
-    );
+    useGraphPaperDetails(detailIds, seededPapers, articleNodes.length > 1);
 
   const papers = fetchedPapers;
 
@@ -387,8 +376,8 @@ export function RelatedWorksGraph({
             </p>
             <p className="text-sm text-muted-foreground">
               {countLabel}
-              {useConnectPapers ? " · built from catalog citations" : ""}
-              . Open the full graph to inspect papers and jump to details.
+              {useConnectPapers ? " · built from catalog citations" : ""}. Open
+              the full graph to inspect papers and jump to details.
             </p>
           </div>
         </div>
@@ -426,9 +415,7 @@ export function RelatedWorksGraph({
           {hardError && (
             <div className="px-4 py-2 text-xs text-muted-foreground border-b border-border bg-muted/30 shrink-0">
               {relatedError ??
-                (connectError instanceof Error
-                  ? connectError.message
-                  : null) ??
+                (connectError instanceof Error ? connectError.message : null) ??
                 "Could not load related works."}
             </div>
           )}
@@ -650,7 +637,8 @@ export function RelatedWorksGraph({
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          {(selectedPaper ?? rootPaper)!.citationCount} citations
+                          {(selectedPaper ?? rootPaper)!.citationCount}{" "}
+                          citations
                         </p>
                       </div>
 
@@ -667,7 +655,9 @@ export function RelatedWorksGraph({
 
                       <Button
                         className="w-full"
-                        disabled={(selectedPaper ?? rootPaper)!.id === articleId}
+                        disabled={
+                          (selectedPaper ?? rootPaper)!.id === articleId
+                        }
                         onClick={() =>
                           openPaper((selectedPaper ?? rootPaper)!.id)
                         }

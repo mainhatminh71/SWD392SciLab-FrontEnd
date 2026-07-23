@@ -36,7 +36,9 @@ function jobPaused(job: AdminPipelineJob) {
 }
 
 function jobRunning(job: AdminPipelineJob) {
-  const status = String(job.status ?? job.state ?? job.lastStatus ?? "").toLowerCase();
+  const status = String(
+    job.status ?? job.state ?? job.lastStatus ?? "",
+  ).toLowerCase();
   return status.includes("run") || (job.runningCount ?? 0) > 0;
 }
 
@@ -176,9 +178,7 @@ export default function AdminPipelineJobsPanel() {
                     <td className="py-3.5 px-6 text-xs text-muted-foreground">
                       {job.runningCount != null || job.waitingCount != null
                         ? `run ${job.runningCount ?? 0} · wait ${job.waitingCount ?? 0}${
-                            job.failedCount
-                              ? ` · fail ${job.failedCount}`
-                              : ""
+                            job.failedCount ? ` · fail ${job.failedCount}` : ""
                           }`
                         : "—"}
                     </td>

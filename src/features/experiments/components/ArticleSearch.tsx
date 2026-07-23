@@ -31,11 +31,11 @@ import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticles } from "@/features/experiments/hooks/use-articles";
-import { collectArticleTagOptions, pinTagName } from "@/features/experiments/utils/article-tag-options";
 import {
-  matchesArticleClientFilters,
-  sortArticlesForClient,
-} from "@/features/experiments/utils/article-client-filters";
+  collectArticleTagOptions,
+  pinTagName,
+} from "@/features/experiments/utils/article-tag-options";
+import { matchesArticleClientFilters, sortArticlesForClient } from "@/features/experiments/utils/article-client-filters";
 import {
   CATALOG_INSIGHT_YEAR_FROM,
   CATALOG_INSIGHT_YEAR_TO,
@@ -170,8 +170,7 @@ export default function ArticleSearch() {
     }
     for (const article of items) {
       if (article.journal?.id) {
-        const name =
-          article.journal.displayName?.trim() || article.journal.id;
+        const name = article.journal.displayName?.trim() || article.journal.id;
         if (!map.has(article.journal.id)) {
           map.set(article.journal.id, name);
         }

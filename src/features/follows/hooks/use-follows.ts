@@ -1,70 +1,63 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserFriendlyApiErrorMessage } from "@/core/api";
+import { listQueryStaleTimeMs } from "@/core/api/query-config";
 import { listFollows, toggleFollow } from "@/features/follows/api/follows.api";
-import type {
-  FollowItem,
-  FollowObjectType,
-  NotifyMode,
-} from "@/features/follows/types/follow.types";
+import type { FollowObjectType } from "@/features/follows/types/follow.types";
 
-export function useFollows(objectType?: FollowObjectType) {
-  const [items, setItems] = useState<FollowItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const followsRootQueryKey = ["follows"] as const;
+const dashboardQueryKey = ["dashboard", "me"] as const;
 
-  const reload = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+export function useFollows({
+  page = 1,
+  limit = 20,
+  type,
+}: {
+  page?: number;
+  limit?: number;
+  type?: FollowObjectType;
+} = {}) {
+  const queryClient = useQueryClient();
+  const queryKey = [...followsRootQueryKey, { page, limit, type }] as const;
+  const query = useQuery({
+    queryKey,
+    queryFn: () => listFollows({ page, limit, type }),
+    staleTime: listQueryStaleTimeMs,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
+  });
 
-    try {
-      const page = await listFollows({ page: 1, limit: 50, objectType });
-      setItems(page.items);
-    } catch (fetchError) {
-      setItems([]);
-      setError(getUserFriendlyApiErrorMessage(fetchError));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [objectType]);
+  const refreshRelatedData = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: followsRootQueryKey }),
+      queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
+    ]);
+  }, [queryClient]);
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
-
-  const toggle = useCallback(
+  const unfollow = useCallback(
     async (
-      type: FollowObjectType,
+      objectType: FollowObjectType,
       objectId: string,
-      notifyMode: NotifyMode = "IN_APP",
+      displayName?: string | null,
     ) => {
-      const result = await toggleFollow({
-        objectType: type,
-        objectId,
-        notifyMode,
-      });
-
-      if (result.followed) {
-        await reload();
-      } else {
-        setItems((prev) =>
-          prev.filter(
-            (item) => !(item.objectType === type && item.objectId === objectId),
-          ),
-        );
-      }
-
+      const result = await toggleFollow({ objectType, objectId, displayName });
+      await refreshRelatedData();
       return result;
     },
-    [reload],
+    [refreshRelatedData],
   );
 
   return {
-    items,
-    isLoading,
-    error,
-    reload,
-    toggle,
+    items: query.data?.items ?? [],
+    page: query.data?.page ?? page,
+    limit: query.data?.limit ?? limit,
+    hasMore: query.data?.hasMore ?? false,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error ? getUserFriendlyApiErrorMessage(query.error) : null,
+    reload: query.refetch,
+    unfollow,
   };
 }

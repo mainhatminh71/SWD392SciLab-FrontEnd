@@ -12,7 +12,9 @@ export const RELATED_WORKS_GRAPH_SOURCE = {
 export type RelatedWorksGraphSource =
   (typeof RELATED_WORKS_GRAPH_SOURCE)[keyof typeof RELATED_WORKS_GRAPH_SOURCE];
 
-const SOURCE_VALUES = new Set<string>(Object.values(RELATED_WORKS_GRAPH_SOURCE));
+const SOURCE_VALUES = new Set<string>(
+  Object.values(RELATED_WORKS_GRAPH_SOURCE),
+);
 
 function resolveRelatedWorksGraphSource(
   value = process.env.NEXT_PUBLIC_RELATED_WORKS_GRAPH_SOURCE,

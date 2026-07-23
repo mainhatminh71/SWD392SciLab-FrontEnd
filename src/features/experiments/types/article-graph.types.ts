@@ -34,7 +34,5 @@ export type ArticleGraphParams = {
 
 /** `article:W123` → `W123`; returns null for non-article nodes. */
 export function articleIdFromNodeId(nodeId: string): string | null {
-  return nodeId.startsWith("article:")
-    ? nodeId.slice("article:".length)
-    : null;
+  return nodeId.startsWith("article:") ? nodeId.slice("article:".length) : null;
 }

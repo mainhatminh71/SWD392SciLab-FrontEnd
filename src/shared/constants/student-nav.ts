@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   Bell,
+  Rss,
   Bookmark,
   BookOpen,
   FileText,
@@ -60,6 +61,13 @@ export const STUDENT_NAV_ITEMS: StudentNavItem[] = [
   //   icon: TrendingUp,
   //   permission: "trends",
   // },
+  {
+    id: "follows",
+    label: "Following",
+    href: "/student/follows",
+    icon: Rss,
+    permission: "follow",
+  },
   {
     id: "bookmarks",
     label: "Bookmarks",
