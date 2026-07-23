@@ -35,7 +35,7 @@ import {
   collectArticleTagOptions,
   pinTagName,
 } from "@/features/experiments/utils/article-tag-options";
-import { matchesArticleClientFilters } from "@/features/experiments/utils/article-client-filters";
+import { matchesArticleClientFilters, sortArticlesForClient } from "@/features/experiments/utils/article-client-filters";
 import {
   CATALOG_INSIGHT_YEAR_FROM,
   CATALOG_INSIGHT_YEAR_TO,
