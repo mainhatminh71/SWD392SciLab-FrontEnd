@@ -9,7 +9,12 @@ export interface AdminNavItem {
 }
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { id: "dashboard", label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    href: "/admin",
+    icon: LayoutDashboard,
+  },
   { id: "users", label: "User Management", href: "/admin/users", icon: Users },
   {
     id: "api-sources",

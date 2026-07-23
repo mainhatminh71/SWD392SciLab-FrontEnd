@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
@@ -25,7 +25,6 @@ import { Card } from "@/shared/components/ui/card";
 import { useJournalDetail } from "@/features/laboratories/hooks/use-journal-detail";
 import { useJournalArticles } from "@/features/laboratories/hooks/use-journal-articles";
 import { toggleFollow } from "@/features/follows/api/follows.api";
-import { isLocallyFollowing } from "@/features/follows/api/local-follows";
 import {
   getJournalCountry,
   getJournalIssn,
@@ -57,10 +56,6 @@ export default function JournalDetail({ journalId }: JournalDetailProps) {
   } = useJournalArticles(journalId);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowPending, setIsFollowPending] = useState(false);
-
-  useEffect(() => {
-    setIsFollowing(isLocallyFollowing("JOURNAL", journalId));
-  }, [journalId]);
 
   const handleToggleFollow = async () => {
     if (isFollowPending || !journal) {
@@ -286,7 +281,9 @@ export default function JournalDetail({ journalId }: JournalDetailProps) {
                     Loading articles…
                   </div>
                 ) : articlesError ? (
-                  <p className="text-sm text-destructive py-4">{articlesError}</p>
+                  <p className="text-sm text-destructive py-4">
+                    {articlesError}
+                  </p>
                 ) : articles.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-4">
                     No articles are linked to this journal in the catalog yet.

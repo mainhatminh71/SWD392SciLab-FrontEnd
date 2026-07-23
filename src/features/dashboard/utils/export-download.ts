@@ -24,7 +24,10 @@ export function escapeCsvCell(value: string | number | null | undefined) {
   return text;
 }
 
-export function rowsToCsv(headers: string[], rows: Array<Array<string | number | null | undefined>>) {
+export function rowsToCsv(
+  headers: string[],
+  rows: Array<Array<string | number | null | undefined>>,
+) {
   const lines = [
     headers.map(escapeCsvCell).join(","),
     ...rows.map((row) => row.map(escapeCsvCell).join(",")),

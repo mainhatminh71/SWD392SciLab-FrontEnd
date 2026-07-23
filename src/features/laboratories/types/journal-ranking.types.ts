@@ -1,11 +1,7 @@
 import type { CursorPage } from "@/features/experiments/types/academic-pagination.types";
 
 export type JournalRankingMatchStatus =
-  | "PENDING"
-  | "MATCHED"
-  | "UNMATCHED"
-  | "CONFLICT"
-  | "OUT_OF_SCOPE";
+  "PENDING" | "MATCHED" | "UNMATCHED" | "CONFLICT" | "OUT_OF_SCOPE";
 
 /** One row from GET /academic/journal-rankings. */
 export type JournalRankingItem = {

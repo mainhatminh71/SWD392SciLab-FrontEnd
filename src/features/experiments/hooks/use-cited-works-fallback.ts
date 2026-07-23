@@ -155,7 +155,10 @@ export function useCitedWorksFallback(
         if (sourceId === targetId) {
           return false;
         }
-        if (!availableIds.includes(sourceId) || !availableIds.includes(targetId)) {
+        if (
+          !availableIds.includes(sourceId) ||
+          !availableIds.includes(targetId)
+        ) {
           return false;
         }
         const key = undirectedKey(sourceId, targetId);

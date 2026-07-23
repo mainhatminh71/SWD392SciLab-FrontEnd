@@ -427,131 +427,133 @@ export default function JournalRankings() {
             </div>
 
             <Card className="p-5 border-border space-y-4">
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="space-y-1.5 min-w-[140px]">
-                <Label className="text-xs text-muted-foreground">Year</Label>
-                <Select
-                  value={String(year)}
-                  onValueChange={(value) => {
-                    setYear(Number(value));
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-10 rounded-full bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {JOURNAL_RANKING_YEARS.map((option) => (
-                      <SelectItem key={option} value={String(option)}>
-                        {option}
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1.5 min-w-[140px]">
+                  <Label className="text-xs text-muted-foreground">Year</Label>
+                  <Select
+                    value={String(year)}
+                    onValueChange={(value) => {
+                      setYear(Number(value));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-10 rounded-full bg-card">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {JOURNAL_RANKING_YEARS.map((option) => (
+                        <SelectItem key={option} value={String(option)}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5 min-w-[160px]">
+                  <Label className="text-xs text-muted-foreground">Type</Label>
+                  <Select
+                    value={draft.type}
+                    onValueChange={(value) =>
+                      setDraft((previous) => ({ ...previous, type: value }))
+                    }
+                  >
+                    <SelectTrigger className="h-10 rounded-full bg-card">
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All types</SelectItem>
+                      {typeOptions.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5 min-w-[200px]">
+                  <Label className="text-xs text-muted-foreground">
+                    Region / country
+                  </Label>
+                  <Select
+                    value={draft.country}
+                    onValueChange={(value) =>
+                      setDraft((previous) => ({ ...previous, country: value }))
+                    }
+                  >
+                    <SelectTrigger className="h-10 rounded-full bg-card">
+                      <SelectValue placeholder="All countries" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        All regions / countries
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                      {countryOptions.map((code) => (
+                        <SelectItem key={code} value={code}>
+                          {countryLabel(code)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-1.5 min-w-[160px]">
-                <Label className="text-xs text-muted-foreground">Type</Label>
-                <Select
-                  value={draft.type}
-                  onValueChange={(value) =>
-                    setDraft((previous) => ({ ...previous, type: value }))
-                  }
+                <Button
+                  variant="ghost"
+                  className="h-10 text-primary"
+                  onClick={clearFilters}
                 >
-                  <SelectTrigger className="h-10 rounded-full bg-card">
-                    <SelectValue placeholder="All types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All types</SelectItem>
-                    {typeOptions.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  Clear filters
+                </Button>
               </div>
 
-              <div className="space-y-1.5 min-w-[200px]">
-                <Label className="text-xs text-muted-foreground">
-                  Region / country
-                </Label>
-                <Select
-                  value={draft.country}
-                  onValueChange={(value) =>
-                    setDraft((previous) => ({ ...previous, country: value }))
-                  }
-                >
-                  <SelectTrigger className="h-10 rounded-full bg-card">
-                    <SelectValue placeholder="All countries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All regions / countries</SelectItem>
-                    {countryOptions.map((code) => (
-                      <SelectItem key={code} value={code}>
-                        {countryLabel(code)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={draft.matchedOnly}
+                    onCheckedChange={(checked) =>
+                      setDraft((previous) => ({
+                        ...previous,
+                        matchedOnly: checked,
+                      }))
+                    }
+                    id="matched-only"
+                  />
+                  <Label htmlFor="matched-only" className="text-sm font-normal">
+                    Only matched catalog journals
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor="min-docs"
+                    className="text-sm font-normal whitespace-nowrap"
+                  >
+                    Display journals with at least
+                  </Label>
+                  <Input
+                    id="min-docs"
+                    type="number"
+                    min={0}
+                    className="h-9 w-20"
+                    value={draft.minDocs}
+                    onChange={(event) =>
+                      setDraft((previous) => ({
+                        ...previous,
+                        minDocs: event.target.value,
+                      }))
+                    }
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Citable Docs. (3years)
+                  </span>
+                </div>
+
+                <Button className="h-10 ml-auto" onClick={applyFilters}>
+                  Apply
+                </Button>
               </div>
-
-              <Button
-                variant="ghost"
-                className="h-10 text-primary"
-                onClick={clearFilters}
-              >
-                Clear filters
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2 border-t border-border">
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={draft.matchedOnly}
-                  onCheckedChange={(checked) =>
-                    setDraft((previous) => ({
-                      ...previous,
-                      matchedOnly: checked,
-                    }))
-                  }
-                  id="matched-only"
-                />
-                <Label htmlFor="matched-only" className="text-sm font-normal">
-                  Only matched catalog journals
-                </Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Label
-                  htmlFor="min-docs"
-                  className="text-sm font-normal whitespace-nowrap"
-                >
-                  Display journals with at least
-                </Label>
-                <Input
-                  id="min-docs"
-                  type="number"
-                  min={0}
-                  className="h-9 w-20"
-                  value={draft.minDocs}
-                  onChange={(event) =>
-                    setDraft((previous) => ({
-                      ...previous,
-                      minDocs: event.target.value,
-                    }))
-                  }
-                />
-                <span className="text-sm text-muted-foreground">
-                  Citable Docs. (3years)
-                </span>
-              </div>
-
-              <Button className="h-10 ml-auto" onClick={applyFilters}>
-                Apply
-              </Button>
-            </div>
-          </Card>
+            </Card>
           </div>
 
           {error && (
@@ -601,124 +603,125 @@ export default function JournalRankings() {
                     className="w-max min-w-full"
                     containerClassName="overflow-visible w-max min-w-full"
                   >
-                  <TableHeader className="sticky top-0 z-10 bg-card">
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="w-14">#</TableHead>
-                      <TableHead className="min-w-[240px]">Title</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">SJR</TableHead>
-                      <TableHead className="text-right">H index</TableHead>
-                      <TableHead className="text-right">
-                        Total Docs. ({year})
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Total Docs. (3years)
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Total Refs. ({year})
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Total Citations (3years)
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Citable Docs. (3years)
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Citations / Doc. (2years)
-                      </TableHead>
-                      <TableHead className="text-right">
-                        Ref. / Doc. ({year})
-                      </TableHead>
-                      <TableHead className="text-right">
-                        % Female ({year})
-                      </TableHead>
-                      <TableHead>Country</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pageRows.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={14}
-                          className="h-28 text-center text-muted-foreground"
-                        >
-                          No journals match the current filters.
-                        </TableCell>
+                    <TableHeader className="sticky top-0 z-10 bg-card">
+                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+                        <TableHead className="w-14">#</TableHead>
+                        <TableHead className="min-w-[240px]">Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">SJR</TableHead>
+                        <TableHead className="text-right">H index</TableHead>
+                        <TableHead className="text-right">
+                          Total Docs. ({year})
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Total Docs. (3years)
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Total Refs. ({year})
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Total Citations (3years)
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Citable Docs. (3years)
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Citations / Doc. (2years)
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Ref. / Doc. ({year})
+                        </TableHead>
+                        <TableHead className="text-right">
+                          % Female ({year})
+                        </TableHead>
+                        <TableHead>Country</TableHead>
                       </TableRow>
-                    ) : (
-                      pageRows.map((item, index) => {
-                        const rank = (currentPage - 1) * PAGE_SIZE + index + 1;
-                        const canOpen = Boolean(item.journalId);
-                        return (
-                          <TableRow key={item.scimagoSourceId}>
-                            <TableCell className="text-muted-foreground font-medium">
-                              {rank}
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                type="button"
-                                className={`text-left font-medium inline-flex items-center gap-1.5 ${
-                                  canOpen
-                                    ? "text-primary hover:underline"
-                                    : "text-foreground cursor-default"
-                                }`}
-                                disabled={!canOpen}
-                                onClick={() => {
-                                  if (item.journalId) {
-                                    router.push(
-                                      `/student/journals/${item.journalId}`,
-                                    );
-                                  }
-                                }}
-                              >
-                                {item.title}
-                                {canOpen ? (
-                                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                                ) : null}
-                              </button>
-                            </TableCell>
-                            <TableCell className="capitalize text-muted-foreground">
-                              {item.type ?? "—"}
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              {formatNumber(item.sjr, 3)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.hIndex)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.totalDocs)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.totalDocs3Years)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.totalRefs)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.totalCitations3Years)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.citableDocs3Years)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.citationsPerDoc2Years, 2)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.refsPerDoc, 2)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatNumber(item.femalePercentage, 2)}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">
-                              {countryLabel(item.countryCode)}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    )}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {pageRows.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={14}
+                            className="h-28 text-center text-muted-foreground"
+                          >
+                            No journals match the current filters.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        pageRows.map((item, index) => {
+                          const rank =
+                            (currentPage - 1) * PAGE_SIZE + index + 1;
+                          const canOpen = Boolean(item.journalId);
+                          return (
+                            <TableRow key={item.scimagoSourceId}>
+                              <TableCell className="text-muted-foreground font-medium">
+                                {rank}
+                              </TableCell>
+                              <TableCell>
+                                <button
+                                  type="button"
+                                  className={`text-left font-medium inline-flex items-center gap-1.5 ${
+                                    canOpen
+                                      ? "text-primary hover:underline"
+                                      : "text-foreground cursor-default"
+                                  }`}
+                                  disabled={!canOpen}
+                                  onClick={() => {
+                                    if (item.journalId) {
+                                      router.push(
+                                        `/student/journals/${item.journalId}`,
+                                      );
+                                    }
+                                  }}
+                                >
+                                  {item.title}
+                                  {canOpen ? (
+                                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                  ) : null}
+                                </button>
+                              </TableCell>
+                              <TableCell className="capitalize text-muted-foreground">
+                                {item.type ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {formatNumber(item.sjr, 3)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.hIndex)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.totalDocs)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.totalDocs3Years)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.totalRefs)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.totalCitations3Years)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.citableDocs3Years)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.citationsPerDoc2Years, 2)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.refsPerDoc, 2)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatNumber(item.femalePercentage, 2)}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {countryLabel(item.countryCode)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
                 </RankingsTableViewport>
               </Card>
 

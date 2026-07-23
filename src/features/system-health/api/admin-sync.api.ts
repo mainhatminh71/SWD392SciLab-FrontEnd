@@ -34,7 +34,11 @@ function asString(value: unknown, fallback = "") {
 }
 
 function asNullableString(value: unknown) {
-  return typeof value === "string" ? value : value == null ? null : String(value);
+  return typeof value === "string"
+    ? value
+    : value == null
+      ? null
+      : String(value);
 }
 
 export function normalizeSyncLog(raw: unknown): AdminSyncLog | null {

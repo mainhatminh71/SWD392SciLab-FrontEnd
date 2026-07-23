@@ -10,7 +10,9 @@ export const runtime = "nodejs";
 type RouteContext = { params: Promise<{ path: string[] }> };
 
 function buildUpstreamPath(pathSegments: string[], request: NextRequest) {
-  const joined = pathSegments.map((segment) => encodeURIComponent(segment)).join("/");
+  const joined = pathSegments
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
   const query = request.nextUrl.searchParams.toString();
   return query ? `admin/${joined}?${query}` : `admin/${joined}`;
 }

@@ -110,9 +110,10 @@ export function buildSystemHealthSnapshot(input: {
     id: `job-${job.id}`,
     source: job.displayName || job.name || String(job.id),
     lastSyncTime: job.lastRunAt ?? dashboard.generatedAt,
-    status: job.paused || job.isPaused
-      ? "delayed"
-      : mapApiSyncStatus(String(job.status ?? job.lastStatus ?? "SUCCESS")),
+    status:
+      job.paused || job.isPaused
+        ? "delayed"
+        : mapApiSyncStatus(String(job.status ?? job.lastStatus ?? "SUCCESS")),
     recordsUpdated: job.runningCount ?? 0,
     durationMs: 0,
   }));
