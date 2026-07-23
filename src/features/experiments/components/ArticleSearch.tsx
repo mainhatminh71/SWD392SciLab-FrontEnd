@@ -35,24 +35,24 @@ import {
   collectArticleTagOptions,
   pinTagName,
 } from "@/features/experiments/utils/article-tag-options";
-import { matchesArticleClientFilters, sortArticlesForClient } from "@/features/experiments/utils/article-client-filters";
+import {
+  hasActiveArticleClientFilters,
+  matchesArticleClientFilters,
+} from "@/features/experiments/utils/article-client-filters";
 import {
   CATALOG_INSIGHT_YEAR_FROM,
   CATALOG_INSIGHT_YEAR_TO,
 } from "@/features/dashboard/api/fetch-catalog-sample";
-import { useJournals } from "@/features/laboratories/hooks/use-journals";
 import { toggleBookmark as toggleBookmarkApi } from "@/features/submissions/api/bookmarks.api";
 import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
 import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks";
 import type {
   ArticleApiFilters,
-  ArticleClientSort,
   ArticleGraph,
+  ArticleSort,
 } from "@/features/experiments/types/article.types";
 import {
   articleSortOptions,
-  countryFilterOptions,
-  toArticleApiSort,
   yearOptions,
 } from "@/features/experiments/types/article.types";
 import {
@@ -68,10 +68,6 @@ import {
   getRelatedTopics,
   getTagNames,
 } from "@/features/experiments/utils/article-format";
-import {
-  getJournalName,
-  getJournalPublisher,
-} from "@/features/laboratories/utils/journal-format";
 
 const itemsPerPage = 10;
 /** Stop auto-paging for client text search after this many loaded articles. */
@@ -127,7 +123,7 @@ export default function ArticleSearch() {
     new Set(),
   );
 
-  const [sort, setSort] = useState<ArticleClientSort>("most_related");
+  const [sort, setSort] = useState<ArticleSort>("newest");
   const [journalId, setJournalId] = useState("");
   const [publisher, setPublisher] = useState("");
   const [country, setCountry] = useState("");
@@ -141,19 +137,11 @@ export default function ArticleSearch() {
   const [topicName, setTopicName] = useState("");
   const [openAccess, setOpenAccess] = useState<"" | "oa" | "subscription">("");
 
-  const {
-    items: journals,
-    hasMore: hasMoreJournals,
-    isLoadingMore: isLoadingMoreJournals,
-    loadMore: loadMoreJournals,
-  } = useJournals("");
-
-  // Sort hits the API. Search + sidebar filters run client-side (API `q` is unreliable).
+  // Sort hits the API. Search + sidebar filters run client-side on loaded pages.
   // Keep a fixed 2023–2025 fetch window — unfiltered list calls are ~30s+.
-  // `most_related` fetches newest (mixed counts) then client-sorts by strength.
   const apiFilters = useMemo<ArticleApiFilters>(
     () => ({
-      sort: toArticleApiSort(sort),
+      sort,
       publicationYearFrom: String(CATALOG_INSIGHT_YEAR_FROM),
       publicationYearTo: String(CATALOG_INSIGHT_YEAR_TO),
     }),
@@ -163,40 +151,38 @@ export default function ArticleSearch() {
   const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
     useArticles("", apiFilters);
 
+  // Facet options only from loaded articles so every choice can match something.
   const journalOptions = useMemo(() => {
     const map = new Map<string, string>();
-    for (const journal of journals) {
-      map.set(journal.id, getJournalName(journal));
-    }
     for (const article of items) {
-      if (article.journal?.id) {
-        const name = article.journal.displayName?.trim() || article.journal.id;
-        if (!map.has(article.journal.id)) {
-          map.set(article.journal.id, name);
-        }
-      }
+      if (!article.journal?.id) continue;
+      const name =
+        article.journal.displayName?.trim() || article.journal.id;
+      map.set(article.journal.id, name);
     }
     return [...map.entries()]
       .map(([id, name]) => ({ id, name }))
       .sort((left, right) => left.name.localeCompare(right.name));
-  }, [journals, items]);
+  }, [items]);
 
   const publisherOptions = useMemo(() => {
     const values = new Set<string>();
-    for (const journal of journals) {
-      const name = getJournalPublisher(journal);
-      if (name && name !== "—") {
-        values.add(name);
-      }
-    }
     for (const article of items) {
       const name = article.journal?.publisherName?.trim();
       if (name) values.add(name);
     }
     return [...values].sort((left, right) => left.localeCompare(right));
-  }, [journals, items]);
+  }, [items]);
 
-  // Derive facet options from search results — avoids an extra 100+100 catalog fetch.
+  const countryOptions = useMemo(() => {
+    const values = new Set<string>();
+    for (const article of items) {
+      const name = article.journal?.country?.trim();
+      if (name) values.add(name);
+    }
+    return [...values].sort((left, right) => left.localeCompare(right));
+  }, [items]);
+
   const keywordOptions = useMemo(
     () => collectArticleTagOptions(items, "keywords"),
     [items],
@@ -207,40 +193,49 @@ export default function ArticleSearch() {
     [items],
   );
 
-  const filteredArticles = useMemo(() => {
-    const matched = items.filter((article) =>
-      matchesArticleClientFilters(article, {
-        textSearch: searchQuery,
-        doiSearch,
-        authorSearch,
-        openAccess,
-        journalId,
-        publisher,
-        country,
-        keywordName,
-        topicName,
-        selectedYear,
-        yearFrom,
-        yearTo,
-      }),
-    );
-    return sortArticlesForClient(matched, sort);
-  }, [
-    items,
-    searchQuery,
-    doiSearch,
-    authorSearch,
-    openAccess,
-    journalId,
-    publisher,
-    country,
-    keywordName,
-    topicName,
-    selectedYear,
-    yearFrom,
-    yearTo,
-    sort,
-  ]);
+  const clientFilters = useMemo(
+    () => ({
+      textSearch: searchQuery,
+      doiSearch,
+      authorSearch,
+      openAccess,
+      journalId,
+      publisher,
+      country,
+      keywordName,
+      topicName,
+      selectedYear,
+      yearFrom,
+      yearTo,
+    }),
+    [
+      searchQuery,
+      doiSearch,
+      authorSearch,
+      openAccess,
+      journalId,
+      publisher,
+      country,
+      keywordName,
+      topicName,
+      selectedYear,
+      yearFrom,
+      yearTo,
+    ],
+  );
+
+  const filtersActive = hasActiveArticleClientFilters(clientFilters, {
+    yearFrom: "2023",
+    yearTo: "2025",
+  });
+
+  const filteredArticles = useMemo(
+    () =>
+      items.filter((article) =>
+        matchesArticleClientFilters(article, clientFilters),
+      ),
+    [items, clientFilters],
+  );
 
   const totalPages = Math.max(
     1,
@@ -268,17 +263,16 @@ export default function ArticleSearch() {
     openAccess,
   ]);
 
-  // When text search is set, keep loading pages until we have a usable match
-  // set (or hit the load cap / end of results).
+  // When any client filter is active, keep loading pages until we have a usable
+  // match set (or hit the load cap / end of results).
   useEffect(() => {
-    const hasTextSearch = searchQuery.trim().length > 0;
-    if (!hasTextSearch) return;
+    if (!filtersActive) return;
     if (isLoading || isLoadingMore || !hasMore) return;
     if (items.length >= clientFilterLoadCap) return;
     if (filteredArticles.length >= itemsPerPage) return;
     void loadMore();
   }, [
-    searchQuery,
+    filtersActive,
     filteredArticles.length,
     items.length,
     hasMore,
@@ -340,7 +334,7 @@ export default function ArticleSearch() {
   };
 
   const clearFilters = () => {
-    setSort("most_related");
+    setSort("newest");
     setKeywordName("");
     setTopicName("");
     setJournalId("");
@@ -355,7 +349,7 @@ export default function ArticleSearch() {
   };
 
   const activeFilterCount =
-    (sort !== "most_related" ? 1 : 0) +
+    (sort !== "newest" ? 1 : 0) +
     (keywordName ? 1 : 0) +
     (topicName ? 1 : 0) +
     (journalId ? 1 : 0) +
@@ -444,13 +438,14 @@ export default function ArticleSearch() {
                   <div className="space-y-5 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1 py-1">
                     <p className="text-xs text-muted-foreground">
                       Search and filters apply instantly on loaded results. Sort
-                      still calls the API.
+                      still calls the API. Facets only list values present in
+                      loaded articles.
                     </p>
                     <FilterSelect
                       id="sort-filter"
                       label="Sort"
                       value={sort}
-                      onChange={(value) => setSort(value as ArticleClientSort)}
+                      onChange={(value) => setSort(value as ArticleSort)}
                     >
                       {articleSortOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -459,17 +454,10 @@ export default function ArticleSearch() {
                       ))}
                     </FilterSelect>
 
-                    {sort === "most_related" && (
-                      <p className="text-xs text-muted-foreground -mt-2">
-                        Shows strongest connected articles first (related works
-                        or citation count).
-                      </p>
-                    )}
-
                     {sort === "relevant" && (
                       <p className="text-xs text-muted-foreground -mt-2">
-                        Relevant ranking needs a working API search; using
-                        newest for the catalog fetch instead.
+                        Relevant ranking needs a working API search; results may
+                        look like newest order.
                       </p>
                     )}
 
@@ -487,20 +475,6 @@ export default function ArticleSearch() {
                           </option>
                         ))}
                       </FilterSelect>
-
-                      {hasMoreJournals && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-full text-xs"
-                          disabled={isLoadingMoreJournals}
-                          onClick={() => void loadMoreJournals()}
-                        >
-                          {isLoadingMoreJournals
-                            ? "Loading journals…"
-                            : "Load more journals"}
-                        </Button>
-                      )}
 
                       <FilterSelect
                         id="publisher-filter"
@@ -523,9 +497,9 @@ export default function ArticleSearch() {
                         onChange={setCountry}
                       >
                         <option value="">All countries</option>
-                        {countryFilterOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
+                        {countryOptions.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
                           </option>
                         ))}
                       </FilterSelect>
@@ -693,13 +667,12 @@ export default function ArticleSearch() {
                       <span className="font-medium text-foreground">
                         {filteredArticles.length}
                         {hasMore ||
-                        (searchQuery.trim() &&
-                          items.length < clientFilterLoadCap)
+                        (filtersActive && items.length < clientFilterLoadCap)
                           ? "+"
                           : ""}
                       </span>{" "}
                       articles
-                      {searchQuery.trim() ? (
+                      {filtersActive ? (
                         <span className="text-muted-foreground">
                           {" "}
                           · {items.length} loaded

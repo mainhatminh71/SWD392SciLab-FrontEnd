@@ -1,11 +1,5 @@
-import type {
-  ArticleClientSort,
-  ArticleGraph,
-} from "@/features/experiments/types/article.types";
-import {
-  getArticleAuthorNames,
-  getArticleGraphNodeCount,
-} from "@/features/experiments/utils/article-format";
+import type { ArticleGraph } from "@/features/experiments/types/article.types";
+import { getArticleAuthorNames } from "@/features/experiments/utils/article-format";
 
 export type ArticleClientFilters = {
   /** Main search box — title, abstract, keywords, topics, authors, DOI, journal. */
@@ -23,8 +17,6 @@ export type ArticleClientFilters = {
   selectedYear?: string;
   yearFrom?: string;
   yearTo?: string;
-  /** Minimum related-work / graph neighbor count (`citedArticleIds.length`). */
-  minGraphNodes?: string;
 };
 
 function parseYear(value?: string) {
@@ -77,7 +69,39 @@ function buildArticleSearchHaystack(article: ArticleGraph) {
     .toLowerCase();
 }
 
-/** Instant sidebar filters — avoid re-hitting the slow academic list API. */
+function labelsLooselyMatch(actual: string, selected: string) {
+  const left = normalizeLabel(actual);
+  const right = normalizeLabel(selected);
+  if (!right) return true;
+  if (!left) return false;
+  return left === right || left.includes(right) || right.includes(left);
+}
+
+/** True when the user narrowed results beyond the default catalog year window. */
+export function hasActiveArticleClientFilters(
+  filters: ArticleClientFilters,
+  defaults?: { yearFrom?: string; yearTo?: string },
+): boolean {
+  const defaultFrom = defaults?.yearFrom ?? "2023";
+  const defaultTo = defaults?.yearTo ?? "2025";
+
+  return Boolean(
+    filters.textSearch?.trim() ||
+      filters.doiSearch?.trim() ||
+      filters.authorSearch?.trim() ||
+      filters.openAccess ||
+      filters.journalId ||
+      filters.publisher ||
+      filters.country ||
+      filters.keywordName ||
+      filters.topicName ||
+      filters.selectedYear ||
+      (filters.yearFrom && filters.yearFrom !== defaultFrom) ||
+      (filters.yearTo && filters.yearTo !== defaultTo),
+  );
+}
+
+/** Instant sidebar filters — apply on already-loaded catalog pages. */
 export function matchesArticleClientFilters(
   article: ArticleGraph,
   filters: ArticleClientFilters,
@@ -125,17 +149,11 @@ export function matchesArticleClientFilters(
     return false;
   }
 
-  if (
-    filters.publisher &&
-    publisher.toLowerCase() !== filters.publisher.toLowerCase()
-  ) {
+  if (filters.publisher && !labelsLooselyMatch(publisher, filters.publisher)) {
     return false;
   }
 
-  if (
-    filters.country &&
-    country.toLowerCase() !== filters.country.toLowerCase()
-  ) {
+  if (filters.country && !labelsLooselyMatch(country, filters.country)) {
     return false;
   }
 
@@ -145,13 +163,6 @@ export function matchesArticleClientFilters(
 
   if (!articleHasNamedTag(article.topics, filters.topicName)) {
     return false;
-  }
-
-  const minNodes = Number(filters.minGraphNodes);
-  if (Number.isFinite(minNodes) && minNodes > 0) {
-    if (getArticleGraphNodeCount(article) < minNodes) {
-      return false;
-    }
   }
 
   const exactYear = parseYear(filters.selectedYear);
@@ -172,23 +183,4 @@ export function matchesArticleClientFilters(
   }
 
   return true;
-}
-
-/** Client-side ordering for UI sorts the API does not support. */
-export function sortArticlesForClient(
-  articles: ArticleGraph[],
-  sort: ArticleClientSort,
-): ArticleGraph[] {
-  if (sort !== "most_related") {
-    return articles;
-  }
-
-  return articles.slice().sort((left, right) => {
-    const nodeDelta =
-      getArticleGraphNodeCount(right) - getArticleGraphNodeCount(left);
-    if (nodeDelta !== 0) return nodeDelta;
-    return (
-      (right.article.publicationYear ?? 0) - (left.article.publicationYear ?? 0)
-    );
-  });
 }

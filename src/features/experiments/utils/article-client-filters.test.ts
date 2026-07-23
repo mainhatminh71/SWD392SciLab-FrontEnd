@@ -1,17 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  hasActiveArticleClientFilters,
   matchesArticleClientFilters,
-  sortArticlesForClient,
 } from "@/features/experiments/utils/article-client-filters";
 import {
   collectArticleTagOptions,
   pinTagName,
 } from "@/features/experiments/utils/article-tag-options";
 import { getArticleGraphNodeCount } from "@/features/experiments/utils/article-format";
-import {
-  toArticleApiSort,
-  type ArticleGraph,
-} from "@/features/experiments/types/article.types";
+import type { ArticleGraph } from "@/features/experiments/types/article.types";
 
 function articleFixture(
   id: string,
@@ -53,43 +50,10 @@ describe("getArticleGraphNodeCount", () => {
   });
 });
 
-describe("toArticleApiSort", () => {
-  it("maps most_related to newest so first pages stay mixed for filtering", () => {
-    expect(toArticleApiSort("most_related")).toBe("newest");
-    expect(toArticleApiSort("most_cited")).toBe("most_cited");
-    expect(toArticleApiSort("newest")).toBe("newest");
-  });
-});
-
-describe("graph node filter against live-like citation mix", () => {
-  const page = [
-    articleFixture("W-hi", 475),
-    articleFixture("W-mid", 42),
-    articleFixture("W-lo", 3),
-    articleFixture("W-zero", 0),
-  ];
-
-  it("keeps only articles meeting the minimum", () => {
-    const kept = page.filter((article) =>
-      matchesArticleClientFilters(article, { minGraphNodes: "100" }),
-    );
-    expect(kept.map((item) => item.article.id)).toEqual(["W-hi"]);
-  });
-
-  it("sorts most_related with high connectivity first", () => {
-    const ordered = sortArticlesForClient(page, "most_related");
-    expect(ordered.map((item) => item.article.id)).toEqual([
-      "W-hi",
-      "W-mid",
-      "W-lo",
-      "W-zero",
-    ]);
-  });
-});
-
 const withBiology = {
   article: {
     id: "W1",
+    title: "ACS materials overview",
     doi: "10.1000/demo",
     publicationYear: 2024,
     citationCount: 12,
@@ -107,25 +71,13 @@ const withBiology = {
   ],
   topics: [{ id: "t1", displayName: "Materials science", isPrimary: true }],
   authors: [{ displayName: "Ada Lovelace" }],
-  citedArticleIds: [], // empty like live list — count falls back to citationCount
-} as unknown as ArticleGraph;
-
-const withHydratedRefs = {
-  article: {
-    id: "W3",
-    publicationYear: 2024,
-    citationCount: 2,
-  },
-  journal: null,
-  keywords: [],
-  topics: [],
-  authors: [],
-  citedArticleIds: ["W10", "W11", "W12", "W13", "W14", "W15"],
+  citedArticleIds: [],
 } as unknown as ArticleGraph;
 
 const withoutBiology = {
   article: {
     id: "W2",
+    title: "Agriculture notes",
     publicationYear: 2025,
     citationCount: 0,
   },
@@ -212,37 +164,31 @@ describe("matchesArticleClientFilters", () => {
     ).toBe(false);
   });
 
-  it("filters by minimum related-work graph node count", () => {
+  it("loosely matches country / publisher labels", () => {
     expect(
-      matchesArticleClientFilters(withBiology, { minGraphNodes: "5" }),
+      matchesArticleClientFilters(withBiology, { country: "us" }),
     ).toBe(true);
     expect(
-      matchesArticleClientFilters(withBiology, { minGraphNodes: "20" }),
-    ).toBe(false);
-    expect(
-      matchesArticleClientFilters(withoutBiology, { minGraphNodes: "1" }),
-    ).toBe(false);
-    expect(
-      matchesArticleClientFilters(withHydratedRefs, { minGraphNodes: "5" }),
+      matchesArticleClientFilters(withBiology, { publisher: "ac" }),
     ).toBe(true);
   });
 });
 
-describe("sortArticlesForClient", () => {
-  it("puts richer graphs first for most_related", () => {
-    const ordered = sortArticlesForClient(
-      [withoutBiology, withBiology, withHydratedRefs],
-      "most_related",
-    );
-    expect(ordered.map((item) => item.article.id)).toEqual(["W1", "W3", "W2"]);
-  });
-
-  it("keeps API order for newest", () => {
-    const ordered = sortArticlesForClient(
-      [withoutBiology, withBiology],
-      "newest",
-    );
-    expect(ordered.map((item) => item.article.id)).toEqual(["W2", "W1"]);
+describe("hasActiveArticleClientFilters", () => {
+  it("ignores the default year window", () => {
+    expect(
+      hasActiveArticleClientFilters({
+        yearFrom: "2023",
+        yearTo: "2025",
+      }),
+    ).toBe(false);
+    expect(
+      hasActiveArticleClientFilters({
+        yearFrom: "2023",
+        yearTo: "2025",
+        keywordName: "Biology",
+      }),
+    ).toBe(true);
   });
 });
 
