@@ -42,22 +42,19 @@ function recordsUpdated(log: AdminSyncLog) {
   );
 }
 
-/** Map live admin dashboard + jobs/logs into the existing System Health view model. */
+/** Map live admin dashboard (+ optional recent logs) into the System Health view model. */
 export function buildSystemHealthSnapshot(input: {
   dashboard: AdminDashboardMetrics;
-  jobs: AdminPipelineJob[];
-  syncLogs: AdminSyncLog[];
+  jobs?: AdminPipelineJob[];
+  syncLogs?: AdminSyncLog[];
 }): SystemHealthSnapshot {
-  const { dashboard, jobs, syncLogs } = input;
+  const { dashboard, jobs = [] } = input;
+  const syncLogs =
+    input.syncLogs && input.syncLogs.length > 0
+      ? input.syncLogs
+      : (dashboard.sync.recentLogs ?? []);
   const failedLogs = syncLogs.filter((log) =>
     ["FAILED", "CANCELLED"].includes(log.status.toUpperCase()),
-  );
-  const runningJobs = jobs.filter(
-    (job) =>
-      job.paused !== true &&
-      String(job.status ?? job.state ?? "")
-        .toLowerCase()
-        .includes("run"),
   );
 
   const overallStatus =
@@ -205,7 +202,7 @@ export function buildSystemHealthSnapshot(input: {
         Math.round(
           100 -
             dashboard.sync.failedSyncCountLast24Hours * 4 -
-            runningJobs.length,
+            dashboard.sync.runningJobCount,
         ),
       ),
     ),

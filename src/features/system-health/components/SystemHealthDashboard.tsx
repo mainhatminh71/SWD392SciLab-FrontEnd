@@ -191,8 +191,9 @@ export default function SystemHealthDashboard() {
         </Button>
       }
     >
+      <div className="space-y-6">
       {error && (
-        <Card className="p-4 border-border mb-6">
+        <Card className="p-4 border-border">
           <p className="text-sm text-destructive mb-3">{error}</p>
           <Button variant="outline" size="sm" onClick={() => void reload()}>
             Try again
@@ -200,10 +201,12 @@ export default function SystemHealthDashboard() {
         </Card>
       )}
 
-      {isLoading && <RouteDataLoading label="Loading system health…" />}
+      {isLoading && !data && (
+        <RouteDataLoading label="Loading dashboard metrics…" />
+      )}
 
-      {!isLoading && data && overall && (
-        <div className="space-y-6">
+      {data && overall && (
+        <>
           <Card className="p-4 border-border bg-card">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-3 flex-wrap">
@@ -216,7 +219,7 @@ export default function SystemHealthDashboard() {
                   {overall.label}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  Live metrics from /admin/dashboard, jobs, and sync logs
+                  Overview from /admin/dashboard · jobs and logs load separately
                 </span>
               </div>
               <div className="flex flex-wrap gap-3 text-sm">
@@ -394,10 +397,15 @@ export default function SystemHealthDashboard() {
               )}
             </Card>
           </div>
+        </>
+      )}
 
-          <AdminPipelineJobsPanel />
-          <AdminSyncLogsPanel />
+      {/* Load in parallel with dashboard — do not wait for overview */}
+      <AdminPipelineJobsPanel />
+      <AdminSyncLogsPanel />
 
+      {data && (
+        <>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="border-border bg-card overflow-hidden">
               <div className="px-6 py-4 border-b border-border flex items-center justify-between">
@@ -406,7 +414,7 @@ export default function SystemHealthDashboard() {
                     Recent sync activity
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Latest runs from dashboard + sync logs
+                    Latest runs from dashboard recent logs
                   </p>
                 </div>
                 <TrendingUp className="w-4 h-4 text-muted-foreground" />
@@ -622,8 +630,9 @@ export default function SystemHealthDashboard() {
               </div>
             </Card>
           </div>
-        </div>
+        </>
       )}
+      </div>
     </AdminPageFrame>
   );
 }

@@ -60,7 +60,7 @@ const selectClassName =
 export default function AdminSyncLogsPanel() {
   const [filters, setFilters] = useState<AdminSyncLogListParams>({
     page: 1,
-    pageSize: 20,
+    pageSize: 10,
     source: "",
     dataType: "",
     status: "",
@@ -70,7 +70,7 @@ export default function AdminSyncLogsPanel() {
   const queryFilters = useMemo(
     () => ({
       page: filters.page ?? 1,
-      pageSize: filters.pageSize ?? 20,
+      pageSize: filters.pageSize ?? 10,
       source: filters.source || undefined,
       dataType: filters.dataType || undefined,
       status: filters.status || undefined,
@@ -195,7 +195,7 @@ export default function AdminSyncLogsPanel() {
               onClick={() =>
                 setFilters({
                   page: 1,
-                  pageSize: 20,
+                  pageSize: 10,
                   source: "",
                   dataType: "",
                   status: "",

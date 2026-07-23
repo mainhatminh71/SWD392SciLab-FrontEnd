@@ -14,19 +14,20 @@ import {
   retryAdminJob,
   triggerAdminJob,
 } from "@/features/system-health/api/admin-sync.api";
+import {
+  adminDashboardQueryKey,
+  adminJobsQueryKey,
+  adminSyncLogsQueryKey,
+} from "@/features/system-health/hooks/admin-sync-query-keys";
 import type {
   AdminJobActionBody,
   AdminPipelineJobId,
   AdminSyncLogListParams,
 } from "@/features/system-health/types/admin-sync.types";
 
-const dashboardKey = ["admin", "dashboard"] as const;
-const jobsKey = ["admin", "jobs"] as const;
-const syncLogsRootKey = ["admin", "sync-logs"] as const;
-
 export function useAdminDashboard() {
   const query = useQuery({
-    queryKey: dashboardKey,
+    queryKey: adminDashboardQueryKey,
     staleTime: listQueryStaleTimeMs,
     queryFn: getAdminDashboardMetrics,
   });
@@ -42,17 +43,16 @@ export function useAdminDashboard() {
 export function useAdminJobs() {
   const queryClient = useQueryClient();
   const query = useQuery({
-    queryKey: jobsKey,
-    staleTime: 30_000,
-    refetchInterval: 60_000,
+    queryKey: adminJobsQueryKey,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
     queryFn: listAdminJobs,
   });
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: jobsKey });
-    void queryClient.invalidateQueries({ queryKey: dashboardKey });
-    void queryClient.invalidateQueries({ queryKey: syncLogsRootKey });
-    void queryClient.invalidateQueries({ queryKey: ["admin", "system-health"] });
+    void queryClient.invalidateQueries({ queryKey: adminJobsQueryKey });
+    void queryClient.invalidateQueries({ queryKey: adminDashboardQueryKey });
+    void queryClient.invalidateQueries({ queryKey: adminSyncLogsQueryKey });
   };
 
   const actionMutation = useMutation({
@@ -97,8 +97,8 @@ export function useAdminJobs() {
 
 export function useAdminSyncLogs(filters: AdminSyncLogListParams) {
   const query = useQuery({
-    queryKey: [...syncLogsRootKey, filters] as const,
-    staleTime: 30_000,
+    queryKey: [...adminSyncLogsQueryKey, filters] as const,
+    staleTime: 60_000,
     queryFn: () => listAdminSyncLogs(filters),
   });
 
@@ -113,7 +113,7 @@ export function useAdminSyncLogs(filters: AdminSyncLogListParams) {
 
 export function useAdminSyncLogDetail(id: string | null) {
   const query = useQuery({
-    queryKey: [...syncLogsRootKey, "detail", id] as const,
+    queryKey: [...adminSyncLogsQueryKey, "detail", id] as const,
     enabled: Boolean(id),
     staleTime: 30_000,
     queryFn: () => getAdminSyncLog(id!),
