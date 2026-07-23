@@ -78,6 +78,12 @@ export type ArticleListParams = {
 
 export type ArticleSort = "relevant" | "newest" | "most_cited";
 
+/**
+ * UI sort for Article Search. `most_related` is client-only (API has no graph-node sort);
+ * list is fetched as newest then ordered by related-work / graph node count.
+ */
+export type ArticleClientSort = ArticleSort | "most_related";
+
 /** Filters sent to GET /academic/articles (excluding cursor/limit/q). */
 export type ArticleApiFilters = {
   keywordId?: string;
@@ -96,11 +102,30 @@ export type ArticleDetailResponse = ArticleGraph;
 
 export const yearOptions = ["2025", "2024", "2023"];
 
-export const articleSortOptions: { value: ArticleSort; label: string }[] = [
-  { value: "relevant", label: "Partial match (relevant)" },
+export const articleSortOptions: {
+  value: ArticleClientSort;
+  label: string;
+}[] = [
+  { value: "most_related", label: "Most graph nodes" },
   { value: "newest", label: "Newest first" },
   { value: "most_cited", label: "Most cited" },
+  { value: "relevant", label: "Partial match (relevant)" },
 ];
+
+/** Minimum related-work / graph neighbor counts for the sidebar filter. */
+export const graphNodeFilterOptions: { value: string; label: string }[] = [
+  { value: "", label: "Any size" },
+  { value: "1", label: "1+ nodes" },
+  { value: "5", label: "5+ nodes" },
+  { value: "10", label: "10+ nodes" },
+  { value: "20", label: "20+ nodes" },
+  { value: "50", label: "50+ nodes" },
+];
+
+/** Map UI sort to the academic list API sort. */
+export function toArticleApiSort(sort: ArticleClientSort): ArticleSort {
+  return sort === "most_related" ? "newest" : sort;
+}
 
 export const countryFilterOptions: { value: string; label: string }[] = [
   { value: "US", label: "United States (US)" },

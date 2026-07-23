@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { matchesArticleClientFilters } from "@/features/experiments/utils/article-client-filters";
+import {
+  matchesArticleClientFilters,
+  sortArticlesForClient,
+} from "@/features/experiments/utils/article-client-filters";
 import {
   collectArticleTagOptions,
   pinTagName,
@@ -25,6 +28,7 @@ const withBiology = {
   ],
   topics: [{ id: "t1", displayName: "Materials science", isPrimary: true }],
   authors: [{ displayName: "Ada Lovelace" }],
+  citedArticleIds: ["W10", "W11", "W12", "W13", "W14"],
 } as unknown as ArticleGraph;
 
 const withoutBiology = {
@@ -42,6 +46,7 @@ const withoutBiology = {
   keywords: [{ id: "k-empty", displayName: null }],
   topics: [],
   authors: [{ displayName: "Chen Dong" }],
+  citedArticleIds: [],
 } as unknown as ArticleGraph;
 
 describe("matchesArticleClientFilters", () => {
@@ -85,6 +90,36 @@ describe("matchesArticleClientFilters", () => {
         topicName: "Organic chemistry",
       }),
     ).toBe(false);
+  });
+
+  it("filters by minimum related-work graph node count", () => {
+    expect(
+      matchesArticleClientFilters(withBiology, { minGraphNodes: "5" }),
+    ).toBe(true);
+    expect(
+      matchesArticleClientFilters(withBiology, { minGraphNodes: "10" }),
+    ).toBe(false);
+    expect(
+      matchesArticleClientFilters(withoutBiology, { minGraphNodes: "1" }),
+    ).toBe(false);
+  });
+});
+
+describe("sortArticlesForClient", () => {
+  it("puts richer graphs first for most_related", () => {
+    const ordered = sortArticlesForClient(
+      [withoutBiology, withBiology],
+      "most_related",
+    );
+    expect(ordered.map((item) => item.article.id)).toEqual(["W1", "W2"]);
+  });
+
+  it("keeps API order for newest", () => {
+    const ordered = sortArticlesForClient(
+      [withoutBiology, withBiology],
+      "newest",
+    );
+    expect(ordered.map((item) => item.article.id)).toEqual(["W2", "W1"]);
   });
 });
 

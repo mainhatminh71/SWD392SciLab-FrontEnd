@@ -1,5 +1,11 @@
-import type { ArticleGraph } from "@/features/experiments/types/article.types";
-import { getArticleAuthorNames } from "@/features/experiments/utils/article-format";
+import type {
+  ArticleClientSort,
+  ArticleGraph,
+} from "@/features/experiments/types/article.types";
+import {
+  getArticleAuthorNames,
+  getArticleGraphNodeCount,
+} from "@/features/experiments/utils/article-format";
 
 export type ArticleClientFilters = {
   doiSearch?: string;
@@ -15,6 +21,8 @@ export type ArticleClientFilters = {
   selectedYear?: string;
   yearFrom?: string;
   yearTo?: string;
+  /** Minimum related-work / graph neighbor count (`citedArticleIds.length`). */
+  minGraphNodes?: string;
 };
 
 function parseYear(value?: string) {
@@ -98,6 +106,13 @@ export function matchesArticleClientFilters(
     return false;
   }
 
+  const minNodes = Number(filters.minGraphNodes);
+  if (Number.isFinite(minNodes) && minNodes > 0) {
+    if (getArticleGraphNodeCount(article) < minNodes) {
+      return false;
+    }
+  }
+
   const exactYear = parseYear(filters.selectedYear);
   if (exactYear != null) {
     return year === exactYear;
@@ -116,4 +131,23 @@ export function matchesArticleClientFilters(
   }
 
   return true;
+}
+
+/** Client-side ordering for UI sorts the API does not support. */
+export function sortArticlesForClient(
+  articles: ArticleGraph[],
+  sort: ArticleClientSort,
+): ArticleGraph[] {
+  if (sort !== "most_related") {
+    return articles;
+  }
+
+  return articles.slice().sort((left, right) => {
+    const nodeDelta =
+      getArticleGraphNodeCount(right) - getArticleGraphNodeCount(left);
+    if (nodeDelta !== 0) return nodeDelta;
+    return (
+      (right.article.publicationYear ?? 0) - (left.article.publicationYear ?? 0)
+    );
+  });
 }

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   BookOpen,
   Loader2,
+  Network,
   Search,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -31,7 +32,10 @@ import { Label } from "@/shared/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticles } from "@/features/experiments/hooks/use-articles";
 import { collectArticleTagOptions, pinTagName } from "@/features/experiments/utils/article-tag-options";
-import { matchesArticleClientFilters } from "@/features/experiments/utils/article-client-filters";
+import {
+  matchesArticleClientFilters,
+  sortArticlesForClient,
+} from "@/features/experiments/utils/article-client-filters";
 import {
   CATALOG_INSIGHT_YEAR_FROM,
   CATALOG_INSIGHT_YEAR_TO,
@@ -42,12 +46,14 @@ import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmark
 import { isLocallyBookmarked } from "@/features/submissions/api/local-bookmarks";
 import type {
   ArticleApiFilters,
+  ArticleClientSort,
   ArticleGraph,
-  ArticleSort,
 } from "@/features/experiments/types/article.types";
 import {
   articleSortOptions,
   countryFilterOptions,
+  graphNodeFilterOptions,
+  toArticleApiSort,
   yearOptions,
 } from "@/features/experiments/types/article.types";
 import {
@@ -55,6 +61,7 @@ import {
   getArticleAuthorNames,
   getArticleCitationCount,
   getArticleDoi,
+  getArticleGraphNodeCount,
   getArticleJournal,
   getArticleTitle,
   getArticleYear,
@@ -113,7 +120,7 @@ export default function ArticleSearch() {
     new Set(),
   );
 
-  const [sort, setSort] = useState<ArticleSort>("newest");
+  const [sort, setSort] = useState<ArticleClientSort>("most_related");
   const [journalId, setJournalId] = useState("");
   const [publisher, setPublisher] = useState("");
   const [country, setCountry] = useState("");
@@ -126,6 +133,7 @@ export default function ArticleSearch() {
   const [keywordName, setKeywordName] = useState("");
   const [topicName, setTopicName] = useState("");
   const [openAccess, setOpenAccess] = useState<"" | "oa" | "subscription">("");
+  const [minGraphNodes, setMinGraphNodes] = useState("");
 
   const {
     items: journals,
@@ -136,9 +144,10 @@ export default function ArticleSearch() {
 
   // Only search + sort hit the API. Sidebar filters run client-side (instant).
   // Keep a fixed 2023–2025 fetch window — unfiltered list calls are ~30s+.
+  // `most_related` is client-sorted; API still uses newest for speed.
   const apiFilters = useMemo<ArticleApiFilters>(
     () => ({
-      sort,
+      sort: toArticleApiSort(sort),
       publicationYearFrom: String(CATALOG_INSIGHT_YEAR_FROM),
       publicationYearTo: String(CATALOG_INSIGHT_YEAR_TO),
     }),
@@ -193,38 +202,40 @@ export default function ArticleSearch() {
     [items],
   );
 
-  const filteredArticles = useMemo(
-    () =>
-      items.filter((article) =>
-        matchesArticleClientFilters(article, {
-          doiSearch,
-          authorSearch,
-          openAccess,
-          journalId,
-          publisher,
-          country,
-          keywordName,
-          topicName,
-          selectedYear,
-          yearFrom,
-          yearTo,
-        }),
-      ),
-    [
-      items,
-      doiSearch,
-      authorSearch,
-      openAccess,
-      journalId,
-      publisher,
-      country,
-      keywordName,
-      topicName,
-      selectedYear,
-      yearFrom,
-      yearTo,
-    ],
-  );
+  const filteredArticles = useMemo(() => {
+    const matched = items.filter((article) =>
+      matchesArticleClientFilters(article, {
+        doiSearch,
+        authorSearch,
+        openAccess,
+        journalId,
+        publisher,
+        country,
+        keywordName,
+        topicName,
+        selectedYear,
+        yearFrom,
+        yearTo,
+        minGraphNodes,
+      }),
+    );
+    return sortArticlesForClient(matched, sort);
+  }, [
+    items,
+    doiSearch,
+    authorSearch,
+    openAccess,
+    journalId,
+    publisher,
+    country,
+    keywordName,
+    topicName,
+    selectedYear,
+    yearFrom,
+    yearTo,
+    minGraphNodes,
+    sort,
+  ]);
 
   const totalPages = Math.max(
     1,
@@ -250,6 +261,7 @@ export default function ArticleSearch() {
     doiSearch,
     authorSearch,
     openAccess,
+    minGraphNodes,
   ]);
 
   useEffect(() => {
@@ -305,7 +317,7 @@ export default function ArticleSearch() {
   };
 
   const clearFilters = () => {
-    setSort("newest");
+    setSort("most_related");
     setKeywordName("");
     setTopicName("");
     setJournalId("");
@@ -317,10 +329,11 @@ export default function ArticleSearch() {
     setDoiSearch("");
     setAuthorSearch("");
     setOpenAccess("");
+    setMinGraphNodes("");
   };
 
   const activeFilterCount =
-    (sort !== "newest" ? 1 : 0) +
+    (sort !== "most_related" ? 1 : 0) +
     (keywordName ? 1 : 0) +
     (topicName ? 1 : 0) +
     (journalId ? 1 : 0) +
@@ -331,7 +344,8 @@ export default function ArticleSearch() {
     (yearTo && yearTo !== "2025" ? 1 : 0) +
     (doiSearch ? 1 : 0) +
     (authorSearch ? 1 : 0) +
-    (openAccess ? 1 : 0);
+    (openAccess ? 1 : 0) +
+    (minGraphNodes ? 1 : 0);
 
   return (
     <>
@@ -415,7 +429,7 @@ export default function ArticleSearch() {
                       id="sort-filter"
                       label="Sort"
                       value={sort}
-                      onChange={(value) => setSort(value as ArticleSort)}
+                      onChange={(value) => setSort(value as ArticleClientSort)}
                     >
                       {articleSortOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -424,12 +438,32 @@ export default function ArticleSearch() {
                       ))}
                     </FilterSelect>
 
+                    {sort === "most_related" && (
+                      <p className="text-xs text-muted-foreground -mt-2">
+                        Default: articles with more related-work graph nodes
+                        appear first (from loaded results).
+                      </p>
+                    )}
+
                     {sort === "relevant" && !searchQuery.trim() && (
                       <p className="text-xs text-muted-foreground -mt-2">
                         Relevant sort needs a search query; using newest until
                         then.
                       </p>
                     )}
+
+                    <FilterSelect
+                      id="graph-nodes-filter"
+                      label="Graph nodes (related works)"
+                      value={minGraphNodes}
+                      onChange={setMinGraphNodes}
+                    >
+                      {graphNodeFilterOptions.map((option) => (
+                        <option key={option.value || "any"} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </FilterSelect>
 
                     <div className="pt-4 border-t border-border space-y-5">
                       <FilterSelect
@@ -772,6 +806,14 @@ export default function ArticleSearch() {
                                 <Quote className="w-4 h-4" />
                                 <span>
                                   {getArticleCitationCount(article)} citations
+                                </span>
+                              </div>
+                              <span className="text-border">•</span>
+                              <div className="flex items-center gap-1">
+                                <Network className="w-4 h-4" />
+                                <span>
+                                  {getArticleGraphNodeCount(article)} graph
+                                  nodes
                                 </span>
                               </div>
                             </div>
