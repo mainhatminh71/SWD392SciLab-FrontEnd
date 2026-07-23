@@ -19,10 +19,6 @@ export function getUserFriendlyApiErrorMessage(
     return "Something went wrong. Please try again.";
   }
 
-  if (error.code === "SOURCE_DISABLED") {
-    return error.message;
-  }
-
   if (error.code === "TIMEOUT") {
     return "The request took too long. Please try again.";
   }
