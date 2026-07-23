@@ -110,7 +110,8 @@ export default function AdvancedDashboard() {
                     Multi-Keyword Comparison
                   </h2>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    Publication volume by year for top topics & keywords ·{" "}
+                    Publication volume by year (2023–2025) for top topics &
+                    keywords ·{" "}
                     {data.sampleHint}
                   </p>
                 </div>
@@ -169,7 +170,7 @@ export default function AdvancedDashboard() {
                     Research Activity Heatmap
                   </h2>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    Relative intensity (0–100) by field and publication year
+                    Relative intensity (0–100) by field and year (2023–2025)
                   </p>
                 </div>
                 {data.heatmapRows.length === 0 ? (

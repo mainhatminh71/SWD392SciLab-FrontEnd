@@ -5,6 +5,10 @@ import {
   getArticleTitle,
 } from "@/features/experiments/utils/article-format";
 import type { CatalogSample } from "@/features/dashboard/api/fetch-catalog-sample";
+import {
+  CATALOG_INSIGHT_YEARS,
+  filterArticlesToInsightYears,
+} from "@/features/dashboard/api/fetch-catalog-sample";
 import catalogTotals from "@/features/dashboard/data/catalog-totals.json";
 
 export type DashboardStat = {
@@ -64,12 +68,15 @@ function percentChange(current: number, previous: number) {
 
 function countByYear(articles: ArticleGraph[]) {
   const map = new Map<number, number>();
+  for (const year of CATALOG_INSIGHT_YEARS) {
+    map.set(year, 0);
+  }
   for (const item of articles) {
     const year = item.article.publicationYear;
-    if (typeof year !== "number") continue;
+    if (typeof year !== "number" || !map.has(year)) continue;
     map.set(year, (map.get(year) ?? 0) + 1);
   }
-  return [...map.entries()].sort((a, b) => a[0] - b[0]);
+  return CATALOG_INSIGHT_YEARS.map((year) => [year, map.get(year) ?? 0] as const);
 }
 
 function countTopics(articles: ArticleGraph[]) {
@@ -116,7 +123,8 @@ export function buildDashboardInsights(
   sample: CatalogSample,
 ): DashboardInsights {
   void TREND_COLORS_UNUSED;
-  const { articles, journals, articlesHasMore, journalsHasMore } = sample;
+  const articles = filterArticlesToInsightYears(sample.articles);
+  const { journals, articlesHasMore, journalsHasMore } = sample;
   const byYear = countByYear(articles);
   const topicCounts = countTopics(articles);
   const keywordCount = new Set(

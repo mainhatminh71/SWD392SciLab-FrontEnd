@@ -139,7 +139,7 @@ export default function Dashboard() {
                       Publication Growth
                     </h3>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Articles by publication year in catalog sample
+                      Articles by publication year (2023–2025)
                     </p>
                   </div>
                   {data.publicationGrowth.length === 0 ? (
@@ -191,7 +191,7 @@ export default function Dashboard() {
                       Year Distribution
                     </h3>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      How sampled articles spread across years
+                      How sampled articles spread across 2023–2025
                     </p>
                   </div>
                   {data.yearDistribution.length === 0 ? (
@@ -409,7 +409,8 @@ export default function Dashboard() {
                 Sample: {data.sampleSize.articles} articles
                 {data.sampleSize.articlesHasMore ? "+" : ""} ·{" "}
                 {data.sampleSize.journals} journals
-                {data.sampleSize.journalsHasMore ? "+" : ""}. Metrics are
+                {data.sampleSize.journalsHasMore ? "+" : ""} · years 2023–2025.
+                Metrics are
                 computed from the live catalog.
               </p>
             </>
