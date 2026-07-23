@@ -126,8 +126,9 @@ export const graphNodeFilterOptions: { value: string; label: string }[] = [
 
 /** Map UI sort to the academic list API sort. */
 export function toArticleApiSort(sort: ArticleClientSort): ArticleSort {
-  // Until citedArticleIds are hydrated, most_cited is the best first-page proxy.
-  return sort === "most_related" ? "most_cited" : sort;
+  // Fetch a mixed newest page, then client-sort by graph/citation strength.
+  // (most_cited first pages are all high-citation, so graph filters look broken.)
+  return sort === "most_related" ? "newest" : sort;
 }
 
 export const countryFilterOptions: { value: string; label: string }[] = [

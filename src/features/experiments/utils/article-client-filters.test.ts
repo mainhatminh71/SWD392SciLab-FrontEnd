@@ -7,7 +7,85 @@ import {
   collectArticleTagOptions,
   pinTagName,
 } from "@/features/experiments/utils/article-tag-options";
-import type { ArticleGraph } from "@/features/experiments/types/article.types";
+import { getArticleGraphNodeCount } from "@/features/experiments/utils/article-format";
+import {
+  toArticleApiSort,
+  type ArticleGraph,
+} from "@/features/experiments/types/article.types";
+
+function articleFixture(
+  id: string,
+  citationCount: number,
+  cited: string[] = [],
+): ArticleGraph {
+  return {
+    article: {
+      id,
+      title: id,
+      abstract: null,
+      doi: null,
+      publicationYear: 2024,
+      version: null,
+      volumeNumber: null,
+      issueNumber: null,
+      citationCount,
+      createdAt: null,
+      updatedAt: null,
+    },
+    journal: null,
+    authors: [],
+    keywords: [],
+    topics: [],
+    citedArticleIds: cited,
+  };
+}
+
+describe("getArticleGraphNodeCount", () => {
+  it("uses citedArticleIds when hydrated", () => {
+    expect(
+      getArticleGraphNodeCount(articleFixture("W1", 999, ["a", "b", "c"])),
+    ).toBe(3);
+  });
+
+  it("falls back to citationCount when refs are empty (live API shape)", () => {
+    expect(getArticleGraphNodeCount(articleFixture("W1", 230, []))).toBe(230);
+    expect(getArticleGraphNodeCount(articleFixture("W2", 0, []))).toBe(0);
+  });
+});
+
+describe("toArticleApiSort", () => {
+  it("maps most_related to newest so first pages stay mixed for filtering", () => {
+    expect(toArticleApiSort("most_related")).toBe("newest");
+    expect(toArticleApiSort("most_cited")).toBe("most_cited");
+    expect(toArticleApiSort("newest")).toBe("newest");
+  });
+});
+
+describe("graph node filter against live-like citation mix", () => {
+  const page = [
+    articleFixture("W-hi", 475),
+    articleFixture("W-mid", 42),
+    articleFixture("W-lo", 3),
+    articleFixture("W-zero", 0),
+  ];
+
+  it("keeps only articles meeting the minimum", () => {
+    const kept = page.filter((article) =>
+      matchesArticleClientFilters(article, { minGraphNodes: "100" }),
+    );
+    expect(kept.map((item) => item.article.id)).toEqual(["W-hi"]);
+  });
+
+  it("sorts most_related with high connectivity first", () => {
+    const ordered = sortArticlesForClient(page, "most_related");
+    expect(ordered.map((item) => item.article.id)).toEqual([
+      "W-hi",
+      "W-mid",
+      "W-lo",
+      "W-zero",
+    ]);
+  });
+});
 
 const withBiology = {
   article: {

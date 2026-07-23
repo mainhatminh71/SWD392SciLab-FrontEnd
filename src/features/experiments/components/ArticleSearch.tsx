@@ -75,6 +75,14 @@ import {
 } from "@/features/laboratories/utils/journal-format";
 
 const itemsPerPage = 10;
+/** Stop auto-paging for graph-node filters after this many loaded articles. */
+const graphFilterLoadCap = 120;
+
+const filterFieldClassName =
+  "w-full h-9 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer outline-none transition-[border-color,box-shadow] focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/25";
+
+const filterInputClassName =
+  "h-9 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/25";
 
 function FilterSelect({
   id,
@@ -97,7 +105,7 @@ function FilterSelect({
       <div className="relative">
         <select
           id={id}
-          className="w-full h-9 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+          className={filterFieldClassName}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         >
@@ -144,7 +152,7 @@ export default function ArticleSearch() {
 
   // Only search + sort hit the API. Sidebar filters run client-side (instant).
   // Keep a fixed 2023–2025 fetch window — unfiltered list calls are ~30s+.
-  // `most_related` is client-sorted; API still uses newest for speed.
+  // `most_related` fetches newest (mixed counts) then client-sorts by strength.
   const apiFilters = useMemo<ArticleApiFilters>(
     () => ({
       sort: toArticleApiSort(sort),
@@ -262,6 +270,25 @@ export default function ArticleSearch() {
     authorSearch,
     openAccess,
     minGraphNodes,
+  ]);
+
+  // When a graph-node minimum is set, keep loading pages until we have a
+  // usable match set (or hit the load cap / end of results).
+  useEffect(() => {
+    const min = Number(minGraphNodes);
+    if (!Number.isFinite(min) || min <= 0) return;
+    if (isLoading || isLoadingMore || !hasMore) return;
+    if (items.length >= graphFilterLoadCap) return;
+    if (filteredArticles.length >= itemsPerPage) return;
+    void loadMore();
+  }, [
+    minGraphNodes,
+    filteredArticles.length,
+    items.length,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    loadMore,
   ]);
 
   useEffect(() => {
@@ -420,7 +447,7 @@ export default function ArticleSearch() {
                     </Button>
                   </div>
 
-                  <div className="space-y-5 flex-1 min-h-0 overflow-y-auto pr-1">
+                  <div className="space-y-5 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1 py-1">
                     <p className="text-xs text-muted-foreground">
                       Filters apply instantly on loaded results. Search and sort
                       still call the API.
@@ -440,8 +467,8 @@ export default function ArticleSearch() {
 
                     {sort === "most_related" && (
                       <p className="text-xs text-muted-foreground -mt-2">
-                        Orders by related-work graph size when available;
-                        otherwise uses citation count (refs not hydrated yet).
+                        Shows strongest connected articles first (related works
+                        or citation count).
                       </p>
                     )}
 
@@ -465,7 +492,11 @@ export default function ArticleSearch() {
                       ))}
                     </FilterSelect>
                     <p className="text-xs text-muted-foreground -mt-2">
-                      Related works when synced; otherwise citation count.
+                      Filters loaded results
+                      {minGraphNodes
+                        ? ` (≥${minGraphNodes}; may load more pages)`
+                        : ""}
+                      . Uses related works when synced, else citations.
                     </p>
 
                     <div className="pt-4 border-t border-border space-y-5">
@@ -641,7 +672,7 @@ export default function ArticleSearch() {
                           id="doi-search"
                           type="text"
                           placeholder="10.1038/..."
-                          className="h-9"
+                          className={filterInputClassName}
                           value={doiSearch}
                           onChange={(event) => setDoiSearch(event.target.value)}
                         />
@@ -658,7 +689,7 @@ export default function ArticleSearch() {
                           id="author-search"
                           type="text"
                           placeholder="Author name"
-                          className="h-9"
+                          className={filterInputClassName}
                           value={authorSearch}
                           onChange={(event) =>
                             setAuthorSearch(event.target.value)
@@ -687,9 +718,19 @@ export default function ArticleSearch() {
                       of{" "}
                       <span className="font-medium text-foreground">
                         {filteredArticles.length}
-                        {hasMore ? "+" : ""}
+                        {hasMore ||
+                        (minGraphNodes && items.length < graphFilterLoadCap)
+                          ? "+"
+                          : ""}
                       </span>{" "}
                       articles
+                      {minGraphNodes ? (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {items.length} loaded
+                          {isLoadingMore ? " (loading more…)" : ""}
+                        </span>
+                      ) : null}
                     </>
                   )}
                 </p>
