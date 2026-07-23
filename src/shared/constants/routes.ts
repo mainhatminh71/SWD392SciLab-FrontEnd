@@ -14,7 +14,7 @@ export const routes = {
     rankings: "/student/rankings",
     articles: "/student/articles",
     articleDetail: (id: string) => `/student/articles/${id}`,
-    trends: "/student/trends",
+    // trends: "/student/trends",
     bookmarks: "/student/bookmarks",
     notifications: "/student/notifications",
     profile: "/student/profile",

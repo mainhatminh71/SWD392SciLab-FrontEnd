@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   BookOpen,
   FileText,
-  ChevronRight,
+  // ChevronRight,
   ArrowUp,
   ArrowDown,
   Hash,
@@ -271,6 +271,7 @@ export default function Dashboard() {
                       Most frequent topics & keywords in the sample
                     </p>
                   </div>
+                  {/* Trend Analysis temporarily disabled
                   <Button
                     asChild
                     variant="ghost"
@@ -285,6 +286,7 @@ export default function Dashboard() {
                       />
                     </Link>
                   </Button>
+                  */}
                 </div>
 
                 {data.trendingTopics.length === 0 ? (
