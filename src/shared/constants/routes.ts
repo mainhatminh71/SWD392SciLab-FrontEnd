@@ -20,6 +20,7 @@ export const routes = {
     profile: "/student/profile",
   },
   admin: {
+    dashboard: "/admin",
     users: "/admin/users",
     apiSources: "/admin/api-sources",
     systemHealth: "/admin/system-health",
@@ -27,5 +28,5 @@ export const routes = {
 } as const;
 
 export function getPostLoginPath(role: UserRole) {
-  return role === "admin" ? routes.admin.users : routes.student.dashboard;
+  return role === "admin" ? routes.admin.dashboard : routes.student.dashboard;
 }
