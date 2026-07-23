@@ -204,8 +204,7 @@ export const SYNC_JOB_TYPE_LABELS: Record<AdminSyncJobType, string> = {
 
 export function pipelineJobLabel(jobId: string) {
   return (
-    PIPELINE_JOB_LABELS[jobId as AdminPipelineJobId] ??
-    jobId.replace(/-/g, " ")
+    PIPELINE_JOB_LABELS[jobId as AdminPipelineJobId] ?? jobId.replace(/-/g, " ")
   );
 }
 

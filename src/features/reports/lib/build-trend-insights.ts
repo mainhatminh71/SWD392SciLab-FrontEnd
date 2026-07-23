@@ -118,9 +118,7 @@ export function buildTrendInsights(
   let articles = filterArticlesToInsightYears(sample.articles).filter(
     (item) => {
       const year = item.article.publicationYear;
-      return (
-        typeof year === "number" && year >= yearFrom && year <= yearTo
-      );
+      return typeof year === "number" && year >= yearFrom && year <= yearTo;
     },
   );
 

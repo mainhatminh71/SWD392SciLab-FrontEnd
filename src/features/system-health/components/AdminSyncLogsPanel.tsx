@@ -320,7 +320,9 @@ export default function AdminSyncLogsPanel() {
             <div className="px-6 py-3 border-t border-border flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">
                 Page {currentPage} of {totalPages}
-                {page?.total != null ? ` · ${page.total.toLocaleString("en-US")} logs` : ""}
+                {page?.total != null
+                  ? ` · ${page.total.toLocaleString("en-US")} logs`
+                  : ""}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -364,9 +366,7 @@ export default function AdminSyncLogsPanel() {
           </SheetHeader>
 
           <div className="mt-6 space-y-4 px-1">
-            {detail.isLoading && (
-              <RouteDataLoading label="Loading sync log…" />
-            )}
+            {detail.isLoading && <RouteDataLoading label="Loading sync log…" />}
             {detail.error && (
               <p className="text-sm text-destructive">{detail.error}</p>
             )}
@@ -413,7 +413,11 @@ export default function AdminSyncLogsPanel() {
                   )}
                 />
                 {detail.log.configId && (
-                  <DetailRow label="Config ID" value={detail.log.configId} mono />
+                  <DetailRow
+                    label="Config ID"
+                    value={detail.log.configId}
+                    mono
+                  />
                 )}
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">

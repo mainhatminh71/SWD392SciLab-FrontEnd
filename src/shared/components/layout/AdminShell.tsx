@@ -48,8 +48,7 @@ export default function AdminShell({
             const Icon = item.icon;
             const isActive =
               pathname === item.href ||
-              (item.href !== "/admin" &&
-                pathname.startsWith(`${item.href}/`));
+              (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
 
             return (
               <Link

@@ -31,9 +31,7 @@ export function collectArticleTagOptions(
 
 /** Prefer the active filter tag so it stays visible on cards. */
 export function pinTagName(names: string[], pinnedName?: string, maxCount = 4) {
-  const cleaned = names
-    .map((name) => name.trim())
-    .filter(Boolean);
+  const cleaned = names.map((name) => name.trim()).filter(Boolean);
   if (!pinnedName?.trim()) {
     return cleaned.slice(0, maxCount);
   }

@@ -4,11 +4,7 @@ import type { JournalNode } from "@/features/experiments/types/journal.types";
 export type { CursorPage } from "@/features/experiments/types/academic-pagination.types";
 
 export type AcademicNodeType =
-  | "ARTICLE"
-  | "AUTHOR"
-  | "JOURNAL"
-  | "KEYWORD"
-  | "TOPIC";
+  "ARTICLE" | "AUTHOR" | "JOURNAL" | "KEYWORD" | "TOPIC";
 
 /** Core article fields from GET /academic/articles and article graph payloads. */
 export type ArticleNode = {

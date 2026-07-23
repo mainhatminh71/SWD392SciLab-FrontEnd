@@ -174,7 +174,7 @@ export function syncLocalFollowNotifications(
 }
 
 export function notifyFollowStarted(input: {
-  objectType: "JOURNAL" | "KEYWORD" | "TOPIC";
+  objectType: "AUTHOR" | "JOURNAL" | "KEYWORD" | "TOPIC";
   objectId: string;
   displayName: string;
 }) {
