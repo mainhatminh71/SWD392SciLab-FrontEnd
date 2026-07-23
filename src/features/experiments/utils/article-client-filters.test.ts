@@ -143,6 +143,33 @@ const withoutBiology = {
 } as unknown as ArticleGraph;
 
 describe("matchesArticleClientFilters", () => {
+  it("filters the main search box against title/abstract/tags (AND tokens)", () => {
+    const titled = {
+      ...withBiology,
+      article: {
+        ...withBiology.article,
+        title: "Identification and management of workplace stress",
+        abstract: "A review of clinical protocols.",
+      },
+    } as unknown as ArticleGraph;
+
+    expect(
+      matchesArticleClientFilters(titled, {
+        textSearch: "Identification and management",
+      }),
+    ).toBe(true);
+    expect(
+      matchesArticleClientFilters(titled, {
+        textSearch: "biology",
+      }),
+    ).toBe(true);
+    expect(
+      matchesArticleClientFilters(withoutBiology, {
+        textSearch: "Identification and management",
+      }),
+    ).toBe(false);
+  });
+
   it("keeps only cards that actually carry the selected keyword name", () => {
     expect(
       matchesArticleClientFilters(withBiology, { keywordName: "Biology" }),

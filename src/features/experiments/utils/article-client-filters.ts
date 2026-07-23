@@ -8,6 +8,8 @@ import {
 } from "@/features/experiments/utils/article-format";
 
 export type ArticleClientFilters = {
+  /** Main search box — title, abstract, keywords, topics, authors, DOI, journal. */
+  textSearch?: string;
   doiSearch?: string;
   authorSearch?: string;
   openAccess?: "" | "oa" | "subscription";
@@ -44,6 +46,37 @@ function articleHasNamedTag(
   return tags.some((tag) => normalizeLabel(tag.displayName) === wanted);
 }
 
+/** Split search into tokens; every token must appear somewhere in the haystack. */
+export function tokenizeTextSearch(query?: string) {
+  return (query ?? "")
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function buildArticleSearchHaystack(article: ArticleGraph) {
+  const keywordText = article.keywords
+    .map((tag) => tag.displayName ?? "")
+    .join(" ");
+  const topicText = article.topics
+    .map((tag) => tag.displayName ?? "")
+    .join(" ");
+  const authorText = getArticleAuthorNames(article).join(" ");
+
+  return [
+    article.article.title ?? "",
+    article.article.abstract ?? "",
+    article.article.doi ?? "",
+    article.journal?.displayName ?? "",
+    keywordText,
+    topicText,
+    authorText,
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
 /** Instant sidebar filters — avoid re-hitting the slow academic list API. */
 export function matchesArticleClientFilters(
   article: ArticleGraph,
@@ -54,6 +87,14 @@ export function matchesArticleClientFilters(
   const year = article.article.publicationYear;
   const publisher = article.journal?.publisherName?.trim() ?? "";
   const country = article.journal?.country?.trim() ?? "";
+
+  const textTokens = tokenizeTextSearch(filters.textSearch);
+  if (textTokens.length > 0) {
+    const haystack = buildArticleSearchHaystack(article);
+    if (!textTokens.every((token) => haystack.includes(token))) {
+      return false;
+    }
+  }
 
   if (
     filters.doiSearch &&

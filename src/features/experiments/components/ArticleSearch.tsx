@@ -150,7 +150,7 @@ export default function ArticleSearch() {
     loadMore: loadMoreJournals,
   } = useJournals("");
 
-  // Only search + sort hit the API. Sidebar filters run client-side (instant).
+  // Sort hits the API. Search + sidebar filters run client-side (API `q` is unreliable).
   // Keep a fixed 2023–2025 fetch window — unfiltered list calls are ~30s+.
   // `most_related` fetches newest (mixed counts) then client-sorts by strength.
   const apiFilters = useMemo<ArticleApiFilters>(
@@ -163,7 +163,7 @@ export default function ArticleSearch() {
   );
 
   const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
-    useArticles(searchQuery, apiFilters);
+    useArticles("", apiFilters);
 
   const journalOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -213,6 +213,7 @@ export default function ArticleSearch() {
   const filteredArticles = useMemo(() => {
     const matched = items.filter((article) =>
       matchesArticleClientFilters(article, {
+        textSearch: searchQuery,
         doiSearch,
         authorSearch,
         openAccess,
@@ -230,6 +231,7 @@ export default function ArticleSearch() {
     return sortArticlesForClient(matched, sort);
   }, [
     items,
+    searchQuery,
     doiSearch,
     authorSearch,
     openAccess,
@@ -272,17 +274,20 @@ export default function ArticleSearch() {
     minGraphNodes,
   ]);
 
-  // When a graph-node minimum is set, keep loading pages until we have a
-  // usable match set (or hit the load cap / end of results).
+  // When text search or a graph-node minimum is set, keep loading pages until we
+  // have a usable match set (or hit the load cap / end of results).
   useEffect(() => {
     const min = Number(minGraphNodes);
-    if (!Number.isFinite(min) || min <= 0) return;
+    const hasGraphFloor = Number.isFinite(min) && min > 0;
+    const hasTextSearch = searchQuery.trim().length > 0;
+    if (!hasGraphFloor && !hasTextSearch) return;
     if (isLoading || isLoadingMore || !hasMore) return;
     if (items.length >= graphFilterLoadCap) return;
     if (filteredArticles.length >= itemsPerPage) return;
     void loadMore();
   }, [
     minGraphNodes,
+    searchQuery,
     filteredArticles.length,
     items.length,
     hasMore,
@@ -449,8 +454,8 @@ export default function ArticleSearch() {
 
                   <div className="space-y-5 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1 py-1">
                     <p className="text-xs text-muted-foreground">
-                      Filters apply instantly on loaded results. Search and sort
-                      still call the API.
+                      Search and filters apply instantly on loaded results. Sort
+                      still calls the API.
                     </p>
                     <FilterSelect
                       id="sort-filter"
@@ -472,10 +477,10 @@ export default function ArticleSearch() {
                       </p>
                     )}
 
-                    {sort === "relevant" && !searchQuery.trim() && (
+                    {sort === "relevant" && (
                       <p className="text-xs text-muted-foreground -mt-2">
-                        Relevant sort needs a search query; using newest until
-                        then.
+                        Relevant ranking needs a working API search; using
+                        newest for the catalog fetch instead.
                       </p>
                     )}
 
@@ -719,12 +724,13 @@ export default function ArticleSearch() {
                       <span className="font-medium text-foreground">
                         {filteredArticles.length}
                         {hasMore ||
-                        (minGraphNodes && items.length < graphFilterLoadCap)
+                        ((minGraphNodes || searchQuery.trim()) &&
+                          items.length < graphFilterLoadCap)
                           ? "+"
                           : ""}
                       </span>{" "}
                       articles
-                      {minGraphNodes ? (
+                      {minGraphNodes || searchQuery.trim() ? (
                         <span className="text-muted-foreground">
                           {" "}
                           · {items.length} loaded
