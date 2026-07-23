@@ -22,7 +22,6 @@ export const routes = {
   admin: {
     dashboard: "/admin",
     users: "/admin/users",
-    apiSources: "/admin/api-sources",
     systemHealth: "/admin/system-health",
   },
 } as const;

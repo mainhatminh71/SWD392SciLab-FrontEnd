@@ -5,6 +5,18 @@ import { FileText, Image as ImageIcon, RefreshCw, TrendingUp } from "lucide-reac
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import Can from "@/shared/components/auth/Can";
 import { useMyDashboard } from "@/features/dashboard/hooks/use-role-dashboard";
+import { Fragment, useRef } from "react";
+import { ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import PageContainer from "@/shared/components/layout/PageContainer";
