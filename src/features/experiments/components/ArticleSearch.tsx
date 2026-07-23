@@ -30,7 +30,12 @@ import Can from "@/shared/components/auth/Can";
 import { Label } from "@/shared/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArticles } from "@/features/experiments/hooks/use-articles";
-import { useCatalogSample } from "@/features/dashboard/hooks/use-catalog-sample";
+import { collectArticleTagOptions, pinTagName } from "@/features/experiments/utils/article-tag-options";
+import { matchesArticleClientFilters } from "@/features/experiments/utils/article-client-filters";
+import {
+  CATALOG_INSIGHT_YEAR_FROM,
+  CATALOG_INSIGHT_YEAR_TO,
+} from "@/features/dashboard/api/fetch-catalog-sample";
 import { useJournals } from "@/features/laboratories/hooks/use-journals";
 import { toggleBookmark as toggleBookmarkApi } from "@/features/submissions/api/bookmarks.api";
 import { bookmarksRootQueryKey } from "@/features/submissions/hooks/use-bookmarks";
@@ -63,12 +68,6 @@ import {
 } from "@/features/laboratories/utils/journal-format";
 
 const itemsPerPage = 10;
-
-type ClientFilters = {
-  doiSearch: string;
-  authorSearch: string;
-  openAccess: "" | "oa" | "subscription";
-};
 
 function FilterSelect({
   id,
@@ -103,38 +102,6 @@ function FilterSelect({
   );
 }
 
-function matchesClientFilters(article: ArticleGraph, filters: ClientFilters) {
-  const doi = article.article.doi ?? "";
-  const authors = getArticleAuthorNames(article).join(" ").toLowerCase();
-
-  if (
-    filters.doiSearch &&
-    !doi.toLowerCase().includes(filters.doiSearch.toLowerCase())
-  ) {
-    return false;
-  }
-
-  if (
-    filters.authorSearch &&
-    !authors.includes(filters.authorSearch.toLowerCase())
-  ) {
-    return false;
-  }
-
-  if (filters.openAccess === "oa" && article.journal?.isOpenAccess !== true) {
-    return false;
-  }
-
-  if (
-    filters.openAccess === "subscription" &&
-    article.journal?.isOpenAccess === true
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
 export default function ArticleSearch() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -146,7 +113,7 @@ export default function ArticleSearch() {
     new Set(),
   );
 
-  const [sort, setSort] = useState<ArticleSort>("relevant");
+  const [sort, setSort] = useState<ArticleSort>("newest");
   const [journalId, setJournalId] = useState("");
   const [publisher, setPublisher] = useState("");
   const [country, setCountry] = useState("");
@@ -156,11 +123,9 @@ export default function ArticleSearch() {
 
   const [doiSearch, setDoiSearch] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
-  const [keywordId, setKeywordId] = useState("");
-  const [topicId, setTopicId] = useState("");
+  const [keywordName, setKeywordName] = useState("");
+  const [topicName, setTopicName] = useState("");
   const [openAccess, setOpenAccess] = useState<"" | "oa" | "subscription">("");
-
-  const { data: catalogSample } = useCatalogSample();
 
   const {
     items: journals,
@@ -169,35 +134,38 @@ export default function ArticleSearch() {
     loadMore: loadMoreJournals,
   } = useJournals("");
 
-  const keywordOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const item of catalogSample?.articles ?? []) {
-      for (const keyword of item.keywords) {
-        const name = keyword.displayName?.trim();
-        if (keyword.id && name) {
-          map.set(keyword.id, name);
-        }
-      }
-    }
-    return [...map.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((left, right) => left.name.localeCompare(right.name));
-  }, [catalogSample?.articles]);
+  // Only search + sort hit the API. Sidebar filters run client-side (instant).
+  // Keep a fixed 2023–2025 fetch window — unfiltered list calls are ~30s+.
+  const apiFilters = useMemo<ArticleApiFilters>(
+    () => ({
+      sort,
+      publicationYearFrom: String(CATALOG_INSIGHT_YEAR_FROM),
+      publicationYearTo: String(CATALOG_INSIGHT_YEAR_TO),
+    }),
+    [sort],
+  );
 
-  const topicOptions = useMemo(() => {
+  const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
+    useArticles(searchQuery, apiFilters);
+
+  const journalOptions = useMemo(() => {
     const map = new Map<string, string>();
-    for (const item of catalogSample?.articles ?? []) {
-      for (const topic of item.topics) {
-        const name = topic.displayName?.trim();
-        if (topic.id && name) {
-          map.set(topic.id, name);
+    for (const journal of journals) {
+      map.set(journal.id, getJournalName(journal));
+    }
+    for (const article of items) {
+      if (article.journal?.id) {
+        const name =
+          article.journal.displayName?.trim() || article.journal.id;
+        if (!map.has(article.journal.id)) {
+          map.set(article.journal.id, name);
         }
       }
     }
     return [...map.entries()]
       .map(([id, name]) => ({ id, name }))
       .sort((left, right) => left.name.localeCompare(right.name));
-  }, [catalogSample?.articles]);
+  }, [journals, items]);
 
   const publisherOptions = useMemo(() => {
     const values = new Set<string>();
@@ -207,58 +175,55 @@ export default function ArticleSearch() {
         values.add(name);
       }
     }
+    for (const article of items) {
+      const name = article.journal?.publisherName?.trim();
+      if (name) values.add(name);
+    }
     return [...values].sort((left, right) => left.localeCompare(right));
-  }, [journals]);
+  }, [journals, items]);
 
-  const journalOptions = useMemo(
-    () =>
-      [...journals]
-        .map((journal) => ({
-          id: journal.id,
-          name: getJournalName(journal),
-        }))
-        .sort((left, right) => left.name.localeCompare(right.name)),
-    [journals],
+  // Derive facet options from search results — avoids an extra 100+100 catalog fetch.
+  const keywordOptions = useMemo(
+    () => collectArticleTagOptions(items, "keywords"),
+    [items],
   );
 
-  const apiFilters = useMemo<ArticleApiFilters>(
-    () => ({
-      sort,
-      keywordId: keywordId || undefined,
-      topicId: topicId || undefined,
-      journalId: journalId || undefined,
-      publisher: publisher || undefined,
-      country: country || undefined,
-      publicationYear: selectedYear || undefined,
-      publicationYearFrom: selectedYear ? undefined : yearFrom || undefined,
-      publicationYearTo: selectedYear ? undefined : yearTo || undefined,
-    }),
-    [
-      sort,
-      keywordId,
-      topicId,
-      journalId,
-      publisher,
-      country,
-      selectedYear,
-      yearFrom,
-      yearTo,
-    ],
+  const topicOptions = useMemo(
+    () => collectArticleTagOptions(items, "topics"),
+    [items],
   );
-
-  const { items, isLoading, isLoadingMore, hasMore, error, reload, loadMore } =
-    useArticles(searchQuery, apiFilters);
 
   const filteredArticles = useMemo(
     () =>
       items.filter((article) =>
-        matchesClientFilters(article, {
+        matchesArticleClientFilters(article, {
           doiSearch,
           authorSearch,
           openAccess,
+          journalId,
+          publisher,
+          country,
+          keywordName,
+          topicName,
+          selectedYear,
+          yearFrom,
+          yearTo,
         }),
       ),
-    [items, doiSearch, authorSearch, openAccess],
+    [
+      items,
+      doiSearch,
+      authorSearch,
+      openAccess,
+      journalId,
+      publisher,
+      country,
+      keywordName,
+      topicName,
+      selectedYear,
+      yearFrom,
+      yearTo,
+    ],
   );
 
   const totalPages = Math.max(
@@ -274,8 +239,8 @@ export default function ArticleSearch() {
   }, [
     searchQuery,
     sort,
-    keywordId,
-    topicId,
+    keywordName,
+    topicName,
     journalId,
     publisher,
     country,
@@ -340,9 +305,9 @@ export default function ArticleSearch() {
   };
 
   const clearFilters = () => {
-    setSort("relevant");
-    setKeywordId("");
-    setTopicId("");
+    setSort("newest");
+    setKeywordName("");
+    setTopicName("");
     setJournalId("");
     setPublisher("");
     setCountry("");
@@ -355,9 +320,9 @@ export default function ArticleSearch() {
   };
 
   const activeFilterCount =
-    (sort !== "relevant" ? 1 : 0) +
-    (keywordId ? 1 : 0) +
-    (topicId ? 1 : 0) +
+    (sort !== "newest" ? 1 : 0) +
+    (keywordName ? 1 : 0) +
+    (topicName ? 1 : 0) +
     (journalId ? 1 : 0) +
     (publisher ? 1 : 0) +
     (country ? 1 : 0) +
@@ -442,6 +407,10 @@ export default function ArticleSearch() {
                   </div>
 
                   <div className="space-y-5 flex-1 min-h-0 overflow-y-auto pr-1">
+                    <p className="text-xs text-muted-foreground">
+                      Filters apply instantly on loaded results. Search and sort
+                      still call the API.
+                    </p>
                     <FilterSelect
                       id="sort-filter"
                       label="Sort"
@@ -597,12 +566,12 @@ export default function ArticleSearch() {
                       <FilterSelect
                         id="keyword-filter"
                         label="Keyword"
-                        value={keywordId}
-                        onChange={setKeywordId}
+                        value={keywordName}
+                        onChange={setKeywordName}
                       >
                         <option value="">All keywords</option>
                         {keywordOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
+                          <option key={option.name} value={option.name}>
                             {option.name}
                           </option>
                         ))}
@@ -611,12 +580,12 @@ export default function ArticleSearch() {
                       <FilterSelect
                         id="topic-filter"
                         label="Topic"
-                        value={topicId}
-                        onChange={setTopicId}
+                        value={topicName}
+                        onChange={setTopicName}
                       >
                         <option value="">All topics</option>
                         {topicOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
+                          <option key={option.name} value={option.name}>
                             {option.name}
                           </option>
                         ))}
@@ -724,9 +693,27 @@ export default function ArticleSearch() {
                 <div className="space-y-4 pb-2">
                   {currentArticles.map((article) => {
                     const articleId = article.article.id;
-                    const keywords = getTagNames(article.keywords, 4);
-                    const primaryTopics = getPrimaryTopics(article);
-                    const relatedTopics = getRelatedTopics(article);
+                    const keywords = pinTagName(
+                      getTagNames(article.keywords, 12),
+                      keywordName,
+                      4,
+                    );
+                    const primaryTopics = pinTagName(
+                      getPrimaryTopics(article, 8),
+                      topicName,
+                      3,
+                    );
+                    const relatedTopics = pinTagName(
+                      getRelatedTopics(article, 8),
+                      topicName &&
+                        !primaryTopics.some(
+                          (topic) =>
+                            topic.toLowerCase() === topicName.toLowerCase(),
+                        )
+                        ? topicName
+                        : undefined,
+                      4,
+                    );
                     const isBookmarked = bookmarkedIds.has(articleId);
                     const articleHref = `/student/articles/${encodeURIComponent(articleId)}`;
 

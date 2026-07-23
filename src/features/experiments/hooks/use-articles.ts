@@ -14,7 +14,7 @@ import type {
   ArticleSort,
 } from "@/features/experiments/types/article.types";
 
-const searchDebounceMs = 350;
+const searchDebounceMs = 250;
 
 function resolveSort(
   sort: ArticleSort | undefined,
@@ -64,9 +64,9 @@ export function useArticles(
     Boolean(apiFilters.keywordId?.trim()) ||
     Boolean(apiFilters.topicId?.trim());
 
-  // Prefer relevant ranking for text / keyword / topic searches.
+  // Default to newest — `relevant` ranking is much slower on the academic API.
   const effectiveSort = hasResearchQuery
-    ? resolveSort(apiFilters.sort ?? "relevant", true)
+    ? resolveSort(apiFilters.sort ?? "newest", true)
     : resolveSort(apiFilters.sort ?? "newest", false);
 
   const queryKey = [

@@ -1,12 +1,14 @@
 import { apiRequest } from "@/core/api";
+import {
+  academicArticlePageSize,
+  academicSearchTimeoutMs,
+} from "@/core/api/query-config";
 import type {
   ArticleDetailResponse,
   ArticleGraph,
   ArticleListParams,
   ArticleListResponse,
 } from "@/features/experiments/types/article.types";
-
-const defaultLimit = 100;
 
 function setOptionalParam(
   params: URLSearchParams,
@@ -23,7 +25,8 @@ function setOptionalParam(
   }
 }
 
-function buildArticleQuery({
+/** Exported for unit tests — builds GET /academic/articles query string. */
+export function buildArticleQuery({
   cursor,
   q,
   keywordId,
@@ -36,7 +39,7 @@ function buildArticleQuery({
   publisher,
   country,
   sort,
-  limit = defaultLimit,
+  limit = academicArticlePageSize,
 }: ArticleListParams = {}) {
   const params = new URLSearchParams({ limit: String(limit) });
 
@@ -63,6 +66,7 @@ export function listArticles(
   return apiRequest<ArticleListResponse>({
     method: "GET",
     path: `/academic/articles?${buildArticleQuery(params)}`,
+    timeoutMs: academicSearchTimeoutMs,
   });
 }
 
