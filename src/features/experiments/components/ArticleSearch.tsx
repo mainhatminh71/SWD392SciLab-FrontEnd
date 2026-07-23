@@ -440,8 +440,8 @@ export default function ArticleSearch() {
 
                     {sort === "most_related" && (
                       <p className="text-xs text-muted-foreground -mt-2">
-                        Default: articles with more related-work graph nodes
-                        appear first (from loaded results).
+                        Orders by related-work graph size when available;
+                        otherwise uses citation count (refs not hydrated yet).
                       </p>
                     )}
 
@@ -454,7 +454,7 @@ export default function ArticleSearch() {
 
                     <FilterSelect
                       id="graph-nodes-filter"
-                      label="Graph nodes (related works)"
+                      label="Graph nodes"
                       value={minGraphNodes}
                       onChange={setMinGraphNodes}
                     >
@@ -464,6 +464,9 @@ export default function ArticleSearch() {
                         </option>
                       ))}
                     </FilterSelect>
+                    <p className="text-xs text-muted-foreground -mt-2">
+                      Related works when synced; otherwise citation count.
+                    </p>
 
                     <div className="pt-4 border-t border-border space-y-5">
                       <FilterSelect
@@ -814,6 +817,9 @@ export default function ArticleSearch() {
                                 <span>
                                   {getArticleGraphNodeCount(article)} graph
                                   nodes
+                                  {(article.citedArticleIds?.length ?? 0) === 0
+                                    ? " (via citations)"
+                                    : ""}
                                 </span>
                               </div>
                             </div>

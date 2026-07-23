@@ -120,11 +120,14 @@ export const graphNodeFilterOptions: { value: string; label: string }[] = [
   { value: "10", label: "10+ nodes" },
   { value: "20", label: "20+ nodes" },
   { value: "50", label: "50+ nodes" },
+  { value: "100", label: "100+ nodes" },
+  { value: "500", label: "500+ nodes" },
 ];
 
 /** Map UI sort to the academic list API sort. */
 export function toArticleApiSort(sort: ArticleClientSort): ArticleSort {
-  return sort === "most_related" ? "newest" : sort;
+  // Until citedArticleIds are hydrated, most_cited is the best first-page proxy.
+  return sort === "most_related" ? "most_cited" : sort;
 }
 
 export const countryFilterOptions: { value: string; label: string }[] = [

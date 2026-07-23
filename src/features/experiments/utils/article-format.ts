@@ -59,11 +59,23 @@ export function getArticleCitationCount(article: ArticleGraph) {
 }
 
 /**
- * Related-work / graph neighbor count available on list payloads.
- * Used for Article Search filter + default "most graph nodes" ordering.
+ * Related-work / graph neighbor count for Article Search filter + sort.
+ *
+ * Prefer `citedArticleIds` when outgoing references are hydrated.
+ * Live list/detail currently often returns an empty array, so fall back to
+ * OpenAlex `citationCount` as a connectivity proxy that actually varies.
  */
 export function getArticleGraphNodeCount(article: ArticleGraph) {
-  return article.citedArticleIds?.length ?? 0;
+  const relatedWorks = article.citedArticleIds?.length ?? 0;
+  if (relatedWorks > 0) {
+    return relatedWorks;
+  }
+  return article.article.citationCount ?? 0;
+}
+
+/** True when the count is still a citation proxy (refs not hydrated). */
+export function isArticleGraphNodeCountProxy(article: ArticleGraph) {
+  return (article.citedArticleIds?.length ?? 0) === 0;
 }
 
 export function getArticleDoi(article: ArticleGraph) {

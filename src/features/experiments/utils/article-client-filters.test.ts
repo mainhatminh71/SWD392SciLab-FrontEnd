@@ -14,6 +14,7 @@ const withBiology = {
     id: "W1",
     doi: "10.1000/demo",
     publicationYear: 2024,
+    citationCount: 12,
   },
   journal: {
     id: "J1",
@@ -28,13 +29,27 @@ const withBiology = {
   ],
   topics: [{ id: "t1", displayName: "Materials science", isPrimary: true }],
   authors: [{ displayName: "Ada Lovelace" }],
-  citedArticleIds: ["W10", "W11", "W12", "W13", "W14"],
+  citedArticleIds: [], // empty like live list — count falls back to citationCount
+} as unknown as ArticleGraph;
+
+const withHydratedRefs = {
+  article: {
+    id: "W3",
+    publicationYear: 2024,
+    citationCount: 2,
+  },
+  journal: null,
+  keywords: [],
+  topics: [],
+  authors: [],
+  citedArticleIds: ["W10", "W11", "W12", "W13", "W14", "W15"],
 } as unknown as ArticleGraph;
 
 const withoutBiology = {
   article: {
     id: "W2",
     publicationYear: 2025,
+    citationCount: 0,
   },
   journal: {
     id: "J1",
@@ -97,21 +112,24 @@ describe("matchesArticleClientFilters", () => {
       matchesArticleClientFilters(withBiology, { minGraphNodes: "5" }),
     ).toBe(true);
     expect(
-      matchesArticleClientFilters(withBiology, { minGraphNodes: "10" }),
+      matchesArticleClientFilters(withBiology, { minGraphNodes: "20" }),
     ).toBe(false);
     expect(
       matchesArticleClientFilters(withoutBiology, { minGraphNodes: "1" }),
     ).toBe(false);
+    expect(
+      matchesArticleClientFilters(withHydratedRefs, { minGraphNodes: "5" }),
+    ).toBe(true);
   });
 });
 
 describe("sortArticlesForClient", () => {
   it("puts richer graphs first for most_related", () => {
     const ordered = sortArticlesForClient(
-      [withoutBiology, withBiology],
+      [withoutBiology, withBiology, withHydratedRefs],
       "most_related",
     );
-    expect(ordered.map((item) => item.article.id)).toEqual(["W1", "W2"]);
+    expect(ordered.map((item) => item.article.id)).toEqual(["W1", "W3", "W2"]);
   });
 
   it("keeps API order for newest", () => {
