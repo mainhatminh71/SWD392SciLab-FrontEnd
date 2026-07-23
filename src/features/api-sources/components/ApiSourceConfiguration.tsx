@@ -40,6 +40,11 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { PROVIDER_PRESETS } from "@/features/api-sources/api/provider-presets";
 import { useApiSources } from "@/features/api-sources/hooks/use-api-sources";
+import {
+  CATALOG_SOURCE_ID,
+  OPENALEX_SOURCE_ID,
+  SCIMAGO_SOURCE_ID,
+} from "@/features/api-sources/lib/runtime-api-sources";
 import type {
   ApiProviderId,
   ApiSource,
@@ -140,24 +145,30 @@ const emptyForm: ApiSourceFormValues = {
 interface ProviderCardProps {
   source: ApiSource;
   testingId: string | null;
+  isActiveCatalog: boolean;
   onEdit: (source: ApiSource) => void;
   onDisable: (sourceId: string) => void;
   onEnable: (sourceId: string) => void;
   onTest: (sourceId: string) => void;
+  onUseAsCatalog: (sourceId: string) => void;
 }
 
 function ProviderCard({
   source,
   testingId,
+  isActiveCatalog,
   onEdit,
   onDisable,
   onEnable,
   onTest,
+  onUseAsCatalog,
 }: ProviderCardProps) {
   const status = getStatusStyles(source.status);
   const health = getHealthStyles(source.connectionHealth);
   const HealthIcon = health.icon;
   const isTesting = testingId === source.id;
+  const canBeCatalog =
+    source.id === CATALOG_SOURCE_ID || source.id.startsWith("src-");
 
   return (
     <Card className="group relative overflow-hidden border border-border bg-card hover:border-primary/30 transition-all">
@@ -180,6 +191,11 @@ function ProviderCard({
                   <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                   {status.label}
                 </span>
+                {isActiveCatalog && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-primary/30 bg-primary/10 text-xs font-medium text-primary">
+                    Active catalog
+                  </span>
+                )}
               </div>
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 {source.description}
@@ -197,7 +213,7 @@ function ProviderCard({
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onClick={() => onEdit(source)}>
                 <Pencil className="w-4 h-4" />
                 Edit Source
@@ -209,6 +225,12 @@ function ProviderCard({
                 <RefreshCw className="w-4 h-4" />
                 Test Connection
               </DropdownMenuItem>
+              {canBeCatalog && !isActiveCatalog && (
+                <DropdownMenuItem onClick={() => onUseAsCatalog(source.id)}>
+                  <Zap className="w-4 h-4" />
+                  Use as catalog
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               {source.status === "disabled" ? (
                 <DropdownMenuItem onClick={() => onEnable(source.id)}>
@@ -469,25 +491,23 @@ function SourceFormDialog({
 
 export default function ApiSourceConfiguration() {
   const {
-    sources: liveSources,
+    sources,
+    activeCatalogSourceId,
     isLoading,
     error,
     reload,
     setStatus,
     refresh,
+    saveCustom,
+    activateCatalog,
+    updateEndpoint,
     isMutating,
   } = useApiSources();
-  const [customSources, setCustomSources] = useState<ApiSource[]>([]);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [editingSource, setEditingSource] = useState<ApiSource | null>(null);
   const [formValues, setFormValues] = useState<ApiSourceFormValues>(emptyForm);
-
-  const sources = useMemo(
-    () => [...liveSources, ...customSources],
-    [liveSources, customSources],
-  );
 
   const stats = useMemo(
     () => ({
@@ -522,39 +542,32 @@ export default function ApiSourceConfiguration() {
 
   const handleSubmit = (values: ApiSourceFormValues) => {
     if (dialogMode === "add") {
-      const newSource: ApiSource = {
+      void saveCustom({
         id: `src-${Date.now()}`,
         providerId: values.providerId,
         name: values.name,
         description: values.description,
         endpoint: values.endpoint,
         status: "active",
-        connectionHealth: "unknown",
-        lastSync: null,
         apiKeyConfigured: Boolean(values.apiKey),
-      };
-      setCustomSources((current) => [...current, newSource]);
+        runtimeRole: "catalog",
+      });
     } else if (editingSource) {
-      const isCustom = customSources.some(
-        (source) => source.id === editingSource.id,
-      );
-      if (isCustom) {
-        setCustomSources((current) =>
-          current.map((source) =>
-            source.id === editingSource.id
-              ? {
-                  ...source,
-                  providerId: values.providerId,
-                  name: values.name,
-                  description: values.description,
-                  endpoint: values.endpoint,
-                  apiKeyConfigured: values.apiKey
-                    ? true
-                    : source.apiKeyConfigured,
-                }
-              : source,
-          ),
-        );
+      if (editingSource.id.startsWith("src-")) {
+        void saveCustom({
+          id: editingSource.id,
+          providerId: values.providerId,
+          name: values.name,
+          description: values.description,
+          endpoint: values.endpoint,
+          status: editingSource.status,
+          apiKeyConfigured: values.apiKey
+            ? true
+            : editingSource.apiKeyConfigured,
+          runtimeRole: "catalog",
+        });
+      } else {
+        void updateEndpoint(editingSource.id, values.endpoint);
       }
     }
 
@@ -562,53 +575,17 @@ export default function ApiSourceConfiguration() {
   };
 
   const handleDisable = (sourceId: string) => {
-    if (customSources.some((source) => source.id === sourceId)) {
-      setCustomSources((current) =>
-        current.map((source) =>
-          source.id === sourceId
-            ? { ...source, status: "disabled", connectionHealth: "unknown" }
-            : source,
-        ),
-      );
-      return;
-    }
     void setStatus(sourceId, "disabled");
   };
 
   const handleEnable = (sourceId: string) => {
-    if (customSources.some((source) => source.id === sourceId)) {
-      setCustomSources((current) =>
-        current.map((source) =>
-          source.id === sourceId
-            ? { ...source, status: "active", connectionHealth: "unknown" }
-            : source,
-        ),
-      );
-      return;
-    }
     void setStatus(sourceId, "active");
   };
 
   const handleTestConnection = async (sourceId: string) => {
     setTestingId(sourceId);
     try {
-      if (customSources.some((source) => source.id === sourceId)) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setCustomSources((current) =>
-          current.map((source) =>
-            source.id === sourceId
-              ? {
-                  ...source,
-                  connectionHealth: "healthy",
-                  lastSync: new Date().toISOString(),
-                  status: source.status === "error" ? "active" : source.status,
-                }
-              : source,
-          ),
-        );
-      } else {
-        await refresh(sourceId);
-      }
+      await refresh(sourceId);
     } finally {
       setTestingId(null);
     }
@@ -620,7 +597,7 @@ export default function ApiSourceConfiguration() {
       subtitle={
         isLoading
           ? "Checking connections…"
-          : `${stats.active} active · ${stats.healthy} healthy connections`
+          : `${stats.active} active · ${stats.healthy} healthy · toggles affect live student features`
       }
       icon={
         <Database
@@ -665,9 +642,10 @@ export default function ApiSourceConfiguration() {
                   External Data Providers
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                  Manage academic API integrations used for publication
-                  metadata, journal rankings, and citation enrichment. Inspired
-                  by integration marketplaces like Vercel and Supabase.
+                  Enable/disable sources to gate live features. SciLab Academic
+                  → search & dashboards · SCImago → rankings · OpenAlex →
+                  related works. Custom sources can be set as the active
+                  catalog endpoint.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -686,15 +664,28 @@ export default function ApiSourceConfiguration() {
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {sources.map((source) => (
-              <ProviderCard
-                key={source.id}
-                source={source}
-                testingId={testingId}
-                onEdit={openEditDialog}
-                onDisable={handleDisable}
-                onEnable={handleEnable}
-                onTest={handleTestConnection}
-              />
+              <div key={source.id} className="space-y-2">
+                <ProviderCard
+                  source={source}
+                  testingId={testingId}
+                  isActiveCatalog={source.id === activeCatalogSourceId}
+                  onEdit={openEditDialog}
+                  onDisable={handleDisable}
+                  onEnable={handleEnable}
+                  onTest={handleTestConnection}
+                  onUseAsCatalog={(sourceId) => void activateCatalog(sourceId)}
+                />
+                <p className="px-1 text-xs text-muted-foreground">
+                  Runtime:{" "}
+                  {source.id === CATALOG_SOURCE_ID
+                    ? "Controls Article Search, Journals, Dashboard, Trends"
+                    : source.id === SCIMAGO_SOURCE_ID
+                      ? "Controls Journal Rankings"
+                      : source.id === OPENALEX_SOURCE_ID
+                        ? "Controls Related Works graph"
+                        : "Custom catalog endpoint (SciLab-compatible)"}
+                </p>
+              </div>
             ))}
           </div>
 

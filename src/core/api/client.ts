@@ -1,6 +1,10 @@
 import { apiConfig } from "@/core/api/config";
 import { ApiError } from "@/core/api/errors";
 import type { ApiEnvelope, ApiRequestOptions } from "@/core/api/types";
+import {
+  assertApiSourceForPath,
+  resolveRequestApiBase,
+} from "@/features/api-sources/lib/runtime-api-sources";
 
 /**
  * Call the Scilab backend and return unwrapped `data`.
@@ -30,7 +34,8 @@ export async function apiRequest<T>({
     }
 
     const requestHeaders = buildHeaders(headers, body !== undefined);
-    const apiUrl = authenticated ? apiConfig.bffApiUrl : apiConfig.publicApiUrl;
+    assertApiSourceForPath(path);
+    const apiUrl = resolveRequestApiBase(path, authenticated);
 
     const response = await fetch(`${apiUrl}${normalizePath(path)}`, {
       ...init,
