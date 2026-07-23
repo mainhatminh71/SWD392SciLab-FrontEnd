@@ -95,7 +95,7 @@ const withoutBiology = {
 } as unknown as ArticleGraph;
 
 describe("matchesArticleClientFilters", () => {
-  it("filters the main search box against title/abstract/tags (AND tokens)", () => {
+  it("filters the main search box against title only (AND tokens)", () => {
     const titled = {
       ...withBiology,
       article: {
@@ -110,11 +110,12 @@ describe("matchesArticleClientFilters", () => {
         textSearch: "Identification and management",
       }),
     ).toBe(true);
+    // Keyword-only hits must not match title search.
     expect(
       matchesArticleClientFilters(titled, {
         textSearch: "biology",
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       matchesArticleClientFilters(withoutBiology, {
         textSearch: "Identification and management",

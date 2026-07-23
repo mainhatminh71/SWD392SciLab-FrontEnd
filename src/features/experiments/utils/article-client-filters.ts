@@ -2,7 +2,7 @@ import type { ArticleGraph } from "@/features/experiments/types/article.types";
 import { getArticleAuthorNames } from "@/features/experiments/utils/article-format";
 
 export type ArticleClientFilters = {
-  /** Main search box — title, abstract, keywords, topics, authors, DOI, journal. */
+  /** Main search box — article title only. */
   textSearch?: string;
   doiSearch?: string;
   authorSearch?: string;
@@ -72,29 +72,8 @@ export function tokenizeTextSearch(query?: string) {
   return meaningful.length > 0 ? meaningful : raw;
 }
 
-function buildArticleSearchHaystack(article: ArticleGraph) {
-  const keywords = article.keywords ?? [];
-  const topics = article.topics ?? [];
-  const keywordText = keywords.map((tag) => tag.displayName ?? "").join(" ");
-  const topicText = topics.map((tag) => tag.displayName ?? "").join(" ");
-  let authorText = "";
-  try {
-    authorText = getArticleAuthorNames(article).join(" ");
-  } catch {
-    authorText = "";
-  }
-
-  return [
-    article.article?.title ?? "",
-    article.article?.abstract ?? "",
-    article.article?.doi ?? "",
-    article.journal?.displayName ?? "",
-    keywordText,
-    topicText,
-    authorText,
-  ]
-    .join(" ")
-    .toLowerCase();
+function buildArticleTitleHaystack(article: ArticleGraph) {
+  return (article.article?.title ?? "").toLowerCase();
 }
 
 function labelsLooselyMatch(actual: string, selected: string) {
@@ -151,7 +130,7 @@ export function matchesArticleClientFilters(
 
   const textTokens = tokenizeTextSearch(filters.textSearch);
   if (textTokens.length > 0) {
-    const haystack = buildArticleSearchHaystack(article);
+    const haystack = buildArticleTitleHaystack(article);
     if (!textTokens.every((token) => haystack.includes(token))) {
       return false;
     }

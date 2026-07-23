@@ -395,7 +395,7 @@ export default function ArticleSearch() {
                 htmlFor="article-name-search"
                 className="text-sm font-medium"
               >
-                Search by title, abstract, keyword, or topic
+                Search by title
               </Label>
               <div className="relative max-w-2xl">
                 <Search
@@ -405,7 +405,7 @@ export default function ArticleSearch() {
                 <Input
                   id="article-name-search"
                   type="search"
-                  placeholder="Type a title, keyword, or topic…"
+                  placeholder="Type an article title…"
                   className="pl-10 h-11 bg-card"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
