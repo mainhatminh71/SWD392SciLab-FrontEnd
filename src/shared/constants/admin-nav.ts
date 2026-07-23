@@ -12,6 +12,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { id: "dashboard", label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { id: "users", label: "User Management", href: "/admin/users", icon: Users },
   {
+    id: "api-sources",
+    label: "API Sources",
+    href: "/admin/api-sources",
+    icon: Database,
+  },
+  {
     id: "system-health",
     label: "System Health",
     href: "/admin/system-health",
