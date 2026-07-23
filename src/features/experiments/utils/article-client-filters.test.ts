@@ -122,6 +122,29 @@ describe("matchesArticleClientFilters", () => {
     ).toBe(false);
   });
 
+  it("survives missing keywords/topics arrays from the live API", () => {
+    const sparse = {
+      article: {
+        id: "W-sparse",
+        title: "Climate policy identification",
+        abstract: null,
+        publicationYear: 2024,
+      },
+      journal: null,
+      authors: null,
+      keywords: null,
+      topics: null,
+      citedArticleIds: null,
+    } as unknown as ArticleGraph;
+
+    expect(
+      matchesArticleClientFilters(sparse, { textSearch: "identification" }),
+    ).toBe(true);
+    expect(
+      matchesArticleClientFilters(sparse, { textSearch: "missing-token" }),
+    ).toBe(false);
+  });
+
   it("keeps only cards that actually carry the selected keyword name", () => {
     expect(
       matchesArticleClientFilters(withBiology, { keywordName: "Biology" }),

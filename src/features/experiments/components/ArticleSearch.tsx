@@ -231,9 +231,14 @@ export default function ArticleSearch() {
 
   const filteredArticles = useMemo(
     () =>
-      items.filter((article) =>
-        matchesArticleClientFilters(article, clientFilters),
-      ),
+      items.filter((article) => {
+        try {
+          return matchesArticleClientFilters(article, clientFilters);
+        } catch {
+          // Never let one bad payload blank the whole list while searching.
+          return !String(clientFilters.textSearch ?? "").trim();
+        }
+      }),
     [items, clientFilters],
   );
 
@@ -711,7 +716,11 @@ export default function ArticleSearch() {
 
               {!isLoading && !error && currentArticles.length === 0 && (
                 <Card className="p-8 border-border text-center text-muted-foreground">
-                  No articles found. Try another keyword or clear your filters.
+                  {filtersActive && isLoadingMore
+                    ? "Searching loaded articles and fetching more…"
+                    : filtersActive
+                      ? "No matches in loaded articles. Try a shorter query, clear filters, or load more."
+                      : "No articles found. Try another keyword or clear your filters."}
                 </Card>
               )}
 

@@ -19,6 +19,21 @@ export type ArticleClientFilters = {
   yearTo?: string;
 };
 
+const SEARCH_STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "or",
+  "the",
+  "of",
+  "in",
+  "on",
+  "for",
+  "to",
+  "with",
+  "by",
+]);
+
 function parseYear(value?: string) {
   if (!value?.trim()) return null;
   const year = Number(value);
@@ -30,36 +45,49 @@ function normalizeLabel(value?: string | null) {
 }
 
 function articleHasNamedTag(
-  tags: Array<{ displayName?: string | null }>,
+  tags: Array<{ displayName?: string | null }> | null | undefined,
   selectedName?: string,
 ) {
   const wanted = normalizeLabel(selectedName);
   if (!wanted) return true;
-  return tags.some((tag) => normalizeLabel(tag.displayName) === wanted);
+  return (tags ?? []).some((tag) => normalizeLabel(tag.displayName) === wanted);
 }
 
-/** Split search into tokens; every token must appear somewhere in the haystack. */
+/**
+ * Split search into meaningful tokens (drop short stop words).
+ * Every remaining token must appear somewhere in the haystack.
+ */
 export function tokenizeTextSearch(query?: string) {
-  return (query ?? "")
+  const raw = (query ?? "")
     .trim()
     .toLowerCase()
-    .split(/\s+/)
+    .split(/[^a-z0-9]+/i)
     .filter(Boolean);
+
+  const meaningful = raw.filter(
+    (token) => token.length > 1 && !SEARCH_STOP_WORDS.has(token),
+  );
+
+  // If the query was only stop words, fall back to the raw tokens.
+  return meaningful.length > 0 ? meaningful : raw;
 }
 
 function buildArticleSearchHaystack(article: ArticleGraph) {
-  const keywordText = article.keywords
-    .map((tag) => tag.displayName ?? "")
-    .join(" ");
-  const topicText = article.topics
-    .map((tag) => tag.displayName ?? "")
-    .join(" ");
-  const authorText = getArticleAuthorNames(article).join(" ");
+  const keywords = article.keywords ?? [];
+  const topics = article.topics ?? [];
+  const keywordText = keywords.map((tag) => tag.displayName ?? "").join(" ");
+  const topicText = topics.map((tag) => tag.displayName ?? "").join(" ");
+  let authorText = "";
+  try {
+    authorText = getArticleAuthorNames(article).join(" ");
+  } catch {
+    authorText = "";
+  }
 
   return [
-    article.article.title ?? "",
-    article.article.abstract ?? "",
-    article.article.doi ?? "",
+    article.article?.title ?? "",
+    article.article?.abstract ?? "",
+    article.article?.doi ?? "",
     article.journal?.displayName ?? "",
     keywordText,
     topicText,
@@ -101,13 +129,22 @@ export function hasActiveArticleClientFilters(
   );
 }
 
-/** Instant sidebar filters — apply on already-loaded catalog pages. */
+/** Instant sidebar / search filters — apply on already-loaded catalog pages. */
 export function matchesArticleClientFilters(
   article: ArticleGraph,
   filters: ArticleClientFilters,
 ): boolean {
+  if (!article?.article) {
+    return false;
+  }
+
   const doi = article.article.doi ?? "";
-  const authors = getArticleAuthorNames(article).join(" ").toLowerCase();
+  let authors = "";
+  try {
+    authors = getArticleAuthorNames(article).join(" ").toLowerCase();
+  } catch {
+    authors = "";
+  }
   const year = article.article.publicationYear;
   const publisher = article.journal?.publisherName?.trim() ?? "";
   const country = article.journal?.country?.trim() ?? "";

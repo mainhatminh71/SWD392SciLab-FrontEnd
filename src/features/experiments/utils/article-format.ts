@@ -10,7 +10,7 @@ export function getArticleTitle(article: ArticleGraph) {
 }
 
 export function getArticleAuthors(article: ArticleGraph, maxCount = 3) {
-  const names = article.authors
+  const names = (article.authors ?? [])
     .slice()
     .sort((left, right) => {
       const leftPosition = left.authorPosition ?? Number.MAX_SAFE_INTEGER;
@@ -33,7 +33,7 @@ export function getArticleAuthors(article: ArticleGraph, maxCount = 3) {
 }
 
 export function getArticleAuthorNames(article: ArticleGraph) {
-  return article.authors
+  return (article.authors ?? [])
     .slice()
     .sort((left, right) => {
       const leftPosition = left.authorPosition ?? Number.MAX_SAFE_INTEGER;
@@ -86,8 +86,11 @@ export function getArticleAbstract(article: ArticleGraph) {
   return article.article.abstract?.trim() || "Abstract unavailable.";
 }
 
-export function getTagNames(items: (KeywordNode | TopicNode)[], maxCount = 4) {
-  return items
+export function getTagNames(
+  items: (KeywordNode | TopicNode)[] | null | undefined,
+  maxCount = 4,
+) {
+  return (items ?? [])
     .map((item) => item.displayName?.trim())
     .filter((name): name is string => Boolean(name))
     .slice(0, maxCount);
@@ -95,7 +98,7 @@ export function getTagNames(items: (KeywordNode | TopicNode)[], maxCount = 4) {
 
 /** Primary OpenAlex topics for an article (isPrimary = true). */
 export function getPrimaryTopics(article: ArticleGraph, maxCount = 3) {
-  return article.topics
+  return (article.topics ?? [])
     .filter((topic) => topic.isPrimary)
     .map((topic) => topic.displayName?.trim())
     .filter((name): name is string => Boolean(name))
@@ -104,7 +107,7 @@ export function getPrimaryTopics(article: ArticleGraph, maxCount = 3) {
 
 /** Non-primary related topics for an article. */
 export function getRelatedTopics(article: ArticleGraph, maxCount = 4) {
-  return article.topics
+  return (article.topics ?? [])
     .filter((topic) => !topic.isPrimary)
     .map((topic) => topic.displayName?.trim())
     .filter((name): name is string => Boolean(name))
