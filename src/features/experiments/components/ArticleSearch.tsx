@@ -52,7 +52,6 @@ import type {
 import {
   articleSortOptions,
   countryFilterOptions,
-  graphNodeFilterOptions,
   toArticleApiSort,
   yearOptions,
 } from "@/features/experiments/types/article.types";
@@ -75,8 +74,8 @@ import {
 } from "@/features/laboratories/utils/journal-format";
 
 const itemsPerPage = 10;
-/** Stop auto-paging for graph-node filters after this many loaded articles. */
-const graphFilterLoadCap = 120;
+/** Stop auto-paging for client text search after this many loaded articles. */
+const clientFilterLoadCap = 120;
 
 const filterFieldClassName =
   "w-full h-9 px-3 pr-8 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer outline-none transition-[border-color,box-shadow] focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/25";
@@ -141,7 +140,6 @@ export default function ArticleSearch() {
   const [keywordName, setKeywordName] = useState("");
   const [topicName, setTopicName] = useState("");
   const [openAccess, setOpenAccess] = useState<"" | "oa" | "subscription">("");
-  const [minGraphNodes, setMinGraphNodes] = useState("");
 
   const {
     items: journals,
@@ -225,7 +223,6 @@ export default function ArticleSearch() {
         selectedYear,
         yearFrom,
         yearTo,
-        minGraphNodes,
       }),
     );
     return sortArticlesForClient(matched, sort);
@@ -243,7 +240,6 @@ export default function ArticleSearch() {
     selectedYear,
     yearFrom,
     yearTo,
-    minGraphNodes,
     sort,
   ]);
 
@@ -271,22 +267,18 @@ export default function ArticleSearch() {
     doiSearch,
     authorSearch,
     openAccess,
-    minGraphNodes,
   ]);
 
-  // When text search or a graph-node minimum is set, keep loading pages until we
-  // have a usable match set (or hit the load cap / end of results).
+  // When text search is set, keep loading pages until we have a usable match
+  // set (or hit the load cap / end of results).
   useEffect(() => {
-    const min = Number(minGraphNodes);
-    const hasGraphFloor = Number.isFinite(min) && min > 0;
     const hasTextSearch = searchQuery.trim().length > 0;
-    if (!hasGraphFloor && !hasTextSearch) return;
+    if (!hasTextSearch) return;
     if (isLoading || isLoadingMore || !hasMore) return;
-    if (items.length >= graphFilterLoadCap) return;
+    if (items.length >= clientFilterLoadCap) return;
     if (filteredArticles.length >= itemsPerPage) return;
     void loadMore();
   }, [
-    minGraphNodes,
     searchQuery,
     filteredArticles.length,
     items.length,
@@ -361,7 +353,6 @@ export default function ArticleSearch() {
     setDoiSearch("");
     setAuthorSearch("");
     setOpenAccess("");
-    setMinGraphNodes("");
   };
 
   const activeFilterCount =
@@ -376,8 +367,7 @@ export default function ArticleSearch() {
     (yearTo && yearTo !== "2025" ? 1 : 0) +
     (doiSearch ? 1 : 0) +
     (authorSearch ? 1 : 0) +
-    (openAccess ? 1 : 0) +
-    (minGraphNodes ? 1 : 0);
+    (openAccess ? 1 : 0);
 
   return (
     <>
@@ -483,26 +473,6 @@ export default function ArticleSearch() {
                         newest for the catalog fetch instead.
                       </p>
                     )}
-
-                    <FilterSelect
-                      id="graph-nodes-filter"
-                      label="Graph nodes"
-                      value={minGraphNodes}
-                      onChange={setMinGraphNodes}
-                    >
-                      {graphNodeFilterOptions.map((option) => (
-                        <option key={option.value || "any"} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </FilterSelect>
-                    <p className="text-xs text-muted-foreground -mt-2">
-                      Filters loaded results
-                      {minGraphNodes
-                        ? ` (≥${minGraphNodes}; may load more pages)`
-                        : ""}
-                      . Uses related works when synced, else citations.
-                    </p>
 
                     <div className="pt-4 border-t border-border space-y-5">
                       <FilterSelect
@@ -724,13 +694,13 @@ export default function ArticleSearch() {
                       <span className="font-medium text-foreground">
                         {filteredArticles.length}
                         {hasMore ||
-                        ((minGraphNodes || searchQuery.trim()) &&
-                          items.length < graphFilterLoadCap)
+                        (searchQuery.trim() &&
+                          items.length < clientFilterLoadCap)
                           ? "+"
                           : ""}
                       </span>{" "}
                       articles
-                      {minGraphNodes || searchQuery.trim() ? (
+                      {searchQuery.trim() ? (
                         <span className="text-muted-foreground">
                           {" "}
                           · {items.length} loaded
